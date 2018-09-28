@@ -51,6 +51,7 @@ void MainWindow::componentsInitialization(void)
 
     m_btnChooseFile = new QPushButton(tr("load .S19 file"));
     connect(m_btnChooseFile, &m_btnChooseFile->clicked, this, &selectFile);
+    m_btnChooseFile->setStatusTip(tr("select the target .S19 file without boot code"));
     m_leFileInfo = new QLineEdit;
     m_leFileInfo->setReadOnly(true);
 
@@ -66,6 +67,7 @@ void MainWindow::componentsInitialization(void)
 
     m_btnGenerate = new QPushButton(tr("generate"));
     connect(m_btnGenerate, &m_btnGenerate->clicked, this, &generateFirmwareWithBootloader);
+    m_btnGenerate->setStatusTip(tr("generate firmware with bootloader"));
 }
 
 void MainWindow::useDefaultBootloader()
@@ -74,11 +76,13 @@ void MainWindow::useDefaultBootloader()
     {
         m_btnLoadBootloader->setEnabled(false);
         m_leBootloaderInfo->setText(tr("default Cherry T19 series boot code is loaded"));
+        m_btnLoadBootloader->setStatusTip(tr("use default boot code now"));
     }
     else
     {
         m_btnLoadBootloader->setEnabled(true);
         m_leBootloaderInfo->clear();
+        m_btnLoadBootloader->setStatusTip(tr("select a file which contains boot code"));
     }
 }
 
