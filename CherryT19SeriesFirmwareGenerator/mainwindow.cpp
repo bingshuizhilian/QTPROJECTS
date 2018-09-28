@@ -21,10 +21,18 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //global layout
     auto layoutGlobal = new QVBoxLayout;
+    layoutGlobal->addWidget(m_leBootloaderInfo);
+    layoutGlobal->addWidget(m_btnLoadBootloader);
     layoutGlobal->addWidget(m_leFileInfo);
     layoutGlobal->addWidget(m_btnChooseFile);
     layoutGlobal->addWidget(m_btnGenerate);
     ui->centralWidget->setLayout(layoutGlobal);
+
+
+    QStringList sl;
+    sl.push_back("abc");
+    sl.push_back("def");
+    sl.push_back("ghi");
 }
 
 MainWindow::~MainWindow()
@@ -36,14 +44,30 @@ void MainWindow::componentsInitialization(void)
 {
     setWindowTitle(tr("CherryT19SeriesFirmwareGenerator"));
 
-    m_btnChooseFile = new QPushButton(tr("choose file"));
+    m_btnChooseFile = new QPushButton(tr("load .S19 file"));
     connect(m_btnChooseFile, &m_btnChooseFile->clicked, this, &selectFile);
-
     m_leFileInfo = new QLineEdit;
     m_leFileInfo->setReadOnly(true);
 
+    m_btnLoadBootloader = new QPushButton(tr("load bootloader"));
+    connect(m_btnLoadBootloader, &m_btnLoadBootloader->clicked, this, &loadBootloader);
+    m_leBootloaderInfo = new QLineEdit;
+    m_leBootloaderInfo->setReadOnly(true);
+
     m_btnGenerate = new QPushButton(tr("generate"));
-    connect(m_btnGenerate, &m_btnGenerate->clicked, this, &generateBootloader);
+    connect(m_btnGenerate, &m_btnGenerate->clicked, this, &generateFirmwareWithBootloader);
+}
+
+void MainWindow::loadBootloader()
+{
+    QString fileName = QFileDialog::getOpenFileName();
+
+    m_leBootloaderInfo->setText(fileName);
+
+    if(!m_leBootloaderInfo->text().isEmpty())
+        qDebug()<<fileName<<endl;
+    else
+        qDebug()<<"m_leBootloaderInfo is empty"<<endl;
 }
 
 void MainWindow::selectFile()
@@ -79,27 +103,84 @@ void MainWindow::selectFile()
         qDebug()<<tmp<<endl;
 }
 
-void MainWindow::generateBootloader()
+void MainWindow::generateFirmwareWithBootloader()
 {
-    if(m_leFileInfo->text().isEmpty())
+    if(m_leBootloaderInfo->text().isEmpty())
     {
-        QMessageBox::warning(this, "Warnning", "Please select a .S19 file first", QMessageBox::Yes);
+        QMessageBox::warning(this, "Warnning", "Please select a bootloader file", QMessageBox::Yes);
         return;
     }
 
-    //获取原文件
+    if(m_leFileInfo->text().isEmpty())
+    {
+        QMessageBox::warning(this, "Warnning", "Please select a .S19 file", QMessageBox::Yes);
+        return;
+    }
+
+    //获取bootloader文件
+    QFile bootloaderFile(m_leBootloaderInfo->text());
+    if(!bootloaderFile.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        QMessageBox::warning(this, "Warnning", "Cannot open " + m_leBootloaderInfo->text(), QMessageBox::Yes);
+        return;
+    }
+    QTextStream bootloaderFileIn(&bootloaderFile);
+
+
+    QStringList bootloaderCodeStringList;
+    while(!bootloaderFileIn.atEnd())
+    {
+        QString readStr = bootloaderFileIn.readLine();
+
+        if(!readStr.isEmpty())
+            bootloaderCodeStringList.push_back(readStr);
+    }
+
+    QString bootloaderCodeString = bootloaderCodeStringList.join('\n');
+    bootloaderCodeString += '\n';
+    bootloaderFile.close();
+
+    qDebug()<<bootloaderCodeString<<endl;
+
+    //获取.S19原文件
     QString fileName =fileInfo.at(ABSOLUTE_FILE_PATH);
-    QFile file(fileName);
-    if(!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    QFile s19File(fileName);
+    if(!s19File.open(QIODevice::ReadOnly | QIODevice::Text))
     {
         QMessageBox::warning(this, "Warnning", "Cannot open " + fileName, QMessageBox::Yes);
         return;
     }
+    QTextStream s19FileIn(&s19File);
+    QStringList orignalS19FileStringList;
+    while(!s19FileIn.atEnd())
+    {
+        QString readStr = s19FileIn.readLine();
 
-    QTextStream in(&file);
-    QString orignalFile = in.readAll();
-    file.close();
+        if(!readStr.isEmpty())
+            orignalS19FileStringList.push_back(readStr);
+    }
+    s19File.close();
 
+    for(auto& elem:orignalS19FileStringList)
+        elem += '\n';
+
+    //将bootloader合成进原始S19文件
+    int targetIndex = orignalS19FileStringList.indexOf(TARGET_STRING_AFTER_GENERATING);
+    if(-1 != targetIndex)
+    {
+        QMessageBox::warning(this, "Warnning", "please check the .S19 file, maybe bootloader is already exist", QMessageBox::Yes);
+        return;
+    }
+
+    int replaceIndex = orignalS19FileStringList.indexOf(REPLACE_STRING);
+    if(-1 == replaceIndex)
+    {
+        QMessageBox::warning(this, "Warnning", "please check the .S19 file, interrupt vector table line doesn't exist", QMessageBox::Yes);
+        return;
+    }
+    orignalS19FileStringList.replace(replaceIndex, bootloaderCodeString);
+
+    //存储生成的含bootloader的文件
     QString tmpFileName = fileInfo.at(FILE_NAME);
     QString timeInfo = QDateTime::currentDateTime().toString("yyyy-MM-dd_HH-mm-ss");
     tmpFileName = tmpFileName.left(tmpFileName.size() - 4);
@@ -122,9 +203,12 @@ void MainWindow::generateBootloader()
         QMessageBox::warning(this, "Warnning", "Cannot open " + newFilePathName, QMessageBox::Yes);
         return;
     }
-
     QTextStream out(&newFile);
-    out << orignalFile + "\n\nthis is a test!";
+    for(auto elem:orignalS19FileStringList)
+    {
+        if(elem != "\n")
+            out << elem;
+    }
     newFile.close();
 
     qDebug()<<newFilePathName<<endl;

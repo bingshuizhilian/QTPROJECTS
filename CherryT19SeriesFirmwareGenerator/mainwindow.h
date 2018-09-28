@@ -28,18 +28,23 @@ private:
         FILE_NAME
     };
 
+    const QString REPLACE_STRING = "S10BFFF8C000C000C000C000FD\n";//未加bootloader的app含有此内容
+    const QString TARGET_STRING_AFTER_GENERATING = "S10BFFF8FC00FC00FC00FC000D\n";//已加bootloader的app含有此内容
+
 private:
     QPushButton* m_btnChooseFile;
     QStringList fileInfo;
     QLineEdit* m_leFileInfo;
+    QPushButton* m_btnLoadBootloader;
+    QLineEdit* m_leBootloaderInfo;
     QPushButton* m_btnGenerate;
 
 private:
     void componentsInitialization(void);
-
 private slots:
     void selectFile();
-    void generateBootloader();
+    void loadBootloader();
+    void generateFirmwareWithBootloader();
 };
 
 #endif // MAINWINDOW_H
