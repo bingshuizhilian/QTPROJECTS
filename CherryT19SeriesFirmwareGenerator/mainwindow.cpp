@@ -1,11 +1,14 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "defaultBootloaderCode.h"
 #include <QLayout>
 #include <QFile>
 #include <QFileDialog>
 #include <QTextStream>
 #include <QDateTime>
 #include <QDir>
+#include <QLabel>
+#include <QProcess>
 #include <QMessageBox>
 #include <QDebug>
 
@@ -21,18 +24,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //global layout
     auto layoutGlobal = new QVBoxLayout;
+    layoutGlobal->addWidget(m_cbUseDefaultBootloader);
     layoutGlobal->addWidget(m_leBootloaderInfo);
     layoutGlobal->addWidget(m_btnLoadBootloader);
     layoutGlobal->addWidget(m_leFileInfo);
     layoutGlobal->addWidget(m_btnChooseFile);
     layoutGlobal->addWidget(m_btnGenerate);
     ui->centralWidget->setLayout(layoutGlobal);
-
-
-    QStringList sl;
-    sl.push_back("abc");
-    sl.push_back("def");
-    sl.push_back("ghi");
 }
 
 MainWindow::~MainWindow()
@@ -44,6 +42,13 @@ void MainWindow::componentsInitialization(void)
 {
     setWindowTitle(tr("CherryT19SeriesFirmwareGenerator"));
 
+    auto labelAuthorInfo = new QLabel;
+    labelAuthorInfo->setStatusTip(tr("click to view source code on my github"));
+    labelAuthorInfo->setOpenExternalLinks(true);
+    labelAuthorInfo->setText(QString::fromLocal8Bit("<style> a {text-decoration: none} </style> <a href = https://www.github.com/bingshuizhilian/QTPROJECTS> contact author </a>"));
+    labelAuthorInfo->show();
+    ui->statusBar->addPermanentWidget(labelAuthorInfo);
+
     m_btnChooseFile = new QPushButton(tr("load .S19 file"));
     connect(m_btnChooseFile, &m_btnChooseFile->clicked, this, &selectFile);
     m_leFileInfo = new QLineEdit;
@@ -54,20 +59,35 @@ void MainWindow::componentsInitialization(void)
     m_leBootloaderInfo = new QLineEdit;
     m_leBootloaderInfo->setReadOnly(true);
 
+    m_cbUseDefaultBootloader = new QCheckBox(tr("use default boot code"));
+    connect(m_cbUseDefaultBootloader, &m_cbUseDefaultBootloader->stateChanged, this, &useDefaultBootloader);
+    m_cbUseDefaultBootloader->setStatusTip(tr("use default boot code when checked"));
+    m_cbUseDefaultBootloader->setChecked(true);
+
     m_btnGenerate = new QPushButton(tr("generate"));
     connect(m_btnGenerate, &m_btnGenerate->clicked, this, &generateFirmwareWithBootloader);
+}
+
+void MainWindow::useDefaultBootloader()
+{
+    if(m_cbUseDefaultBootloader->isChecked())
+    {
+        m_btnLoadBootloader->setEnabled(false);
+        m_leBootloaderInfo->setText(tr("default Cherry T19 series boot code is loaded"));
+    }
+    else
+    {
+        m_btnLoadBootloader->setEnabled(true);
+        m_leBootloaderInfo->clear();
+    }
 }
 
 void MainWindow::loadBootloader()
 {
     QString fileName = QFileDialog::getOpenFileName();
-
     m_leBootloaderInfo->setText(fileName);
 
-    if(!m_leBootloaderInfo->text().isEmpty())
-        qDebug()<<fileName<<endl;
-    else
-        qDebug()<<"m_leBootloaderInfo is empty"<<endl;
+    qDebug()<<fileName<<endl;
 }
 
 void MainWindow::selectFile()
@@ -118,27 +138,34 @@ void MainWindow::generateFirmwareWithBootloader()
     }
 
     //获取bootloader文件
-    QFile bootloaderFile(m_leBootloaderInfo->text());
-    if(!bootloaderFile.open(QIODevice::ReadOnly | QIODevice::Text))
+    QString bootloaderCodeString;
+    if(!m_cbUseDefaultBootloader->isChecked())
     {
-        QMessageBox::warning(this, "Warnning", "Cannot open " + m_leBootloaderInfo->text(), QMessageBox::Yes);
-        return;
+        QFile bootloaderFile(m_leBootloaderInfo->text());
+        if(!bootloaderFile.open(QIODevice::ReadOnly | QIODevice::Text))
+        {
+            QMessageBox::warning(this, "Warnning", "Cannot open " + m_leBootloaderInfo->text(), QMessageBox::Yes);
+            return;
+        }
+
+        QTextStream bootloaderFileIn(&bootloaderFile);
+        QStringList bootloaderCodeStringList;
+        while(!bootloaderFileIn.atEnd())
+        {
+            QString readStr = bootloaderFileIn.readLine();
+
+            if(!readStr.isEmpty())
+                bootloaderCodeStringList.push_back(readStr);
+        }
+
+        bootloaderCodeString = bootloaderCodeStringList.join('\n');
+        bootloaderCodeString += '\n';
+        bootloaderFile.close();
     }
-    QTextStream bootloaderFileIn(&bootloaderFile);
-
-
-    QStringList bootloaderCodeStringList;
-    while(!bootloaderFileIn.atEnd())
+    else
     {
-        QString readStr = bootloaderFileIn.readLine();
-
-        if(!readStr.isEmpty())
-            bootloaderCodeStringList.push_back(readStr);
+        bootloaderCodeString = DEFAULT_BOOTLOADER_CODE;
     }
-
-    QString bootloaderCodeString = bootloaderCodeStringList.join('\n');
-    bootloaderCodeString += '\n';
-    bootloaderFile.close();
 
     qDebug()<<bootloaderCodeString<<endl;
 
@@ -203,6 +230,7 @@ void MainWindow::generateFirmwareWithBootloader()
         QMessageBox::warning(this, "Warnning", "Cannot open " + newFilePathName, QMessageBox::Yes);
         return;
     }
+
     QTextStream out(&newFile);
     for(auto elem:orignalS19FileStringList)
     {
@@ -212,6 +240,15 @@ void MainWindow::generateFirmwareWithBootloader()
     newFile.close();
 
     qDebug()<<newFilePathName<<endl;
+
+    //WINDOWS环境下，选中该文件
+#ifdef WIN32
+    QProcess process;
+    QString openFileName = newFilePathName;
+
+    openFileName.replace("/", "\\");    //***这句windows下必要***
+    process.startDetached("explorer /select," + openFileName);
+#endif
 }
 
 

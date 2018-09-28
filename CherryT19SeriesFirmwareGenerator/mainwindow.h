@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QPushButton>
 #include <QLineEdit>
+#include <QCheckBox>
 
 namespace Ui {
 class MainWindow;
@@ -35,14 +36,17 @@ private:
     QPushButton* m_btnChooseFile;
     QStringList fileInfo;
     QLineEdit* m_leFileInfo;
+    QCheckBox* m_cbUseDefaultBootloader;
     QPushButton* m_btnLoadBootloader;
     QLineEdit* m_leBootloaderInfo;
     QPushButton* m_btnGenerate;
 
 private:
     void componentsInitialization(void);
+
 private slots:
     void selectFile();
+    void useDefaultBootloader();
     void loadBootloader();
     void generateFirmwareWithBootloader();
 };
