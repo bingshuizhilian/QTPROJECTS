@@ -43,6 +43,7 @@ private:
 
 private:
     void componentsInitialization(void);
+    void generateCharArray(void);
 
 private slots:
     void selectFile();

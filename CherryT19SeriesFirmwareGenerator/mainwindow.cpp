@@ -31,6 +31,9 @@ MainWindow::MainWindow(QWidget *parent) :
     layoutGlobal->addWidget(m_btnChooseFile);
     layoutGlobal->addWidget(m_btnGenerate);
     ui->centralWidget->setLayout(layoutGlobal);
+
+    //author debug use only
+    //generateCharArray();
 }
 
 MainWindow::~MainWindow()
@@ -162,9 +165,10 @@ void MainWindow::generateFirmwareWithBootloader()
                 bootloaderCodeStringList.push_back(readStr);
         }
 
+        bootloaderFile.close();
+
         bootloaderCodeString = bootloaderCodeStringList.join('\n');
         bootloaderCodeString += '\n';
-        bootloaderFile.close();
     }
     else
     {
@@ -254,6 +258,112 @@ void MainWindow::generateFirmwareWithBootloader()
     process.startDetached("explorer /select," + openFileName);
 #endif
 }
+
+//调试用，将boot code生成为字符串常量
+void MainWindow::generateCharArray()
+{
+    QString filePathName = QFileDialog::getOpenFileName();
+    QString filePath = QFileInfo(filePathName).absolutePath();
+
+    qDebug()<<filePathName<<endl<<filePath<<endl;
+
+    QFile targetFile(filePathName);
+    if(!targetFile.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        QMessageBox::warning(this, "Warnning", "Cannot open " + filePathName, QMessageBox::Yes);
+        return;
+    }
+
+    QTextStream targetFileIn(&targetFile);
+    QStringList targetCodeStringList;
+    while(!targetFileIn.atEnd())
+    {
+        QString readStr = targetFileIn.readLine();
+
+        if(!readStr.isEmpty())
+            targetCodeStringList.push_back(readStr);
+    }
+
+    targetFile.close();
+    for(auto& elem:targetCodeStringList)
+    {
+        elem.push_front('\"');
+        elem.push_back('\\');
+        elem.push_back('n');
+        elem.push_back('\"');
+        elem.push_back('\n');
+    }
+    if(!targetCodeStringList.isEmpty())
+        targetCodeStringList.last().insert(targetCodeStringList.last().size() - 1, ';');
+
+    targetCodeStringList.push_front("const char* DEFAULT_BOOTLOADER_CODE =\n");
+    targetCodeStringList.push_front("#define __DEFAULT_BOOTLOADER_CODE_H__\n\n");
+    targetCodeStringList.push_front("#ifndef __DEFAULT_BOOTLOADER_CODE_H__\n");
+    targetCodeStringList.push_back("\n#endif\n");
+
+    for(auto& elem:targetCodeStringList)
+        qDebug()<<elem<<endl;
+
+    QString tmpFileName = "defaultBootloaderCode_";
+    QString timeInfo = QDateTime::currentDateTime().toString("yyyy-MM-dd_HH-mm-ss");
+    tmpFileName += timeInfo + ".h";
+
+    QString newFilePathName = filePath + '/' + tmpFileName;
+    QFile newFile(newFilePathName);
+    if(!newFile.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        QMessageBox::warning(this, "Warnning", "Cannot open " + newFilePathName, QMessageBox::Yes);
+        return;
+    }
+
+    QTextStream out(&newFile);
+    for(auto elem:targetCodeStringList)
+        out << elem;
+
+    newFile.close();
+
+    qDebug()<<newFilePathName<<endl;
+
+    //WINDOWS环境下，选中该文件
+#ifdef WIN32
+    QProcess process;
+    QString openFileName = newFilePathName;
+
+    openFileName.replace("/", "\\");    //***这句windows下必要***
+    process.startDetached("explorer /select," + openFileName);
+#endif
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
