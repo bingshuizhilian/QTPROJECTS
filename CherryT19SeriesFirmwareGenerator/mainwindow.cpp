@@ -259,7 +259,7 @@ void MainWindow::generateFirmwareWithBootloader()
 #endif
 }
 
-//调试用，将boot code生成为字符串常量
+//调试用，将boot code生成为字符串常量(数组)
 void MainWindow::generateCharArray()
 {
     QString filePathName = QFileDialog::getOpenFileName();
@@ -318,7 +318,10 @@ void MainWindow::generateCharArray()
 
     QTextStream out(&newFile);
     for(auto elem:targetCodeStringList)
-        out << elem;
+    {
+        if(elem != "\n")
+            out << elem;
+    }
 
     newFile.close();
 
