@@ -378,7 +378,7 @@ void MainWindow::generateFirmwareForDiagnosis()
         return;
     }
 
-    //生成临时文件并在文件夹中定位此文件
+    //生成临时文件
     QString tmpFileName = fileInfo.at(FILE_NAME);
     tmpFileName = tmpFileName.left(tmpFileName.size() - 4);
     tmpFileName += "_diagnosis(tmp).S19";
@@ -673,41 +673,3 @@ void MainWindow::componentsInitialization(void)
 
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
