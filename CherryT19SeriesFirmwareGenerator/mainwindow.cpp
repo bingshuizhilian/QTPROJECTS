@@ -220,34 +220,34 @@ void MainWindow::generateFirmwareWithBootloader()
         return;
     }
     QTextStream s19FileIn(&s19File);
-    QStringList orignalS19FileStringList;
+    QStringList originalS19FileStringList;
     while(!s19FileIn.atEnd())
     {
         QString readStr = s19FileIn.readLine();
 
         if(!readStr.isEmpty())
-            orignalS19FileStringList.push_back(readStr);
+            originalS19FileStringList.push_back(readStr);
     }
     s19File.close();
 
-    for(auto& elem:orignalS19FileStringList)
+    for(auto& elem:originalS19FileStringList)
         elem += '\n';
 
     //将bootloader合成进原始S19文件
-    int targetIndex = orignalS19FileStringList.indexOf(TARGET_STRING_AFTER_GENERATING_BOOTCODE);
+    int targetIndex = originalS19FileStringList.indexOf(TARGET_STRING_AFTER_GENERATING_BOOTCODE);
     if(-1 != targetIndex)
     {
         QMessageBox::warning(this, "Warnning", "please check the .S19 file, maybe bootloader is already exist", QMessageBox::Yes);
         return;
     }
 
-    int replaceIndex = orignalS19FileStringList.indexOf(REPLACE_STRING);
+    int replaceIndex = originalS19FileStringList.indexOf(REPLACE_STRING);
     if(-1 == replaceIndex)
     {
         QMessageBox::warning(this, "Warnning", "please check the .S19 file, interrupt vector table line doesn't exist", QMessageBox::Yes);
         return;
     }
-    orignalS19FileStringList.replace(replaceIndex, bootloaderCodeString);
+    originalS19FileStringList.replace(replaceIndex, bootloaderCodeString);
 
     //存储生成的含bootloader的文件
     QString tmpFileName = fileInfo.at(FILE_NAME);
@@ -274,7 +274,7 @@ void MainWindow::generateFirmwareWithBootloader()
     }
 
     QTextStream out(&newFile);
-    for(auto elem:orignalS19FileStringList)
+    for(auto elem:originalS19FileStringList)
     {
         if(elem != "\n")
             out << elem;
@@ -316,28 +316,6 @@ void MainWindow::generateFirmwareForDiagnosis()
         }
     }
 
-/*
-
-    if(m_leDiagnosisS20C->text().isEmpty())
-    {
-        QMessageBox::warning(this, "Warnning", "Please select a .S19 file", QMessageBox::Yes);
-        return;
-    }
-
-    bool isOK;
-    QString s20cQuery = QInputDialog::getText(NULL, "Additional data query",
-                                               "Please input the CRC result code line starts with S20C:",
-                                               QLineEdit::Normal,
-                                               "",
-                                               &isOK);
-    if(isOK) {
-           QMessageBox::information(NULL, "Information",
-                                           "Your comment is: <b>" + s20cQuery + "</b>",
-                                           QMessageBox::Yes | QMessageBox::No,
-                                           QMessageBox::Yes);
-    }
-*/
-
     //获取.S19原文件
     QString fileName =fileInfo.at(ABSOLUTE_FILE_PATH);
     QFile s19File(fileName);
@@ -347,34 +325,40 @@ void MainWindow::generateFirmwareForDiagnosis()
         return;
     }
     QTextStream s19FileIn(&s19File);
-    QStringList orignalS19FileStringList;
+    QStringList originalS19FileStringList;
     while(!s19FileIn.atEnd())
     {
         QString readStr = s19FileIn.readLine();
 
         if(!readStr.isEmpty())
-            orignalS19FileStringList.push_back(readStr);
+            originalS19FileStringList.push_back(readStr);
     }
     s19File.close();
 
-    for(auto& elem:orignalS19FileStringList)
+    for(auto& elem:originalS19FileStringList)
         elem += '\n';
 
     //校验原文件是否正确
-    int bootValidateIndex = orignalS19FileStringList.indexOf(TARGET_STRING_AFTER_GENERATING_BOOTCODE);
+    int bootValidateIndex = originalS19FileStringList.indexOf(TARGET_STRING_AFTER_GENERATING_BOOTCODE);
     if(-1 != bootValidateIndex)
     {
         QMessageBox::warning(this, "Warnning", "please check the .S19 file, bootloader code exists", QMessageBox::Yes);
         return;
     }
 
-    if(orignalS19FileStringList.first().contains("S021"))
+    if(originalS19FileStringList.first().startsWith("S021"))
     {
         QMessageBox::warning(this, "Warnning", "please check the .S19 file, S021 code is already exist in first line", QMessageBox::Yes);
         return;
     }
 
-    int vectorValidateIndex = orignalS19FileStringList.indexOf(REPLACE_STRING);
+    if(originalS19FileStringList.at(originalS19FileStringList.size() - 1).startsWith("S021FE"))
+    {
+        QMessageBox::warning(this, "Warnning", "please check the .S19 file, CRC code is already exist in first line", QMessageBox::Yes);
+        return;
+    }
+
+    int vectorValidateIndex = originalS19FileStringList.indexOf(REPLACE_STRING);
     if(-1 == vectorValidateIndex)
     {
         QMessageBox::warning(this, "Warnning", "please check the .S19 file, interrupt vector table S10B line doesn't exist", QMessageBox::Yes);
@@ -382,13 +366,176 @@ void MainWindow::generateFirmwareForDiagnosis()
     }
 
     //替换S0行，删除S10B行
-    orignalS19FileStringList.replace(0, m_leDiagnosisS021->text());
-    orignalS19FileStringList.removeOne(REPLACE_STRING);
+    originalS19FileStringList.replace(0, m_leDiagnosisS021->text() + '\n');
+    originalS19FileStringList.removeOne(REPLACE_STRING);
 
-    for(auto elem: orignalS19FileStringList)
+    for(auto elem: originalS19FileStringList)
         qDebug() << elem << endl;
 
-    //flash中S224按Fxx升序排序
+    //.S19文件中S2按Fx升序排序
+    if(!sortS19Code(originalS19FileStringList))
+    {
+        return;
+    }
+
+    //生成临时文件并在文件夹中定位此文件
+    QString tmpFileName = fileInfo.at(FILE_NAME);
+    tmpFileName = tmpFileName.left(tmpFileName.size() - 4);
+    tmpFileName += "_diagnosis(tmp).S19";
+
+    QString folderName = "/generatedFirmwaresForDiagnosis/";
+    QString dirPath = fileInfo.at(ABSOLUTE_PATH) + folderName;
+    QDir dir(dirPath);
+    if(!dir.exists())
+        dir.mkdir(dirPath);
+
+    QString tmpFilePathName = dirPath + tmpFileName;
+    QFile newFile(tmpFilePathName);
+    if(!newFile.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        QMessageBox::warning(this, "Warnning", "Cannot open " + tmpFilePathName, QMessageBox::Yes);
+        return;
+    }
+
+    QTextStream out(&newFile);
+    for(auto elem:originalS19FileStringList)
+    {
+        if(elem != "\n")
+            out << elem;
+    }
+    newFile.close();
+
+    //清空上次输入的S20CFE数据
+    m_leDiagnosisS20C->clear();
+
+    //请求用户输入S20CFE数据
+    bool isOK;
+    QString s20cQuery = QInputDialog::getText(NULL, "CRC data query",
+                                               "Please input CRC result code starts with S20CFE, using file:\n" + tmpFilePathName,
+                                               QLineEdit::Normal,
+                                               "",
+                                               &isOK);
+
+    if(isOK && s20cQuery.startsWith("S20CFE", Qt::CaseInsensitive))
+    {
+        s20cQuery = s20cQuery.toUpper();
+        m_leDiagnosisS20C->setText(s20cQuery);
+        originalS19FileStringList.insert(originalS19FileStringList.size() - 1, s20cQuery + '\n');
+
+        //删除临时文件
+        QFile tmpFile(tmpFilePathName);
+        if (tmpFile.exists())
+        {
+            tmpFile.remove();
+        }
+
+        //生成固件并在文件夹中定位此文件
+        QString newFilePathName = tmpFilePathName.left(tmpFilePathName.size() - 9);
+        QString timeInfo = QDateTime::currentDateTime().toString("yyyy-MM-dd_HH-mm-ss");
+        newFilePathName += "_" + timeInfo + ".S19";
+
+        QFile newFile(newFilePathName);
+        if(!newFile.open(QIODevice::WriteOnly | QIODevice::Text))
+        {
+            QMessageBox::warning(this, "Warnning", "Cannot open " + newFilePathName, QMessageBox::Yes);
+            return;
+        }
+
+        QTextStream out(&newFile);
+        for(auto elem:originalS19FileStringList)
+        {
+            if(elem != "\n")
+                out << elem;
+        }
+        newFile.close();
+#ifdef WIN32
+        QProcess process;
+        QString openNewFileName = newFilePathName;
+
+        openNewFileName.replace("/", "\\");    //***这句windows下必要***
+        process.startDetached("explorer /select," + openNewFileName);
+#endif
+    }
+    else
+    {
+        QMessageBox::warning(this, "Warnning", "please input correct CRC data", QMessageBox::Yes);
+
+        //删除临时文件
+        QFile tmpFile(tmpFilePathName);
+        if (tmpFile.exists())
+        {
+            tmpFile.remove();
+        }
+
+        return;
+    }
+}
+
+bool MainWindow::sortS19Code(QStringList &originalStringList)
+{
+    QStringList stringListS0AndS9;
+    QStringList stringListS1;
+    QStringList stringListS2[16];
+
+    //S0、S9行
+    stringListS0AndS9.push_back(originalStringList.first().toUpper());
+    stringListS0AndS9.push_back(originalStringList.last());
+
+    for(QString elem: originalStringList)
+    {
+        //S1代码段
+        if(elem.startsWith("S1", Qt::CaseInsensitive))
+        {
+            stringListS1.push_back(elem);
+        }
+
+        if(elem.startsWith("S2", Qt::CaseInsensitive))
+        {
+            //S2代码段，开头为：S2**Fx, x在0-F之间
+            int index = hexCharToHex(elem.at(5).toLatin1());
+
+            if(index >=0 && index < 16)
+            {
+                stringListS2[index].push_back(elem);
+            }
+            else
+            {
+                QMessageBox::warning(this, "Warnning", "check:" + elem, QMessageBox::Yes);
+                return false;
+            }
+
+        }
+    }
+
+    //重组originalStringList,按S0-S1-S2-S9的顺序
+    originalStringList.clear();
+    originalStringList.push_front(stringListS0AndS9.first());
+    originalStringList += stringListS1;
+    for(int cnt = 0; cnt < 16; ++cnt)
+    {
+        if(!stringListS2[cnt].isEmpty())
+            originalStringList += stringListS2[cnt];
+    }
+    originalStringList.push_back(stringListS0AndS9.last());
+
+    return true;
+}
+
+int MainWindow::hexCharToHex(char src)
+{
+    int ret = -1;
+    src = toupper(src);
+
+    if(src >= '0' && src <= '9')
+    {
+        ret = src - '0';
+    }
+    else if(src >= 'A' && src <= 'F')
+    {
+        ret = src - 'A' + 10;
+    }
+
+    return ret;
 }
 
 //将boot code生成为字符串常量，当boot code更新时，调用此函数将其转换为数组

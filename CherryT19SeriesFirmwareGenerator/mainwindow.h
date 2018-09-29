@@ -63,6 +63,8 @@ private:
     void generateFirmwareWithBootloader();
     void generateFirmwareForDiagnosis();
     void generateCharArray(void);
+    bool sortS19Code(QStringList &originalStringList);
+    int hexCharToHex(char src);
 
 private slots:
     void selectFilePressed();
