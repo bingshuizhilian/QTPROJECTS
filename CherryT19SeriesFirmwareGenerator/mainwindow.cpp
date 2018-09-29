@@ -293,9 +293,7 @@ void MainWindow::generateFirmwareWithBootloader()
 #endif
 }
 
-<<<<<<< HEAD
 //调试用，将boot code生成为字符串常量(数组)
-=======
 void MainWindow::generateFirmwareForDiagnosis()
 {
     if(m_leFileInfo->text().isEmpty())
@@ -394,7 +392,6 @@ void MainWindow::generateFirmwareForDiagnosis()
 }
 
 //将boot code生成为字符串常量，当boot code更新时，调用此函数将其转换为数组
->>>>>>> f03b5cdb1aaa5d890bc939133ec834eb999b3944
 void MainWindow::generateCharArray()
 {
     QString filePathName = QFileDialog::getOpenFileName();
