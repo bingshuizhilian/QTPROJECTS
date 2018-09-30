@@ -546,7 +546,7 @@ bool MainWindow::sortS19Code(QStringList &originalStringList)
             //S2代码段，开头为：S2**Fx, x在0-F之间
             int index = hexCharToHex(elem.at(5).toLatin1());
 
-            if(index >=0 && index < 16)
+            if(index >= 0 && index < 16)
             {
                 stringListS2[index].push_back(elem);
             }
@@ -601,7 +601,7 @@ unsigned int MainWindow::calcCRC(unsigned int size, QString fileData)
 
     for(i = 0; i < size; i++)
     {
-        if('\n'!=charArray.at(i) )
+        if('\n' != charArray.at(i))
         {
             tmp=(crc>>8)^charArray.at(i);
             crc=(crc<<8)^crcLookupTable[tmp];
@@ -737,6 +737,7 @@ void MainWindow::componentsInitialization(void)
     m_leDiagnosisS20C = new QLineEdit;
     m_leDiagnosisS20C->setReadOnly(true);
 
+    //布局控件
     m_gbBootloader = new QGroupBox;
     m_gbBootloader->setTitle(tr("bootloader settings"));
     m_gbS19Selector = new QGroupBox;
