@@ -28,6 +28,8 @@ SOURCES += main.cpp\
         mainwindow.cpp
 
 HEADERS  += mainwindow.h \
-    defaultBootloaderCode.h
+    defaultBootloaderCode.h \
+    defaultFlashDriverCode.h \
+    crc16.h
 
 FORMS    += mainwindow.ui

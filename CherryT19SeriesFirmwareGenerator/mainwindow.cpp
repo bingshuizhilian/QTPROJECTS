@@ -1,7 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "defaultBootloaderCode.h"
-#include <QLayout>
+#include "defaultFlashDriverCode.h"
+#include "crc16.h"
 #include <QFile>
 #include <QFileDialog>
 #include <QTextStream>
@@ -22,21 +23,49 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //初始化控件
     componentsInitialization();
+    //设置布局
+    layoutsInitialization();
 
 
-    //global layout
-    auto layoutGlobal = new QVBoxLayout;
-    layoutGlobal->addWidget(m_cmbFunctionSwitch);
-    layoutGlobal->addWidget(m_ckbUseDefaultBootloader);
-    layoutGlobal->addWidget(m_leBootloaderInfo);
-    layoutGlobal->addWidget(m_btnLoadBootloader);
-    layoutGlobal->addWidget(m_leFileInfo);
-    layoutGlobal->addWidget(m_btnChooseFile);
-    layoutGlobal->addWidget(m_leDiagnosisS021);
-    layoutGlobal->addWidget(m_leDiagnosisS20C);
-    layoutGlobal->addWidget(m_btnGenerate);
-    ui->centralWidget->setLayout(layoutGlobal);
+    //crc test code
 
+//    {
+//        QString filePathName = QFileDialog::getOpenFileName();
+//        QString filePath = QFileInfo(filePathName).absolutePath();
+
+//        qDebug()<<filePathName<<endl<<filePath<<endl;
+
+//        if(filePathName.isEmpty())
+//        {
+//            QMessageBox::warning(this, "Warnning", "generate failed, please select a file", QMessageBox::Yes);
+//            return;
+//        }
+
+//        QFile targetFile(filePathName);
+//        if(!targetFile.open(QIODevice::ReadOnly | QIODevice::Text))
+//        {
+//            QMessageBox::warning(this, "Warnning", "Cannot open " + filePathName, QMessageBox::Yes);
+//            return;
+//        }
+
+//        QTextStream targetFileIn(&targetFile);
+//        QStringList targetCodeStringList;
+//        while(!targetFileIn.atEnd())
+//        {
+//            QString readStr = targetFileIn.readLine();
+
+//            if(!readStr.isEmpty())
+//                targetCodeStringList.push_back(readStr);
+//        }
+
+//        targetFile.close();
+
+//        QString file = targetCodeStringList.join('\n');
+
+//        unsigned int crc = calcCRC(file.size(), file);
+
+//        qDebug() << crc << "----" << ((crc>>8)&0xff) <<"----"<< (crc&0xff) <<endl;
+//    }
 }
 
 MainWindow::~MainWindow()
@@ -52,35 +81,23 @@ void MainWindow::switchFunctionPressed()
     case BOOTLOADER:
         m_btnGenerate->setStatusTip(tr("generate firmware with bootloader"));
         m_btnGenerate->setText(tr("generate"));
-        m_leDiagnosisS021->setVisible(false);
-        m_leDiagnosisS20C->setVisible(false);
-        m_btnChooseFile->setVisible(true);
-        m_leFileInfo->setVisible(true);
-        m_ckbUseDefaultBootloader->setVisible(true);
-        m_btnLoadBootloader->setVisible(true);
-        m_leBootloaderInfo->setVisible(true);
+        m_gbBootloader->setVisible(true);
+        m_gbS19Selector->setVisible(true);
+        m_gbDiagnosis->setVisible(false);
         break;
     case DIAGNOSIS:
         m_btnGenerate->setStatusTip(tr("generate firmware for diagnosis"));
         m_btnGenerate->setText(tr("generate"));
-        m_leDiagnosisS021->setVisible(true);
-        m_leDiagnosisS20C->setVisible(true);
-        m_btnChooseFile->setVisible(true);
-        m_leFileInfo->setVisible(true);
-        m_ckbUseDefaultBootloader->setVisible(false);
-        m_btnLoadBootloader->setVisible(false);
-        m_leBootloaderInfo->setVisible(false);
+        m_gbBootloader->setVisible(false);
+        m_gbS19Selector->setVisible(true);
+        m_gbDiagnosis->setVisible(true);
         break;
     case BOOTCODE2STRING:
-        m_btnGenerate->setStatusTip(tr("convert boot code to string, and generate a .h file"));
+        m_btnGenerate->setStatusTip(tr("convert code to a char array"));
         m_btnGenerate->setText(tr("load and generate"));
-        m_leDiagnosisS021->setVisible(false);
-        m_leDiagnosisS20C->setVisible(false);
-        m_btnChooseFile->setVisible(false);
-        m_leFileInfo->setVisible(false);
-        m_ckbUseDefaultBootloader->setVisible(false);
-        m_btnLoadBootloader->setVisible(false);
-        m_leBootloaderInfo->setVisible(false);
+        m_gbBootloader->setVisible(false);
+        m_gbS19Selector->setVisible(false);
+        m_gbDiagnosis->setVisible(false);
         break;
     default:
         break;
@@ -103,6 +120,9 @@ void MainWindow::generateButtonPressed()
     default:
         break;
     }
+
+    qDebug()<<"height:"<<this->size().height();
+    qDebug()<<"width:"<<this->size().width();
 }
 
 void MainWindow::useDefaultBootloaderPressed()
@@ -110,7 +130,7 @@ void MainWindow::useDefaultBootloaderPressed()
     if(m_ckbUseDefaultBootloader->isChecked())
     {
         m_btnLoadBootloader->setEnabled(false);
-        m_leBootloaderInfo->setText(tr("default Cherry T19 series boot code is loaded"));
+        m_leBootloaderInfo->setText(tr("default boot code is loaded"));
         m_leBootloaderInfo->setEnabled(false);
         m_btnLoadBootloader->setStatusTip(tr("use default boot code now"));
     }
@@ -119,7 +139,7 @@ void MainWindow::useDefaultBootloaderPressed()
         m_btnLoadBootloader->setEnabled(true);
         m_leBootloaderInfo->setEnabled(true);
         m_leBootloaderInfo->clear();
-        m_btnLoadBootloader->setStatusTip(tr("select a file which contains boot code"));
+        m_btnLoadBootloader->setStatusTip(tr("select the bootloader file"));
     }
 }
 
@@ -293,7 +313,36 @@ void MainWindow::generateFirmwareWithBootloader()
 #endif
 }
 
-//调试用，将boot code生成为字符串常量(数组)
+//生成诊断仪用flash driver
+void MainWindow::generateFlashDriverForDiagnosis(QString dir_path)
+{
+    QString filePathName = dir_path + "CherryT19SeriesFlashDriver.S19";
+
+    QDir dir(dir_path);
+    if(!dir.exists())
+        dir.mkdir(dir_path);
+
+    //删除临时文件
+    QFile tmpFile(filePathName);
+    if (tmpFile.exists())
+    {
+        tmpFile.remove();
+    }
+
+    QFile newFile(filePathName);
+    if(!newFile.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        QMessageBox::warning(this, "Warnning", "Cannot open " + filePathName, QMessageBox::Yes);
+        return;
+    }
+
+    QTextStream out(&newFile);
+    out << DEFAULT_FLASHDRIVER_CODE;
+
+    newFile.close();
+}
+
+//生成诊断仪用固件
 void MainWindow::generateFirmwareForDiagnosis()
 {
     if(m_leFileInfo->text().isEmpty())
@@ -448,6 +497,9 @@ void MainWindow::generateFirmwareForDiagnosis()
                 out << elem;
         }
         newFile.close();
+
+        //同时生成一个flash driver
+        generateFlashDriverForDiagnosis(dirPath);
 #ifdef WIN32
         QProcess process;
         QString openNewFileName = newFilePathName;
@@ -536,6 +588,27 @@ int MainWindow::hexCharToHex(char src)
     }
 
     return ret;
+}
+
+//计算CRC，参考《ECU bootloader and programming implementation specification》
+unsigned int MainWindow::calcCRC(unsigned int size, QString fileData)
+{
+    unsigned int crc = 0xffff; /* initial value */
+    unsigned char tmp = 0;
+    unsigned int i = 0;
+
+    QByteArray charArray = fileData.toLatin1();
+
+    for(i = 0; i < size; i++)
+    {
+        if('\n'!=charArray.at(i) )
+        {
+            tmp=(crc>>8)^charArray.at(i);
+            crc=(crc<<8)^crcLookupTable[tmp];
+        }
+    }
+
+    return crc;
 }
 
 //将boot code生成为字符串常量，当boot code更新时，调用此函数将其转换为数组
@@ -628,16 +701,16 @@ void MainWindow::componentsInitialization(void)
 
     //窗体名称及状态栏设置
     auto labelAuthorInfo = new QLabel;
-    labelAuthorInfo->setStatusTip(tr("click to view source code on my github"));
+    labelAuthorInfo->setStatusTip(tr("click to view source code on github"));
     labelAuthorInfo->setOpenExternalLinks(true);
     labelAuthorInfo->setText(QString::fromLocal8Bit("<style> a {text-decoration: none} </style> <a href = https://www.github.com/bingshuizhilian/QTPROJECTS> contact author </a>"));
     labelAuthorInfo->show();
     ui->statusBar->addPermanentWidget(labelAuthorInfo);
 
     //选择.S19文件按钮
-    m_btnChooseFile = new QPushButton(tr("load .S19 file"));
+    m_btnChooseFile = new QPushButton(tr("load file"));
     connect(m_btnChooseFile, &m_btnChooseFile->clicked, this, &selectFilePressed);
-    m_btnChooseFile->setStatusTip(tr("select the target .S19 file without boot code"));
+    m_btnChooseFile->setStatusTip(tr("select the target .S19 file"));
     //显示.S19文件名
     m_leFileInfo = new QLineEdit;
     m_leFileInfo->setReadOnly(true);
@@ -650,7 +723,7 @@ void MainWindow::componentsInitialization(void)
     m_leBootloaderInfo->setReadOnly(true);
 
     //是否使用默认boot code选项
-    m_ckbUseDefaultBootloader = new QCheckBox(tr("use default boot code"));
+    m_ckbUseDefaultBootloader = new QCheckBox(tr("default"));
     connect(m_ckbUseDefaultBootloader, &m_ckbUseDefaultBootloader->stateChanged, this, &useDefaultBootloaderPressed);
     m_ckbUseDefaultBootloader->setStatusTip(tr("use default boot code when checked"));
     m_ckbUseDefaultBootloader->setChecked(true);
@@ -664,12 +737,62 @@ void MainWindow::componentsInitialization(void)
     m_leDiagnosisS20C = new QLineEdit;
     m_leDiagnosisS20C->setReadOnly(true);
 
+    m_gbBootloader = new QGroupBox;
+    m_gbBootloader->setTitle(tr("bootloader settings"));
+    m_gbS19Selector = new QGroupBox;
+    m_gbS19Selector->setTitle(tr("select .S19 file"));
+    m_gbDiagnosis = new QGroupBox;
+    m_gbDiagnosis->setTitle(tr("diagnosis settings"));
+
     //功能选择下拉框
     m_cmbFunctionSwitch = new QComboBox;
+    m_cmbFunctionSwitch->setStatusTip("select a function");
     connect(m_cmbFunctionSwitch,  static_cast<void (QComboBox::*)(const QString&)>(&QComboBox::currentTextChanged), this, &switchFunctionPressed);
     m_cmbFunctionSwitch->addItem(FUNCTION_STRING_LIST.at(BOOTLOADER), FUNCTION_STRING_LIST.at(BOOTLOADER));
     m_cmbFunctionSwitch->addItem(FUNCTION_STRING_LIST.at(DIAGNOSIS), FUNCTION_STRING_LIST.at(DIAGNOSIS));
     m_cmbFunctionSwitch->addItem(FUNCTION_STRING_LIST.at(BOOTCODE2STRING), FUNCTION_STRING_LIST.at(BOOTCODE2STRING));
 
+}
 
+void MainWindow::layoutsInitialization()
+{
+    //bootloader控件区
+    auto layoutBootloader = new QGridLayout;
+    auto labelLeBootloader = new QLabel(tr("bootloader"));
+    layoutBootloader->addWidget(labelLeBootloader, 0, 0);
+    layoutBootloader->addWidget(m_leBootloaderInfo, 0, 1);
+    layoutBootloader->addWidget(m_ckbUseDefaultBootloader, 1, 0);
+    layoutBootloader->addWidget(m_btnLoadBootloader, 1, 1);
+    m_gbBootloader->setLayout(layoutBootloader);
+
+    //select file控件区
+    auto layoutS19Selector = new QGridLayout;
+    layoutS19Selector->addWidget(m_btnChooseFile, 0, 0);
+    layoutS19Selector->addWidget(m_leFileInfo, 0, 1);
+    m_gbS19Selector->setLayout(layoutS19Selector);
+
+    //diagnosis控件区
+    auto layoutDiagnosis = new QGridLayout;
+    auto labelLeS021 = new QLabel(tr("S021:"));
+    labelLeS021->setStatusTip("the first line of the firmware");
+    auto labelLeS20C = new QLabel(tr("S20C:"));
+    labelLeS20C->setStatusTip("the second last line of the firmware");
+    layoutDiagnosis->addWidget(labelLeS021, 0, 0);
+    layoutDiagnosis->addWidget(m_leDiagnosisS021, 0, 1);
+    layoutDiagnosis->addWidget(labelLeS20C, 1, 0);
+    layoutDiagnosis->addWidget(m_leDiagnosisS20C, 1, 1);
+    m_gbDiagnosis->setLayout(layoutDiagnosis);
+
+    //globle layout
+    m_layoutGlobal = new QVBoxLayout;
+    m_layoutGlobal->addWidget(m_cmbFunctionSwitch);
+    m_layoutGlobal->addWidget(m_gbBootloader);
+    m_layoutGlobal->addWidget(m_gbS19Selector);
+    m_layoutGlobal->addWidget(m_gbDiagnosis);
+    m_layoutGlobal->addWidget(m_btnGenerate);
+
+    ui->centralWidget->setLayout(m_layoutGlobal);
+
+    this->resize(QSize(WINDOW_WIDTH, WINDOW_HEIGHT));
+    this->setFixedHeight(WINDOW_HEIGHT);
 }
