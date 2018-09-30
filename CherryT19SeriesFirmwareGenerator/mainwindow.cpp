@@ -151,6 +151,49 @@ void MainWindow::loadBootloaderPressed()
     qDebug()<<fileName<<endl;
 }
 
+void MainWindow::s021ReturnedPressed()
+{
+    QString originalS021Data = m_leDiagnosisS021->text();
+
+    if(originalS021Data.isEmpty())
+    {
+        QMessageBox::warning(this, "Warnning", "empty data, couldn't modify version", QMessageBox::Yes);
+        return;
+    }
+
+    //S021***30302E30312E323040, 至少也要有22个有效字节(实际要更多，这里先这样校验即可)
+    if(!originalS021Data.startsWith("S021", Qt::CaseInsensitive) || originalS021Data.size() < 22)
+    {
+        QMessageBox::warning(this, "Warnning", "invalid data, couldn't modify version", QMessageBox::Yes);
+        return;
+    }
+
+    //请求用户输入版本信息数据
+    bool isOK;
+    QString versionQueryData = QInputDialog::getText(NULL,
+                                                     "version data query",
+                                                     "Please input new version, format: xx.xx.xx\n",
+                                                     QLineEdit::Normal,
+                                                     "",
+                                                     &isOK);
+    //校验输入信息, 严格匹配xx.xx.xx
+    QRegExp regExp("^([a-fA-F\\d]{2}\\.){2}[a-fA-F\\d]{2}$");
+
+    if(isOK && regExp.exactMatch(versionQueryData))
+    {
+        QString newS021String = originalS021Data.left(originalS021Data.size() - 18);
+        newS021String += versionQueryData.toLatin1().toHex();
+        newS021String += originalS021Data.right(2);
+
+        m_leDiagnosisS021->setText(newS021String.toUpper());
+    }
+    else
+    {
+        QMessageBox::warning(this, "Warnning", "invalid version data, version update failed", QMessageBox::Yes);
+        return;
+    }
+}
+
 void MainWindow::selectFilePressed()
 {
     //定义文件对话框类
@@ -734,6 +777,8 @@ void MainWindow::componentsInitialization(void)
 
     //合成诊断仪firmware时需要的额外信息
     m_leDiagnosisS021 = new QLineEdit;
+    connect(m_leDiagnosisS021, &m_leDiagnosisS021->returnPressed, this, &s021ReturnedPressed);
+    m_leDiagnosisS021->setStatusTip("press enter to modify version");
     m_leDiagnosisS20C = new QLineEdit;
     m_leDiagnosisS20C->setReadOnly(true);
 

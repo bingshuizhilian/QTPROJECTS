@@ -87,6 +87,7 @@ private slots:
     void selectFilePressed();
     void useDefaultBootloaderPressed();
     void loadBootloaderPressed();
+    void s021ReturnedPressed();
     void switchFunctionPressed();
     void generateButtonPressed();
 };
