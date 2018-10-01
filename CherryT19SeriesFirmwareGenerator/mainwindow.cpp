@@ -12,6 +12,12 @@
 #include <QProcess>
 #include <QMessageBox>
 #include <QInputDialog>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QJsonValue>
+#include <QJsonParseError>
+#include <QClipboard>
 #include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -24,47 +30,8 @@ MainWindow::MainWindow(QWidget *parent) :
     componentsInitialization();
     //设置布局
     layoutsInitialization();
-
-
-    //crc test code
-
-//    {
-//        QString filePathName = QFileDialog::getOpenFileName();
-//        QString filePath = QFileInfo(filePathName).absolutePath();
-
-//        qDebug()<<filePathName<<endl<<filePath<<endl;
-
-//        if(filePathName.isEmpty())
-//        {
-//            QMessageBox::warning(this, "Warnning", "generate failed, please select a file", QMessageBox::Yes);
-//            return;
-//        }
-
-//        QFile targetFile(filePathName);
-//        if(!targetFile.open(QIODevice::ReadOnly | QIODevice::Text))
-//        {
-//            QMessageBox::warning(this, "Warnning", "Cannot open " + filePathName, QMessageBox::Yes);
-//            return;
-//        }
-
-//        QTextStream targetFileIn(&targetFile);
-//        QStringList targetCodeStringList;
-//        while(!targetFileIn.atEnd())
-//        {
-//            QString readStr = targetFileIn.readLine();
-
-//            if(!readStr.isEmpty())
-//                targetCodeStringList.push_back(readStr);
-//        }
-
-//        targetFile.close();
-
-//        QString file = targetCodeStringList.join('\n');
-
-//        unsigned int crc = calcCRC(file.size(), file);
-
-//        qDebug() << crc << "----" << ((crc>>8)&0xff) <<"----"<< (crc&0xff) <<endl;
-//    }
+    //命令行初始化
+    commandsInitialization();
 }
 
 MainWindow::~MainWindow()
@@ -78,27 +45,108 @@ void MainWindow::switchFunctionPressed()
     switch(m_cmbFunctionSwitch->currentIndex())
     {
     case BOOTLOADER:
+        m_cmbFunctionSwitch->setFixedWidth(182);
+        m_gbSwitchFunction->setTitle(tr("switch function"));
+        m_leRunCommand->setVisible(false);
         m_btnGenerate->setStatusTip(tr("generate firmware with bootloader"));
-        m_btnGenerate->setText(tr("generate"));
+        m_btnGenerate->setVisible(true);
         m_gbBootloader->setVisible(true);
         m_gbS19Selector->setVisible(true);
         m_gbDiagnosis->setVisible(false);
+        ptOutputWnd->setVisible(false);
         break;
     case DIAGNOSIS:
+        m_cmbFunctionSwitch->setFixedWidth(182);
+        m_gbSwitchFunction->setTitle(tr("switch function"));
+        m_leRunCommand->setVisible(false);
         m_btnGenerate->setStatusTip(tr("generate firmware for diagnosis"));
-        m_btnGenerate->setText(tr("generate"));
+        m_btnGenerate->setVisible(true);
         m_gbBootloader->setVisible(false);
         m_gbS19Selector->setVisible(true);
         m_gbDiagnosis->setVisible(true);
+        ptOutputWnd->setVisible(false);
         break;
-    case BOOTCODE2STRING:
-        m_btnGenerate->setStatusTip(tr("convert code to a char array"));
-        m_btnGenerate->setText(tr("load and generate"));
+    case CMD_HANDLER:
+        m_cmbFunctionSwitch->setFixedWidth(90);
+        m_gbSwitchFunction->setTitle(tr("input command"));
+        m_leRunCommand->setVisible(true);
+        m_btnGenerate->setVisible(false);
         m_gbBootloader->setVisible(false);
         m_gbS19Selector->setVisible(false);
         m_gbDiagnosis->setVisible(false);
+        ptOutputWnd->setVisible(true);
         break;
     default:
+        break;
+    }
+}
+
+void MainWindow::runCmdReturnPressed()
+{
+    QString inputString = m_leRunCommand->text();
+    CmdType findCmd = CMD_MAX;
+
+    foreach(auto pairElem, cmdList)
+    {
+        foreach(auto strListElem, pairElem.second)
+        {
+            if(!strListElem.compare(inputString, Qt::CaseInsensitive))
+            {
+                findCmd = pairElem.first;
+                break;
+            }
+        }
+
+        if(CMD_MAX != findCmd)
+            break;
+    }
+
+    switch(findCmd)
+    {
+    case CMD_HELP:
+    case CMD_HELP_BOOTLOADER:
+    case CMD_HELP_DAIGNOSIS:
+        showHelpInfo(findCmd);
+        break;
+    case CMD_CLEAR_SCREEN:
+        ptOutputWnd->clear();
+        break;
+    case CMD_SAVE_CONFIG_FILE:
+    case CMD_LOAD_CONFIG_FILE:
+        procConfigFile(findCmd);
+        break;
+    case CMD_CODE_TO_STRING:
+        generateCharArray();
+        break;
+    case CMD_CRC_CALCULATOR:
+        crcTest();
+        break;
+    case CMD_DIAG_M1A_S021_AUTOFILL:
+        m_leDiagnosisS021->setText(DIAG_M1A_S021);
+    case CMD_DIAG_M1A_S021:
+        ptOutputWnd->clear();
+        ptOutputWnd->appendPlainText(DIAG_M1A_S021);
+        break;
+    case CMD_DIAG_T19_S021_AUTOFILL:
+        m_leDiagnosisS021->setText(DIAG_T19_S021);
+    case CMD_DIAG_T19_S021:
+        ptOutputWnd->clear();
+        ptOutputWnd->appendPlainText(DIAG_T19_S021);
+        break;
+#if WIN32
+    case CMD_WINDOWS_CALCULATOR:
+    case CMD_WINDOWS_SNIPPINGTOOL:
+    case CMD_WINDOWS_PAINT:
+    {
+        QString windowsCmd = cmdList.at(findCmd).second.first();
+        windowsCmd = windowsCmd.right(windowsCmd.size() - 1);
+        QProcess::startDetached(windowsCmd);
+        break;
+    }
+#endif
+    default:
+        ptOutputWnd->clear();
+        ptOutputWnd->appendHtml("unknown command, input <u>:?</u> for help");
         break;
     }
 }
@@ -113,15 +161,14 @@ void MainWindow::generateButtonPressed()
     case DIAGNOSIS:
         generateFirmwareForDiagnosis();
         break;
-    case BOOTCODE2STRING:
-        generateCharArray();
-        break;
     default:
         break;
     }
 
-    qDebug()<<"height:"<<this->size().height();
-    qDebug()<<"width:"<<this->size().width();
+    qDebug()<<"wd height:"<<this->size().height();
+    qDebug()<<"wd width:"<<this->size().width();
+
+    qDebug()<<"m_cmbFunctionSwitch:"<<m_cmbFunctionSwitch->size().width();
 }
 
 void MainWindow::useDefaultBootloaderPressed()
@@ -145,12 +192,14 @@ void MainWindow::useDefaultBootloaderPressed()
 void MainWindow::loadBootloaderPressed()
 {
     QString fileName = QFileDialog::getOpenFileName();
-    m_leBootloaderInfo->setText(fileName);
+
+    if(!fileName.isEmpty())
+        m_leBootloaderInfo->setText(fileName);
 
     qDebug()<<fileName<<endl;
 }
 
-void MainWindow::s021ReturnedPressed()
+void MainWindow::s021ReturnPressed()
 {
     QString originalS021Data = m_leDiagnosisS021->text();
 
@@ -161,7 +210,7 @@ void MainWindow::s021ReturnedPressed()
     }
 
     //S021***30302E30312E323040, 至少也要有22个有效字节(实际要更多，这里先这样校验即可)
-    if(!originalS021Data.startsWith("S021", Qt::CaseInsensitive) || originalS021Data.size() < 22)
+    if(!originalS021Data.startsWith("S021", Qt::CaseInsensitive) || originalS021Data.size() < DIAG_M1A_S021_MIN_LENGTH)
     {
         QMessageBox::warning(this, "Warnning", "invalid data, couldn't modify version", QMessageBox::Yes);
         return;
@@ -265,6 +314,13 @@ void MainWindow::generateFirmwareWithBootloader()
 
         bootloaderCodeString = bootloaderCodeStringList.join('\n');
         bootloaderCodeString += '\n';
+
+        int targetIndex = bootloaderCodeStringList.indexOf(TARGET_STRING_AFTER_GENERATING_BOOTCODE);
+        if(-1 == targetIndex)
+        {
+            QMessageBox::warning(this, "Warnning", "please check the bootloader file, interrupt vector table line doesn't exist", QMessageBox::Yes);
+            return;
+        }
     }
     else
     {
@@ -400,7 +456,7 @@ void MainWindow::generateFirmwareForDiagnosis()
     }
     else
     {
-        if(!(m_leDiagnosisS021->text().startsWith("S021", Qt::CaseInsensitive)))
+        if(!m_leDiagnosisS021->text().startsWith("S021", Qt::CaseInsensitive) || m_leDiagnosisS021->text().size() < DIAG_M1A_S021_MIN_LENGTH)
         {
             QMessageBox::warning(this, "Warnning", "Please check S021 data", QMessageBox::Yes);
             return;
@@ -496,13 +552,18 @@ void MainWindow::generateFirmwareForDiagnosis()
     }
     newFile.close();
 
+    //将临时文件的路径复制到系统剪贴板
+    QClipboard *clipBoard = QApplication::clipboard();
+    clipBoard->setText(dirPath);
+
     //清空上次输入的S20CFE数据
     m_leDiagnosisS20C->clear();
 
     //请求用户输入S20CFE数据
     bool isOK;
     QString s20cQuery = QInputDialog::getText(NULL, "CRC data query",
-                                               "Please input CRC result code starts with S20CFE, using file:\n" + tmpFilePathName,
+                                               "Please input CRC result code starts with S20CFE, using file shown as below, " \
+                                               "file directory path has been copied to system clipboard:\n" + tmpFilePathName,
                                                QLineEdit::Normal,
                                                "",
                                                &isOK);
@@ -653,6 +714,218 @@ unsigned int MainWindow::calcCRC(unsigned int size, QString fileData)
     return crc;
 }
 
+void MainWindow::crcTest()
+{
+    QString filePathName = QFileDialog::getOpenFileName();
+    QString filePath = QFileInfo(filePathName).absolutePath();
+
+    qDebug()<<filePathName<<endl<<filePath<<endl;
+
+    if(filePathName.isEmpty())
+    {
+        QMessageBox::warning(this, "Warnning", "generate failed, please select a file", QMessageBox::Yes);
+        return;
+    }
+
+    QFile targetFile(filePathName);
+    if(!targetFile.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        QMessageBox::warning(this, "Warnning", "Cannot open " + filePathName, QMessageBox::Yes);
+        return;
+    }
+
+    QTextStream targetFileIn(&targetFile);
+    QStringList targetCodeStringList;
+    while(!targetFileIn.atEnd())
+    {
+        QString readStr = targetFileIn.readLine();
+
+        if(!readStr.isEmpty())
+            targetCodeStringList.push_back(readStr);
+    }
+
+    targetFile.close();
+
+    QString file = targetCodeStringList.join('\n');
+
+    unsigned int crc = calcCRC(file.size(), file);
+
+    ptOutputWnd->clear();
+    ptOutputWnd->appendPlainText(file);
+
+    QString outStr;
+    outStr += "\n\n######################\n";
+    outStr += "filesize: " + QString::number(file.size()) + "\n";
+    outStr += "crc: " + QString::number(crc) + "\n";
+    outStr += "crc high: " + QString::number((crc>>8)&0xff) + "\n";
+    outStr += "crc low: " + QString::number(crc&0xff) + "\n";
+    outStr += "######################";
+    ptOutputWnd->appendPlainText(outStr);
+
+    qDebug() << crc << "----" << ((crc>>8)&0xff) <<"----"<< (crc&0xff) <<endl;
+}
+
+void MainWindow::showHelpInfo(CmdType cmd)
+{
+    QStringList hlpInfo;
+
+    if(CMD_HELP == cmd)
+    {
+        hlpInfo.push_back(tr("0.Welcome to use and spread this open source serial port tool."));
+        hlpInfo.push_back(tr("1.This tool is developed under Qt creator using QT5 in C++, thanks for QT's easy-use."));
+        hlpInfo.push_back(tr("2.Input <u>:show extra</u> or <u>:se</u> for extra features, and <u>:hide extra</u> or <u>:he</u> to hide them."));
+        hlpInfo.push_back(tr("3.Input <u>:save config file</u> or <u>:scf</u> to save config file, and <u>:load config file</u> or <u>:lcf</u> to load config file, "
+                             "take care that the tool will not save or load config file automatically."));
+        hlpInfo.push_back(tr("4.Input <u>:reset</u> or <u>:rst</u> to reset the tool, and <u>:clear input</u> or <u>:ci</u> to clear extra input area."));
+        hlpInfo.push_back(tr("5.Any good idea to improve this tool, click contact author."));
+    }
+    else if(CMD_HELP_BOOTLOADER == cmd)
+    {
+        hlpInfo.push_back(tr("《BootLoader合成工具使用方法》"));
+        hlpInfo.push_back(tr("0 将<u>switch function</u>切换至<u>add bootloader to firmware</u>."));
+        hlpInfo.push_back(tr("1 加载bootloader代码段的两种方式."));
+        hlpInfo.push_back(tr("1.1 方式一：加载默认bootloader代码段，只需勾选<u>default</u>， 程序默认设置其为勾选状态."));
+        hlpInfo.push_back(tr("1.2 方式二：加载其它bootloader代码段，去勾选<u>default</u>，点击<u>load bootloader</u>按钮选择其它bootloader文件."));
+        hlpInfo.push_back(tr("2 点击<u>load file</u>按钮选择.S19原app文件."));
+        hlpInfo.push_back(tr("3 点击<u>generate</u>按钮生成含bootloader的新app文件,并自动打开该文件所在的目录且选中该文件."));
+    }
+    else if(CMD_HELP_DAIGNOSIS == cmd)
+    {
+        hlpInfo.push_back(tr("《诊断仪app生成工具使用方法》"));
+        hlpInfo.push_back(tr("0 将<u>switch function</u>切换至<u>gen firmware for diagnosis</u>."));
+        hlpInfo.push_back(tr("1 点击<u>load file</u>按钮选择.S19原app文件."));
+        hlpInfo.push_back(tr("2 输入S021数据，该数据最终将位于app的第一行."));
+        hlpInfo.push_back(tr("2.1 在命令行可查询程序预置的S021数据，请在命令行输入<u>:?</u>获取相关命令信息."));
+        hlpInfo.push_back(tr("2.2 正确输入S021数据后，将光标置于S021数据所在的输入框后，点击回车键可以修改版本号，版本号格式需严格匹配<u>xx.xx.xx</u>,x为0-9或a-f,字母不区分大小写，最终按大写字母写入."));
+        hlpInfo.push_back(tr("3 点击<u>generate</u>按钮生成用于计算CRC的临时文件，弹出请求S20C数据的对话框，并将临时文件的路径存入系统剪贴板."));
+        hlpInfo.push_back(tr("4 用第三方软件对临时文件计算CRC并生成S20C数据，该数据最终将位于app的倒数第二行，将S20C结果回填至对话框."));
+        hlpInfo.push_back(tr("5 点击对话框<u>OK</u>按钮，生成诊断仪app文件,并自动打开该文件所在的目录且选中该文件."));
+    }
+
+    ptOutputWnd->clear();
+    foreach(auto elem, hlpInfo)
+    {
+        ptOutputWnd->appendHtml(elem);
+    }
+
+    //光标移动到最顶部，否则将显示文件末尾
+    QTextCursor cursor = ptOutputWnd->textCursor();
+    cursor.movePosition(QTextCursor::Start);
+    ptOutputWnd->setTextCursor(cursor);
+}
+
+void MainWindow::procConfigFile(CmdType cmd)
+{
+    if(CMD_SAVE_CONFIG_FILE == cmd)
+    {
+        QString fileName = QDir::currentPath() + '/' + CONFIG_FILE_NAME;
+        QFile file(fileName);
+        if(!file.open(QIODevice::WriteOnly | QIODevice::Text))
+        {
+            QMessageBox::warning(this, "Warnning", "Cannot open " + fileName, QMessageBox::Yes);
+            return;
+        }
+
+        QJsonObject jsonSettings;
+        jsonSettings.insert("ComName", "json test");
+
+        QJsonObject jsonEdit;
+        jsonEdit.insert("Showhex", true);
+
+        QJsonArray jsonExtraHexBox;
+        for(auto i = 0; i < 10; ++i)
+        {
+            jsonExtraHexBox.append(i);
+        }
+
+        QJsonObject jsonConfig;
+        jsonConfig.insert("Settings", jsonSettings);
+        jsonConfig.insert("Edit", jsonEdit);
+        jsonConfig.insert("ExtraHexBox", jsonExtraHexBox);
+
+        QJsonDocument document;
+        document.setObject(jsonConfig);
+        QByteArray byte_array = document.toJson(QJsonDocument::Indented);
+        QString jsonEncodedString(byte_array);
+
+        QTextStream out(&file);
+        out << jsonEncodedString;
+        file.close();
+    }
+    else if(CMD_LOAD_CONFIG_FILE == cmd)
+    {
+        QString fileName = QDir::currentPath() + '/' + CONFIG_FILE_NAME;
+        QFile file(fileName);
+        if(!file.open(QIODevice::ReadOnly | QIODevice::Text))
+        {
+            QMessageBox::warning(this, "Warnning", "Cannot open " + fileName, QMessageBox::Yes);
+            return;
+        }
+
+        QTextStream in(&file);
+        QString jsonEncodedString = in.readAll();
+        file.close();
+
+        QJsonParseError jsonError;
+        QJsonDocument parseDoucment = QJsonDocument::fromJson(jsonEncodedString.toLocal8Bit(), &jsonError);
+        if(QJsonParseError::NoError == jsonError.error)
+        {
+            if(parseDoucment.isObject())
+            {
+                QJsonObject docObj = parseDoucment.object();
+                if(docObj.contains("Settings"))
+                {
+                    QJsonValue value = docObj.take("Settings");
+                    if(value.isObject())
+                    {
+                        QJsonObject settingsObj = value.toObject();
+
+                        if(settingsObj.contains("ComName"))
+                        {
+                            QJsonValue value = settingsObj.take("ComName");
+                            if(value.isString())
+                            {
+                                ptOutputWnd->appendPlainText(value.toString() + '\n');
+                            }
+                        }
+                    }
+                }
+
+                if(docObj.contains("Edit"))
+                {
+                    QJsonValue value = docObj.take("Edit");
+                    if(value.isObject())
+                    {
+                        QJsonObject editObj = value.toObject();
+
+                        if(editObj.contains("Showhex"))
+                        {
+                            QJsonValue value = editObj.take("Showhex");
+                            if(value.isBool())
+                            {
+                                ptOutputWnd->appendPlainText(QString::number(value.toBool()) + '\n');
+                            }
+                        }
+                    }
+                }
+
+                if(docObj.contains("ExtraHexBox"))
+                {
+                    QJsonValue value = docObj.take("ExtraHexBox");
+                    if(value.isArray())
+                    {
+                        QJsonArray exHexBoxArray = value.toArray();
+                        for(auto i = 0; i < 10; ++i)
+                        {
+                            ptOutputWnd->appendPlainText(QString::number(exHexBoxArray.at(i).toInt()) + ' ');
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 //将boot code生成为字符串常量，当boot code更新时，调用此函数将其转换为数组
 void MainWindow::generateCharArray()
 {
@@ -752,7 +1025,7 @@ void MainWindow::componentsInitialization(void)
     //选择.S19文件按钮
     m_btnChooseFile = new QPushButton(tr("load file"));
     connect(m_btnChooseFile, &m_btnChooseFile->clicked, this, &selectFilePressed);
-    m_btnChooseFile->setStatusTip(tr("select the target .S19 file"));
+    m_btnChooseFile->setStatusTip(tr("select the original .S19 file"));
     //显示.S19文件名
     m_leFileInfo = new QLineEdit;
     m_leFileInfo->setReadOnly(true);
@@ -776,10 +1049,19 @@ void MainWindow::componentsInitialization(void)
 
     //合成诊断仪firmware时需要的额外信息
     m_leDiagnosisS021 = new QLineEdit;
-    connect(m_leDiagnosisS021, &m_leDiagnosisS021->returnPressed, this, &s021ReturnedPressed);
+    connect(m_leDiagnosisS021, &m_leDiagnosisS021->returnPressed, this, &s021ReturnPressed);
     m_leDiagnosisS021->setStatusTip("press enter to modify version");
     m_leDiagnosisS20C = new QLineEdit;
     m_leDiagnosisS20C->setReadOnly(true);
+    m_leDiagnosisS20C->setStatusTip("obtain from 3rd party software");
+
+    //命令行输入输出窗口
+    m_leRunCommand = new QLineEdit;
+    connect(m_leRunCommand, &m_leRunCommand->returnPressed, this, &runCmdReturnPressed);
+    m_leRunCommand->setStatusTip("press enter to run command");
+    ptOutputWnd = new QPlainTextEdit;
+    ptOutputWnd->setReadOnly(true);
+    ptOutputWnd->setStatusTip(tr("execute result echo window"));
 
     //布局控件
     m_gbBootloader = new QGroupBox;
@@ -787,16 +1069,17 @@ void MainWindow::componentsInitialization(void)
     m_gbS19Selector = new QGroupBox;
     m_gbS19Selector->setTitle(tr("select .S19 file"));
     m_gbDiagnosis = new QGroupBox;
-    m_gbDiagnosis->setTitle(tr("diagnosis settings"));
+    m_gbDiagnosis->setTitle(tr("diagnosis data settings"));
+    m_gbSwitchFunction = new QGroupBox;
 
     //功能选择下拉框
     m_cmbFunctionSwitch = new QComboBox;
+    connect(m_cmbFunctionSwitch, static_cast<void (QComboBox::*)(const QString&)>(&QComboBox::currentTextChanged), this, &switchFunctionPressed);
+    m_cmbFunctionSwitch->setInsertPolicy(QComboBox::NoInsert);
     m_cmbFunctionSwitch->setStatusTip("select a function");
-    connect(m_cmbFunctionSwitch,  static_cast<void (QComboBox::*)(const QString&)>(&QComboBox::currentTextChanged), this, &switchFunctionPressed);
     m_cmbFunctionSwitch->addItem(FUNCTION_STRING_LIST.at(BOOTLOADER), FUNCTION_STRING_LIST.at(BOOTLOADER));
     m_cmbFunctionSwitch->addItem(FUNCTION_STRING_LIST.at(DIAGNOSIS), FUNCTION_STRING_LIST.at(DIAGNOSIS));
-    m_cmbFunctionSwitch->addItem(FUNCTION_STRING_LIST.at(BOOTCODE2STRING), FUNCTION_STRING_LIST.at(BOOTCODE2STRING));
-
+    m_cmbFunctionSwitch->addItem(FUNCTION_STRING_LIST.at(CMD_HANDLER), FUNCTION_STRING_LIST.at(CMD_HANDLER));
 }
 
 void MainWindow::layoutsInitialization()
@@ -828,16 +1111,50 @@ void MainWindow::layoutsInitialization()
     layoutDiagnosis->addWidget(m_leDiagnosisS20C, 1, 1);
     m_gbDiagnosis->setLayout(layoutDiagnosis);
 
+    //功能选择控件区
+    auto swFuncLayout = new QHBoxLayout;
+    swFuncLayout->addWidget(m_cmbFunctionSwitch);
+    swFuncLayout->addWidget(m_leRunCommand);
+    m_gbSwitchFunction->setLayout(swFuncLayout);
+
+    //底部控件区
+    auto bottomLayout = new QHBoxLayout;
+    bottomLayout->addWidget(m_gbSwitchFunction);
+    bottomLayout->addWidget(m_btnGenerate);
+
     //globle layout
     m_layoutGlobal = new QVBoxLayout;
-    m_layoutGlobal->addWidget(m_cmbFunctionSwitch);
+    m_layoutGlobal->addWidget(ptOutputWnd);
     m_layoutGlobal->addWidget(m_gbBootloader);
     m_layoutGlobal->addWidget(m_gbS19Selector);
     m_layoutGlobal->addWidget(m_gbDiagnosis);
-    m_layoutGlobal->addWidget(m_btnGenerate);
+    m_layoutGlobal->addLayout(bottomLayout);
 
+    //设置窗口和其它组件大小
+    m_btnGenerate->setFixedHeight(50);
+    //m_leRunCommand->setFixedWidth(200);
+    this->setFixedSize(WINDOW_WIDTH, WINDOW_HEIGHT);
     ui->centralWidget->setLayout(m_layoutGlobal);
+}
 
-    this->resize(QSize(WINDOW_WIDTH, WINDOW_HEIGHT));
-    this->setFixedHeight(WINDOW_HEIGHT);
+void MainWindow::commandsInitialization()
+{
+    cmdList.push_back({ CMD_HELP, {":help", ":hlp", ":?"} });
+    cmdList.push_back({ CMD_HELP_BOOTLOADER, {":bootloader?", ":b?"} });
+    cmdList.push_back({ CMD_HELP_DAIGNOSIS, {":diagnosis?", ":d?"} });
+    cmdList.push_back({ CMD_CLEAR_SCREEN, {":clear screen", ":cs"} });
+    cmdList.push_back({ CMD_SAVE_CONFIG_FILE, {":save config file", ":scf"} });
+    cmdList.push_back({ CMD_LOAD_CONFIG_FILE, {":load config file", ":lcf"} });
+    cmdList.push_back({ CMD_CODE_TO_STRING, {":convert code to string", ":c2s"} });
+    cmdList.push_back({ CMD_CRC_CALCULATOR, {":crc calc", ":crc"} });
+    cmdList.push_back({ CMD_DIAG_M1A_S021, {":m1a s021", ":ms0"} });
+    cmdList.push_back({ CMD_DIAG_M1A_S021_AUTOFILL, {":m1a s021 fill", ":ms0f"} });
+    cmdList.push_back({ CMD_DIAG_T19_S021, {":t19 s021", ":ts0"} });
+    cmdList.push_back({ CMD_DIAG_T19_S021_AUTOFILL, {":t19 s021 fill", ":ts0f"} });
+#if WIN32
+    //此处要把windows能识别的命令放在stringlist的首位
+    cmdList.push_back({ CMD_WINDOWS_CALCULATOR, {":calc", ":calculator"} });
+    cmdList.push_back({ CMD_WINDOWS_SNIPPINGTOOL, {":snippingtool", ":snip"} });
+    cmdList.push_back({ CMD_WINDOWS_PAINT, {":mspaint", ":mspt"} });
+#endif
 }
