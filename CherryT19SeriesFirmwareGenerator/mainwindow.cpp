@@ -146,7 +146,7 @@ void MainWindow::runCmdReturnPressed()
 #endif
     default:
         ptOutputWnd->clear();
-        ptOutputWnd->appendHtml("unknown command, input <u>:?</u> for help");
+        ptOutputWnd->appendHtml("Unknown command, input <u>:?</u> for help.");
         break;
     }
 }
