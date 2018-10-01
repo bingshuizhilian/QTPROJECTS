@@ -19,7 +19,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    ui->mainToolBar->close();
 
     //初始化控件
     componentsInitialization();
@@ -401,7 +400,7 @@ void MainWindow::generateFirmwareForDiagnosis()
     }
     else
     {
-        if(!(m_leDiagnosisS021->text().contains("S021") || m_leDiagnosisS021->text().contains("s021")))
+        if(!(m_leDiagnosisS021->text().startsWith("S021", Qt::CaseInsensitive)))
         {
             QMessageBox::warning(this, "Warnning", "Please check S021 data", QMessageBox::Yes);
             return;
@@ -438,13 +437,13 @@ void MainWindow::generateFirmwareForDiagnosis()
         return;
     }
 
-    if(originalS19FileStringList.first().startsWith("S021"))
+    if(originalS19FileStringList.first().startsWith("S021", Qt::CaseInsensitive))
     {
         QMessageBox::warning(this, "Warnning", "please check the .S19 file, S021 code is already exist in first line", QMessageBox::Yes);
         return;
     }
 
-    if(originalS19FileStringList.at(originalS19FileStringList.size() - 1).startsWith("S021FE"))
+    if(originalS19FileStringList.at(originalS19FileStringList.size() - 1).startsWith("S20CFE", Qt::CaseInsensitive))
     {
         QMessageBox::warning(this, "Warnning", "please check the .S19 file, CRC code is already exist in first line", QMessageBox::Yes);
         return;
