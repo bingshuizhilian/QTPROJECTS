@@ -49,6 +49,7 @@ private:
         CMD_SAVE_CONFIG_FILE,
         CMD_LOAD_CONFIG_FILE,
         CMD_CODE_TO_STRING,
+        CMD_GEN_FLASH_DRIVER,
         CMD_CRC_CALCULATOR,
         CMD_DIAG_M1A_S021,
         CMD_DIAG_M1A_S021_AUTOFILL,
@@ -65,7 +66,7 @@ private:
     enum WindowSizeType
     {
         WINDOW_HEIGHT = 240,
-        WINDOW_WIDTH  = 332
+        WINDOW_WIDTH  = 334
     };
 
     const QString CONFIG_FILE_NAME = "config.json";
@@ -77,7 +78,7 @@ private:
     };
     const QString REPLACE_STRING = "S10BFFF8C000C000C000C000FD\n";//未加bootloader的app含有此内容
     const QString TARGET_STRING_AFTER_GENERATING_BOOTCODE = "S10BFFF8FC00FC00FC00FC000D\n";//已加bootloader的app含有此内容
-    const unsigned int DIAG_M1A_S021_MIN_LENGTH = 22;
+    const int DIAG_M1A_S021_MIN_LENGTH = 22;
     const QString DIAG_M1A_S021 = "S02100000747395957373031303030303434414120202020200130302E30302E303040";//M1A、M1D的S0行
     const QString DIAG_T19_S021 = "to be filled";//T19、T18的S0行
 
@@ -111,7 +112,7 @@ private:
     void commandsInitialization(void);
     void generateFirmwareWithBootloader();
     void generateFirmwareForDiagnosis();
-    void generateFlashDriverForDiagnosis(QString dir_path);
+    void generateFlashDriverForDiagnosis(QString dir_path, bool is_open_folder);
     void generateCharArray(void);
     bool sortS19Code(QStringList &originalStringList);
     int hexCharToHex(char src);
