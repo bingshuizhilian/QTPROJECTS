@@ -70,7 +70,9 @@ void MainWindow::switchFunctionPressed()
         ptOutputWnd->setVisible(false);
         break;
     case CMD_HANDLER:
-        this->setFixedSize(WINDOW_WIDTH * 3 / 2, WINDOW_HEIGHT * 3 / 2);
+        qDebug() << this->windowFlags();
+        this->setFixedSize(QSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX));
+        this->setMinimumSize(WINDOW_WIDTH * 3 / 2, WINDOW_HEIGHT * 3 / 2);
         m_cmbFunctionSwitch->setFixedWidth(90);
         m_gbSwitchFunction->setTitle(tr("input command"));
         m_leRunCommand->setVisible(true);
@@ -85,6 +87,7 @@ void MainWindow::switchFunctionPressed()
     }
 }
 
+//处理命令输入行按回车执行命令事件
 void MainWindow::runCmdReturnPressed()
 {
     QString inputString = m_leRunCommand->text();
@@ -114,6 +117,12 @@ void MainWindow::runCmdReturnPressed()
         break;
     case CMD_CLEAR_SCREEN:
         ptOutputWnd->clear();
+        break;
+    case CMD_FULL_SCREEN:
+        this->showFullScreen();
+        break;
+    case CMD_NORMAL_SCREEN:
+        this->showNormal();
         break;
     case CMD_SAVE_CONFIG_FILE:
     case CMD_LOAD_CONFIG_FILE:
@@ -164,6 +173,7 @@ void MainWindow::runCmdReturnPressed()
     }
 }
 
+//处理按下generate按钮事件
 void MainWindow::generateButtonPressed()
 {
     switch(m_cmbFunctionSwitch->currentIndex())
@@ -182,6 +192,7 @@ void MainWindow::generateButtonPressed()
     qDebug()<<"wd width:"<<this->size().width();
 }
 
+//处理使用默认bootloader事件
 void MainWindow::useDefaultBootloaderPressed()
 {
     if(m_ckbUseDefaultBootloader->isChecked())
@@ -200,6 +211,7 @@ void MainWindow::useDefaultBootloaderPressed()
     }
 }
 
+//处理加载bootloader事件
 void MainWindow::loadBootloaderPressed()
 {
     QString fileName = QFileDialog::getOpenFileName();
@@ -210,6 +222,7 @@ void MainWindow::loadBootloaderPressed()
     qDebug()<<fileName<<endl;
 }
 
+//处理在S021输入框中按回车键修改版本号事件
 void MainWindow::s021ReturnPressed()
 {
     QString originalS021Data = m_leDiagnosisS021->text();
@@ -253,6 +266,7 @@ void MainWindow::s021ReturnPressed()
     }
 }
 
+//处理加载.S19文件事件
 void MainWindow::selectFilePressed()
 {
     //定义文件对话框类
@@ -286,6 +300,7 @@ void MainWindow::selectFilePressed()
         qDebug()<<tmp<<endl;
 }
 
+//合成含bootloader的固件
 void MainWindow::generateFirmwareWithBootloader()
 {
     if(m_leBootloaderInfo->text().isEmpty())
@@ -535,7 +550,7 @@ void MainWindow::generateFirmwareForDiagnosis()
     }
 
     //替换S0行，删除S10B行
-    originalS19FileStringList.replace(0, m_leDiagnosisS021->text() + '\n');
+    originalS19FileStringList.replace(0, m_leDiagnosisS021->text().toUpper() + '\n');
     originalS19FileStringList.removeOne(REPLACE_STRING);
 
     for(auto elem: originalS19FileStringList)
@@ -648,6 +663,7 @@ void MainWindow::generateFirmwareForDiagnosis()
     }
 }
 
+//将.S19原文件里面的S224代码段，按内存分页升序顺序重新排列（F1、F2、···、FF）
 bool MainWindow::sortS19Code(QStringList &originalStringList)
 {
     QStringList stringListS0AndS9;
@@ -655,7 +671,7 @@ bool MainWindow::sortS19Code(QStringList &originalStringList)
     QStringList stringListS2[16];
 
     //S0、S9行
-    stringListS0AndS9.push_back(originalStringList.first().toUpper());
+    stringListS0AndS9.push_back(originalStringList.first());
     stringListS0AndS9.push_back(originalStringList.last());
 
     for(QString elem: originalStringList)
@@ -698,10 +714,10 @@ bool MainWindow::sortS19Code(QStringList &originalStringList)
     return true;
 }
 
+//将以字符存储的十六进制数字转换为对应数字
 int MainWindow::hexCharToHex(char src)
 {
     int ret = -1;
-    src = toupper(src);
 
     if(src >= '0' && src <= '9')
     {
@@ -710,6 +726,10 @@ int MainWindow::hexCharToHex(char src)
     else if(src >= 'A' && src <= 'F')
     {
         ret = src - 'A' + 10;
+    }
+    else if(src >= 'a' && src <= 'f')
+    {
+        ret = src - 'a' + 10;
     }
 
     return ret;
@@ -728,20 +748,21 @@ unsigned int MainWindow::calcCRC(unsigned int size, QString fileData)
     {
         if('\n' != charArray.at(i))
         {
-            tmp=(crc>>8)^charArray.at(i);
-            crc=(crc<<8)^crcLookupTable[tmp];
+            tmp = (crc >> 8) ^ charArray.at(i);
+            crc = (crc << 8) ^ crcLookupTable[tmp];
         }
     }
 
     return crc;
 }
 
+//crc测试
 void MainWindow::crcTest()
 {
     QString filePathName = QFileDialog::getOpenFileName();
     QString filePath = QFileInfo(filePathName).absolutePath();
 
-    qDebug()<<filePathName<<endl<<filePath<<endl;
+    qDebug()<<filePathName<<filePath<<endl;
 
     if(filePathName.isEmpty())
     {
@@ -784,103 +805,111 @@ void MainWindow::crcTest()
     outStr += "######################";
     ptOutputWnd->appendPlainText(outStr);
 
-    qDebug() << crc << "----" << ((crc>>8)&0xff) <<"----"<< (crc&0xff) <<endl;
+    qDebug() << crc << "----" << ((crc >> 8) & 0xff) <<"----"<< (crc & 0xff) <<endl;
 }
 
+//帮助信息
 void MainWindow::showHelpInfo(CmdType cmd)
 {
     QStringList hlpInfo;
 
     if(CMD_HELP == cmd)
     {
-        hlpInfo.push_back(tr("《命令列表》"));
-        hlpInfo.push_back(tr("0 欢迎使用本软件，本页面介绍软件支持的指令，及其功能定义."));
-        hlpInfo.push_back(tr("0.1 将<u>switch function</u>（或<u>input command</u>）切换至<u>run command</u>，"
-                             "在命令输入框键入<u>:help</u>或<u>:hlp</u>或<u>:?</u>后按回车键进入本页面."));
-        hlpInfo.push_back(tr("0.2 其它命令的使用方法同0.1节，<u>指令输入不区分大小写</u>."));
+        hlpInfo << tr("《命令列表》");
+        hlpInfo << tr("0 欢迎使用本软件，本页面介绍软件支持的指令，及其功能定义.");
+        hlpInfo << tr("0.1 将<u>switch function</u>（或<u>input command</u>）切换至<u>run command</u>，"
+                             "在命令输入框键入<u>:help</u>或<u>:hlp</u>或<u>:?</u>后按回车键进入本页面.");
+        hlpInfo << tr("0.2 其它命令的使用方法同0.1节，<u>指令输入不区分大小写</u>.");
 
-        hlpInfo.push_back(tr("1 软件自身功能."));
-        hlpInfo.push_back(tr("1.1 清屏."));
-        hlpInfo.push_back(tr("1.1.1 定义：清空本软件屏幕当前正在显示的内容."));
-        hlpInfo.push_back(tr("1.1.2 指令：<u>:clear screen</u>或<u>:cs</u>."));
-        hlpInfo.push_back(tr("1.2 保存配置."));
-        hlpInfo.push_back(tr("1.2.1 定义：保存本软件的配置项，将在软件目录下生成config.json文件."));
-        hlpInfo.push_back(tr("1.2.2 指令：<u>:save config file</u>或<u>:scf</u>."));
-        hlpInfo.push_back(tr("1.2.3 备注：当前仅实现接口，尚未有实际需要存储的配置项."));
-        hlpInfo.push_back(tr("1.3 加载配置."));
-        hlpInfo.push_back(tr("1.3.1 定义：加载本软件的配置项，将加载软件目录下的config.json文件."));
-        hlpInfo.push_back(tr("1.3.2 指令：<u>:load config file</u>或<u>:lcf</u>."));
-        hlpInfo.push_back(tr("1.3.3 备注：当前仅实现接口，尚未有实际需要加载的配置项."));
+        hlpInfo << tr("1 软件自身功能.");
+        hlpInfo << tr("1.1 清屏.");
+        hlpInfo << tr("1.1.1 定义：清空本软件屏幕当前正在显示的内容.");
+        hlpInfo << tr("1.1.2 指令：<u>:clear screen</u>或<u>:cs</u>.");
+        hlpInfo << tr("1.2 全屏显示.");
+        hlpInfo << tr("1.2.1 定义：将软件切换至全屏显示.");
+        hlpInfo << tr("1.2.2 指令：<u>:full screen</u>或<u>:fs</u>.");
+        hlpInfo << tr("1.3 正常显示.");
+        hlpInfo << tr("1.3.1 定义：将软件切换至正常大小显示.");
+        hlpInfo << tr("1.3.2 指令：<u>:normal screen</u>或<u>:ns</u>.");
+        hlpInfo << tr("1.4 保存配置.");
+        hlpInfo << tr("1.4.1 定义：保存本软件的配置项，将在软件目录下生成config.json文件.");
+        hlpInfo << tr("1.4.2 指令：<u>:save config file</u>或<u>:scf</u>.");
+        hlpInfo << tr("1.4.3 备注：当前仅实现接口，尚未有实际需要存储的配置项.");
+        hlpInfo << tr("1.5 加载配置.");
+        hlpInfo << tr("1.5.1 定义：加载本软件的配置项，将加载软件目录下的config.json文件.");
+        hlpInfo << tr("1.5.2 指令：<u>:load config file</u>或<u>:lcf</u>.");
+        hlpInfo << tr("1.5.3 备注：当前仅实现接口，尚未有实际需要加载的配置项.");
 
-        hlpInfo.push_back(tr("2 Windows系统工具快捷开启功能."));
-        hlpInfo.push_back(tr("2.1 计算器."));
-        hlpInfo.push_back(tr("2.1.1 定义：开启Windows系统自带的“计算器”软件."));
-        hlpInfo.push_back(tr("2.1.2 指令：<u>:calculator</u>或<u>:calc</u>."));
-        hlpInfo.push_back(tr("2.2 画图."));
-        hlpInfo.push_back(tr("1.2.1 定义：开启Windows系统自带的“画图”软件."));
-        hlpInfo.push_back(tr("1.2.2 指令：<u>:mspaint</u>或<u>:mspt</u>."));
+        hlpInfo << tr("2 Windows系统工具快捷开启功能.");
+        hlpInfo << tr("2.1 计算器.");
+        hlpInfo << tr("2.1.1 定义：开启Windows系统自带的“计算器”软件.");
+        hlpInfo << tr("2.1.2 指令：<u>:calculator</u>或<u>:calc</u>.");
+        hlpInfo << tr("2.2 画图.");
+        hlpInfo << tr("1.2.1 定义：开启Windows系统自带的“画图”软件.");
+        hlpInfo << tr("1.2.2 指令：<u>:mspaint</u>或<u>:mspt</u>.");
 
-        hlpInfo.push_back(tr("3 天有为开发工具功能."));
-        hlpInfo.push_back(tr("3.1 bootloader合成."));
-        hlpInfo.push_back(tr("3.1.1 定义：奇瑞T19系列bootloader合成方法介绍."));
-        hlpInfo.push_back(tr("3.1.2 指令：<u>:bootloader?</u>或<u>:b?</u>."));
-        hlpInfo.push_back(tr("3.2 诊断仪app合成."));
-        hlpInfo.push_back(tr("3.2.1 定义：奇瑞T19系列诊断仪app合成方法介绍."));
-        hlpInfo.push_back(tr("3.2.2 指令：<u>:diagnosis?</u>或<u>:d?</u>."));
-        hlpInfo.push_back(tr("3.3 诊断仪app合成辅助工具."));
-        hlpInfo.push_back(tr("3.3.1 生成flash driver文件."));
-        hlpInfo.push_back(tr("3.3.1.1 定义：独立生成一个诊断仪用flash driver文件."));
-        hlpInfo.push_back(tr("3.3.1.2 指令：<u>:flash driver</u>或<u>:fd</u>."));
-        hlpInfo.push_back(tr("3.3.1.3 备注：用3.2节方法也会自动生成flash driver文件."));
-        hlpInfo.push_back(tr("3.3.2 生成适用于M1A的S021代码."));
-        hlpInfo.push_back(tr("3.3.2.1 定义：将程序预置的适用于M1A的S021代码显示在软件屏幕上."));
-        hlpInfo.push_back(tr("3.3.2.2 指令：<u>:m1a s021</u>或<u>:ms0</u>."));
-        hlpInfo.push_back(tr("3.3.3 自动填充适用于M1A的S021代码."));
-        hlpInfo.push_back(tr("3.3.3.1 定义：将程序预置的适用于M1A的S021代码显示在软件屏幕上，并自动输入到S021代码输入框."));
-        hlpInfo.push_back(tr("3.3.3.2 指令：<u>:m1a s021 fill</u>或<u>:ms0f</u>."));
-        hlpInfo.push_back(tr("3.3.4 生成适用于T19的S021代码."));
-        hlpInfo.push_back(tr("3.3.4.1 定义：将程序预置的适用于T19的S021代码显示在软件屏幕上."));
-        hlpInfo.push_back(tr("3.3.4.2 指令：<u>:t19 s021</u>或<u>:ts0</u>."));
-        hlpInfo.push_back(tr("3.3.5 自动填充适用于T19的S021代码."));
-        hlpInfo.push_back(tr("3.3.5.1 定义：将程序预置的适用于T19的S021代码显示在软件屏幕上，并自动输入到S021代码输入框."));
-        hlpInfo.push_back(tr("3.3.5.2 指令：<u>:t19 s021 fill</u>或<u>:ts0f</u>."));
+        hlpInfo << tr("3 天有为开发工具功能.");
+        hlpInfo << tr("3.1 bootloader合成.");
+        hlpInfo << tr("3.1.1 定义：奇瑞T19系列bootloader合成方法介绍.");
+        hlpInfo << tr("3.1.2 指令：<u>:bootloader?</u>或<u>:b?</u>.");
+        hlpInfo << tr("3.2 诊断仪app合成.");
+        hlpInfo << tr("3.2.1 定义：奇瑞T19系列诊断仪app合成方法介绍.");
+        hlpInfo << tr("3.2.2 指令：<u>:diagnosis?</u>或<u>:d?</u>.");
+        hlpInfo << tr("3.3 诊断仪app合成辅助工具.");
+        hlpInfo << tr("3.3.1 生成flash driver文件.");
+        hlpInfo << tr("3.3.1.1 定义：独立生成一个诊断仪用flash driver文件.");
+        hlpInfo << tr("3.3.1.2 指令：<u>:flash driver</u>或<u>:fd</u>.");
+        hlpInfo << tr("3.3.1.3 备注：用3.2节方法也会自动生成flash driver文件.");
+        hlpInfo << tr("3.3.2 生成适用于M1A的S021代码.");
+        hlpInfo << tr("3.3.2.1 定义：将程序预置的适用于M1A的S021代码显示在软件屏幕上.");
+        hlpInfo << tr("3.3.2.2 指令：<u>:m1a s021</u>或<u>:ms0</u>.");
+        hlpInfo << tr("3.3.3 自动填充适用于M1A的S021代码.");
+        hlpInfo << tr("3.3.3.1 定义：将程序预置的适用于M1A的S021代码显示在软件屏幕上，并自动输入到S021代码输入框.");
+        hlpInfo << tr("3.3.3.2 指令：<u>:m1a s021 fill</u>或<u>:ms0f</u>.");
+        hlpInfo << tr("3.3.4 生成适用于T19的S021代码.");
+        hlpInfo << tr("3.3.4.1 定义：将程序预置的适用于T19的S021代码显示在软件屏幕上.");
+        hlpInfo << tr("3.3.4.2 指令：<u>:t19 s021</u>或<u>:ts0</u>.");
+        hlpInfo << tr("3.3.5 自动填充适用于T19的S021代码.");
+        hlpInfo << tr("3.3.5.1 定义：将程序预置的适用于T19的S021代码显示在软件屏幕上，并自动输入到S021代码输入框.");
+        hlpInfo << tr("3.3.5.2 指令：<u>:t19 s021 fill</u>或<u>:ts0f</u>.");
 
-        hlpInfo.push_back(tr("4 开发辅助工具."));
-        hlpInfo.push_back(tr("4.1 CRC计算工具."));
-        hlpInfo.push_back(tr("4.1.1 定义：对指定文件的所有字节进行CRC计算，并在软件屏幕上回显文件内容及计算结果."));
-        hlpInfo.push_back(tr("4.1.2 指令：<u>:crc calc</u>或<u>:crc</u>."));
-        hlpInfo.push_back(tr("4.2 文件转字符串工具."));
-        hlpInfo.push_back(tr("4.2.1 定义：将指定文件的所有字节生成C/C++语言能识别的数组，并存储为.h文件."));
-        hlpInfo.push_back(tr("4.2.2 指令：<u>:convert code to string</u>或<u>:c2s</u>."));
-        hlpInfo.push_back(tr("4.2.3 备注：本工具原用途为将默认bootloader代码转换为字符串，故相关文件名等信息将包含bootloader字样，作为他用时可自行更改相关命名."));
+        hlpInfo << tr("4 开发辅助工具.");
+        hlpInfo << tr("4.1 CRC计算工具.");
+        hlpInfo << tr("4.1.1 定义：对指定文件的所有字节进行CRC计算，并在软件屏幕上回显文件内容及计算结果.");
+        hlpInfo << tr("4.1.2 指令：<u>:crc calc</u>或<u>:crc</u>.");
+        hlpInfo << tr("4.2 文件转字符串工具.");
+        hlpInfo << tr("4.2.1 定义：将指定文件的所有字节生成C/C++语言能识别的数组，并存储为.h文件.");
+        hlpInfo << tr("4.2.2 指令：<u>:convert code to string</u>或<u>:c2s</u>.");
+        hlpInfo << tr("4.2.3 备注：本工具原用途为将默认bootloader代码转换为字符串，故相关文件名等信息将包含bootloader字样，作为他用时可自行更改相关命名.");
     }
     else if(CMD_HELP_BOOTLOADER == cmd)
     {
-        hlpInfo.push_back(tr("《BootLoader合成工具使用方法》"));
-        hlpInfo.push_back(tr("0 将<u>switch function</u>（或<u>input command</u>）切换至<u>add bootloader to firmware</u>."));
-        hlpInfo.push_back(tr("1 加载bootloader代码段的两种方式."));
-        hlpInfo.push_back(tr("1.1 方式一：加载默认bootloader代码段，只需勾选<u>default</u>， 程序默认设置其为勾选状态."));
-        hlpInfo.push_back(tr("1.2 方式二：加载其它bootloader代码段，去勾选<u>default</u>，点击<u>load bootloader</u>按钮选择其它bootloader文件."));
-        hlpInfo.push_back(tr("2 点击<u>load file</u>按钮选择.S19原app文件."));
-        hlpInfo.push_back(tr("3 点击<u>generate</u>按钮生成含bootloader的新app文件,并自动打开该文件所在的目录且选中该文件."));
+        hlpInfo << tr("《BootLoader合成工具使用方法》");
+        hlpInfo << tr("0 将<u>switch function</u>（或<u>input command</u>）切换至<u>add bootloader to firmware</u>.");
+        hlpInfo << tr("1 加载bootloader代码段的两种方式.");
+        hlpInfo << tr("1.1 方式一：加载默认bootloader代码段，只需勾选<u>default</u>， 程序默认设置其为勾选状态.");
+        hlpInfo << tr("1.2 方式二：加载其它bootloader代码段，去勾选<u>default</u>，点击<u>load bootloader</u>按钮选择其它bootloader文件.");
+        hlpInfo << tr("2 点击<u>load file</u>按钮选择.S19原app文件.");
+        hlpInfo << tr("3 点击<u>generate</u>按钮生成含bootloader的新app文件,并自动打开该文件所在的目录且选中该文件.");
     }
     else if(CMD_HELP_DAIGNOSIS == cmd)
     {
-        hlpInfo.push_back(tr("《诊断仪app生成工具使用方法》"));
-        hlpInfo.push_back(tr("0 将<u>switch function</u>（或<u>input command</u>）切换至<u>gen firmware for diagnosis</u>."));
-        hlpInfo.push_back(tr("1 点击<u>load file</u>按钮选择.S19原app文件."));
-        hlpInfo.push_back(tr("2 输入S021数据，该数据最终将位于app的第一行."));
-        hlpInfo.push_back(tr("2.1 在命令行可查询程序预置的S021数据，请在命令行输入<u>:?</u>获取相关命令信息."));
-        hlpInfo.push_back(tr("2.2 正确输入S021数据后，将光标置于S021数据所在的输入框后，点击回车键可以修改版本号，版本号格式需严格匹配<u>xx.xx.xx</u>,x为0-9或a-f,字母不区分大小写，最终按大写字母写入文件."));
-        hlpInfo.push_back(tr("3 点击<u>generate</u>按钮生成用于计算CRC的临时文件，弹出请求S20C数据的对话框，并将临时文件的路径存入系统剪贴板."));
-        hlpInfo.push_back(tr("4 用第三方软件对临时文件计算CRC并生成S20C数据，该数据最终将位于app的倒数第二行，将S20C结果回填至对话框."));
-        hlpInfo.push_back(tr("5 点击对话框<u>OK</u>按钮，生成诊断仪app文件,并自动打开该文件所在的目录且选中该文件."));
-        hlpInfo.push_back(tr("6 该文件夹下还将自动生成flash driver文件，请将诊断仪app文件和flash driver文件一同加入压缩包提供给使用者."));
+        hlpInfo << tr("《诊断仪app生成工具使用方法》");
+        hlpInfo << tr("0 将<u>switch function</u>（或<u>input command</u>）切换至<u>gen firmware for diagnosis</u>.");
+        hlpInfo << tr("1 点击<u>load file</u>按钮选择.S19原app文件.");
+        hlpInfo << tr("2 输入S021数据，该数据最终将位于app的第一行.");
+        hlpInfo << tr("2.1 在命令行可查询程序预置的S021数据，请在命令行输入<u>:?</u>获取相关命令信息.");
+        hlpInfo << tr("2.2 正确输入S021数据后，将光标置于S021数据所在的输入框后，点击回车键可以修改版本号，版本号格式需严格匹配<u>xx.xx.xx</u>,x为0-9或a-f,字母不区分大小写，最终按大写字母写入文件.");
+        hlpInfo << tr("3 点击<u>generate</u>按钮生成用于计算CRC的临时文件，弹出请求S20C数据的对话框，并将临时文件的路径存入系统剪贴板.");
+        hlpInfo << tr("4 用第三方软件对临时文件计算CRC并生成S20C数据，该数据最终将位于app的倒数第二行，将S20C结果回填至对话框.");
+        hlpInfo << tr("5 点击对话框<u>OK</u>按钮，生成诊断仪app文件,并自动打开该文件所在的目录且选中该文件.");
+        hlpInfo << tr("6 该文件夹下还将自动生成flash driver文件，请将诊断仪app文件和flash driver文件一同加入压缩包提供给使用者.");
     }
 
     ptOutputWnd->clear();
     foreach(QString elem, hlpInfo)
     {
+        //另起一个新段落
         if(elem.startsWith("0 ") || elem.startsWith("1 ") || elem.startsWith("2 ") || elem.startsWith("3 ") || elem.startsWith("4 "))
         {
             ptOutputWnd->appendPlainText(QString());
@@ -895,6 +924,7 @@ void MainWindow::showHelpInfo(CmdType cmd)
     ptOutputWnd->setTextCursor(cursor);
 }
 
+//处理配置文件
 void MainWindow::procConfigFile(CmdType cmd)
 {
     if(CMD_SAVE_CONFIG_FILE == cmd)
@@ -1091,6 +1121,7 @@ void MainWindow::generateCharArray()
 #endif
 }
 
+//控件初始化
 void MainWindow::componentsInitialization(void)
 {
     setWindowTitle(tr("CherryT19SeriesFirmwareGenerator"));
@@ -1163,6 +1194,7 @@ void MainWindow::componentsInitialization(void)
     m_cmbFunctionSwitch->addItem(FUNCTION_STRING_LIST.at(CMD_HANDLER), FUNCTION_STRING_LIST.at(CMD_HANDLER));
 }
 
+//布局初始化
 void MainWindow::layoutsInitialization()
 {
     //bootloader控件区
@@ -1216,12 +1248,15 @@ void MainWindow::layoutsInitialization()
     ui->centralWidget->setLayout(m_layoutGlobal);
 }
 
+//命令初始化
 void MainWindow::commandsInitialization()
 {
     cmdList.push_back({ CMD_HELP, {":help", ":hlp", ":?"} });
     cmdList.push_back({ CMD_HELP_BOOTLOADER, {":bootloader?", ":b?"} });
     cmdList.push_back({ CMD_HELP_DAIGNOSIS, {":diagnosis?", ":d?"} });
     cmdList.push_back({ CMD_CLEAR_SCREEN, {":clear screen", ":cs"} });
+    cmdList.push_back({ CMD_FULL_SCREEN, {":full screen", ":fs"} });
+    cmdList.push_back({ CMD_NORMAL_SCREEN, {":normal screen", ":ns"} });
     cmdList.push_back({ CMD_SAVE_CONFIG_FILE, {":save config file", ":scf"} });
     cmdList.push_back({ CMD_LOAD_CONFIG_FILE, {":load config file", ":lcf"} });
     cmdList.push_back({ CMD_CODE_TO_STRING, {":convert code to string", ":c2s"} });
