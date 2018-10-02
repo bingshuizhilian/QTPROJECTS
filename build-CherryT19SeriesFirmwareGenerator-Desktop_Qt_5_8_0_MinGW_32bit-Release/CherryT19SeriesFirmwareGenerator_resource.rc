@@ -1,6 +1,6 @@
 #include <windows.h>
 
-IDI_ICON1	ICON	DISCARDABLE	"F:\\GitHub\\QTPROJECTS\\resources\\appicon.ico"
+IDI_ICON1	ICON	DISCARDABLE	"F:\\GitHub\\QTPROJECTS-FIRMWARE_GENERATOR\\resources\\appicon.ico"
 
 VS_VERSION_INFO VERSIONINFO
 	FILEVERSION 0,0,0,0
