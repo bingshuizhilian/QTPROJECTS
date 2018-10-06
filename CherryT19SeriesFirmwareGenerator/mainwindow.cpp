@@ -46,6 +46,8 @@ void MainWindow::switchFunctionPressed()
     switch(m_cmbFunctionSwitch->currentIndex())
     {
     case BOOTLOADER:
+        if(this->isFullScreen())
+            this->showNormal();
         this->setFixedSize(WINDOW_WIDTH, WINDOW_HEIGHT);
         m_cmbFunctionSwitch->setFixedWidth(182);
         m_gbSwitchFunction->setTitle(tr("switch function"));
@@ -58,6 +60,8 @@ void MainWindow::switchFunctionPressed()
         ptOutputWnd->setVisible(false);
         break;
     case DIAGNOSIS:
+        if(this->isFullScreen())
+            this->showNormal();
         this->setFixedSize(WINDOW_WIDTH, WINDOW_HEIGHT);
         m_cmbFunctionSwitch->setFixedWidth(182);
         m_gbSwitchFunction->setTitle(tr("switch function"));
@@ -93,19 +97,26 @@ void MainWindow::runCmdReturnPressed()
     QString inputString = m_leRunCommand->text();
     CmdType findCmd = CMD_MAX;
 
-    foreach(auto pairElem, cmdList)
+    if(inputString.startsWith("::"))
     {
-        foreach(auto strListElem, pairElem.second)
+        findCmd = CMD_WINDOWS_COMMON;
+    }
+    else
+    {
+        foreach(auto pairElem, cmdList)
         {
-            if(!strListElem.compare(inputString, Qt::CaseInsensitive))
+            foreach(auto strListElem, pairElem.second)
             {
-                findCmd = pairElem.first;
-                break;
+                if(!strListElem.compare(inputString, Qt::CaseInsensitive))
+                {
+                    findCmd = pairElem.first;
+                    break;
+                }
             }
-        }
 
-        if(CMD_MAX != findCmd)
-            break;
+            if(CMD_MAX != findCmd)
+                break;
+        }
     }
 
     switch(findCmd)
@@ -123,6 +134,9 @@ void MainWindow::runCmdReturnPressed()
         break;
     case CMD_NORMAL_SCREEN:
         this->showNormal();
+        break;
+    case CMD_QUIT_APPLICATION:
+        QApplication::quit();
         break;
     case CMD_SAVE_CONFIG_FILE:
     case CMD_LOAD_CONFIG_FILE:
@@ -156,8 +170,29 @@ void MainWindow::runCmdReturnPressed()
         ptOutputWnd->appendPlainText(DIAG_T19_S021);
         break;
 #if WIN32
+    case CMD_WINDOWS_COMMON:
+    {
+        QString windowsCmd = inputString.right(inputString.size() - 2);
+        bool isSuccess = QProcess::startDetached(windowsCmd);
+        QString outputResult;
+
+        if(isSuccess)
+        {
+            outputResult = windowsCmd + " -> success";
+        }
+        else
+        {
+            if(!windowsCmd.isEmpty())
+                outputResult = windowsCmd + " -> fail";
+            else
+                outputResult = "please input a command";
+        }
+
+        ptOutputWnd->appendPlainText(outputResult);
+        break;
+    }
     case CMD_WINDOWS_CALCULATOR:
-    case CMD_WINDOWS_SNIPPINGTOOL:
+    case CMD_WINDOWS_TASKMANAGER:
     case CMD_WINDOWS_PAINT:
     {
         QString windowsCmd = cmdList.at(findCmd).second.first();
@@ -839,14 +874,24 @@ void MainWindow::showHelpInfo(CmdType cmd)
         hlpInfo << tr("1.5.1 定义：加载本软件的配置项，将加载软件目录下的config.json文件.");
         hlpInfo << tr("1.5.2 指令：<u>:load config file</u>或<u>:lcf</u>.");
         hlpInfo << tr("1.5.3 备注：当前仅实现接口，尚未有实际需要加载的配置项.");
+        hlpInfo << tr("1.6 退出程序.");
+        hlpInfo << tr("1.6.1 定义：退出本软件.");
+        hlpInfo << tr("1.6.2 指令：<u>:quit</u>或<u>:q</u>.");
 
         hlpInfo << tr("2 Windows系统工具快捷开启功能.");
-        hlpInfo << tr("2.1 计算器.");
-        hlpInfo << tr("2.1.1 定义：开启Windows系统自带的“计算器”软件.");
-        hlpInfo << tr("2.1.2 指令：<u>:calculator</u>或<u>:calc</u>.");
-        hlpInfo << tr("2.2 画图.");
-        hlpInfo << tr("1.2.1 定义：开启Windows系统自带的“画图”软件.");
-        hlpInfo << tr("1.2.2 指令：<u>:mspaint</u>或<u>:mspt</u>.");
+        hlpInfo << tr("2.1 运行Windows系统指令通运方法.");
+        hlpInfo << tr("2.1.1 定义：像Windows系统自带的“运行”软件一样运行Windows系统指令.");
+        hlpInfo << tr("2.1.2 指令：<u>::command</u>，其中<u>command</u>为Windows系统能识别的指令.");
+        hlpInfo << tr("2.1.3 备注：受限于QT的运行机制，部分Windows系统指令可能不会被正确执行.");
+        hlpInfo << tr("2.2 计算器.");
+        hlpInfo << tr("2.2.1 定义：快速开启Windows系统自带的“计算器”软件.");
+        hlpInfo << tr("2.2.2 指令：<u>:calculator</u>或<u>:calc</u>或<u>:c</u>.");
+        hlpInfo << tr("2.3 任务管理器.");
+        hlpInfo << tr("2.3.1 定义：快速开启Windows系统自带的“任务管理器”软件.");
+        hlpInfo << tr("2.3.2 指令：<u>:taskmgr</u>或<u>:tm</u>.");
+        hlpInfo << tr("2.4 画图.");
+        hlpInfo << tr("2.4.1 定义：快速开启Windows系统自带的“画图”软件.");
+        hlpInfo << tr("2.4.2 指令：<u>:mspaint</u>或<u>:mp</u>.");
 
         hlpInfo << tr("3 天有为开发工具功能.");
         hlpInfo << tr("3.1 bootloader合成.");
@@ -1257,6 +1302,7 @@ void MainWindow::commandsInitialization()
     cmdList.push_back({ CMD_CLEAR_SCREEN, {":clear screen", ":cs"} });
     cmdList.push_back({ CMD_FULL_SCREEN, {":full screen", ":fs"} });
     cmdList.push_back({ CMD_NORMAL_SCREEN, {":normal screen", ":ns"} });
+    cmdList.push_back({ CMD_QUIT_APPLICATION, {":quit", ":q"} });
     cmdList.push_back({ CMD_SAVE_CONFIG_FILE, {":save config file", ":scf"} });
     cmdList.push_back({ CMD_LOAD_CONFIG_FILE, {":load config file", ":lcf"} });
     cmdList.push_back({ CMD_CODE_TO_STRING, {":convert code to string", ":c2s"} });
@@ -1267,9 +1313,10 @@ void MainWindow::commandsInitialization()
     cmdList.push_back({ CMD_DIAG_T19_S021, {":t19 s021", ":ts0"} });
     cmdList.push_back({ CMD_DIAG_T19_S021_AUTOFILL, {":t19 s021 fill", ":ts0f"} });
 #if WIN32
+    cmdList.push_back({ CMD_WINDOWS_COMMON, {"::"} });
     //此处要把windows能识别的命令放在stringlist的首位
-    cmdList.push_back({ CMD_WINDOWS_CALCULATOR, {":calc", ":calculator"} });
-    cmdList.push_back({ CMD_WINDOWS_SNIPPINGTOOL, {":snippingtool", ":snip"} });
-    cmdList.push_back({ CMD_WINDOWS_PAINT, {":mspaint", ":mspt"} });
+    cmdList.push_back({ CMD_WINDOWS_CALCULATOR, {":calc", ":calculator", ":c"} });
+    cmdList.push_back({ CMD_WINDOWS_TASKMANAGER, {":taskmgr", ":tm"} });
+    cmdList.push_back({ CMD_WINDOWS_PAINT, {":mspaint", ":mp"} });
 #endif
 }
