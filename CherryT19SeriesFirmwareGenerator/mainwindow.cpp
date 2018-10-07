@@ -813,16 +813,18 @@ void MainWindow::crcTest()
     }
 
     QTextStream targetFileIn(&targetFile);
-    QString file;
+    QStringList targetCodeStringList;
     while(!targetFileIn.atEnd())
     {
         QString readStr = targetFileIn.readLine();
 
         if(!readStr.isEmpty())
-            file += readStr;
+            targetCodeStringList.push_back(readStr);
     }
 
     targetFile.close();
+
+    QString file = targetCodeStringList.join('\n');
 
     unsigned short crc = calcCRC(file.size(), file);
 
@@ -832,9 +834,9 @@ void MainWindow::crcTest()
     QString outStr;
     outStr += "\n\n######################\n";
     outStr += "filesize: " + QString::number(file.size()) + "\n";
-    outStr += "crc: " + QString::number(crc) + "\n";
-    outStr += "crc high: " + QString::number((crc>>8)&0xff) + "\n";
-    outStr += "crc low: " + QString::number(crc&0xff) + "\n";
+    outStr += "crc: 0x" + QString::number(crc, 16) + "\n";
+    outStr += "crc high: 0x" + QString::number((crc>>8)&0xff, 16) + "\n";
+    outStr += "crc low: 0x" + QString::number(crc&0xff, 16) + "\n";
     outStr += "######################";
     ptOutputWnd->appendPlainText(outStr);
 
