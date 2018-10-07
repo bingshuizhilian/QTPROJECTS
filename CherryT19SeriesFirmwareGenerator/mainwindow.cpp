@@ -771,9 +771,9 @@ int MainWindow::hexCharToHex(char src)
 }
 
 //计算CRC，参考《ECU bootloader and programming implementation specification》
-unsigned int MainWindow::calcCRC(unsigned int size, QString fileData)
+unsigned short MainWindow::calcCRC(unsigned int size, QString fileData)
 {
-    unsigned int crc = 0xffff; /* initial value */
+    unsigned short crc = 0xffff; /* initial value */
     unsigned char tmp = 0;
     unsigned int i = 0;
 
@@ -813,20 +813,18 @@ void MainWindow::crcTest()
     }
 
     QTextStream targetFileIn(&targetFile);
-    QStringList targetCodeStringList;
+    QString file;
     while(!targetFileIn.atEnd())
     {
         QString readStr = targetFileIn.readLine();
 
         if(!readStr.isEmpty())
-            targetCodeStringList.push_back(readStr);
+            file += readStr;
     }
 
     targetFile.close();
 
-    QString file = targetCodeStringList.join('\n');
-
-    unsigned int crc = calcCRC(file.size(), file);
+    unsigned short crc = calcCRC(file.size(), file);
 
     ptOutputWnd->clear();
     ptOutputWnd->appendPlainText(file);
