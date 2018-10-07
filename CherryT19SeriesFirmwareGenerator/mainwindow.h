@@ -120,7 +120,7 @@ private:
     void generateCharArray(void);
     bool sortS19Code(QStringList &originalStringList);
     int hexCharToHex(char src);
-    unsigned int calcCRC(unsigned int size, QString fileData);
+    unsigned short calcCRC(unsigned int size, QString fileData);
     void crcTest();
     void showHelpInfo(CmdType cmd);
     void procConfigFile(CmdType cmd);
