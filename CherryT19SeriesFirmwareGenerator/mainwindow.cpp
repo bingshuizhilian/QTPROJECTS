@@ -1150,7 +1150,7 @@ void MainWindow::componentsInitialization(void)
     auto labelAuthorInfo = new QLabel;
     labelAuthorInfo->setStatusTip(tr("click to view source code on github"));
     labelAuthorInfo->setOpenExternalLinks(true);
-    labelAuthorInfo->setText(QString::fromLocal8Bit("<style> a {text-decoration: none} </style> <a href = https://www.github.com/bingshuizhilian/QTPROJECTS> contact author </a>"));
+    labelAuthorInfo->setText(QString::fromLocal8Bit("<style> a {text-decoration: none} </style> <a href = https://www.github.com/bingshuizhilian/QTPROJECTS-FIRMWARE_GENERATOR> contact author </a>"));
     labelAuthorInfo->show();
     ui->statusBar->addPermanentWidget(labelAuthorInfo);
 
