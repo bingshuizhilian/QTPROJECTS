@@ -53,7 +53,6 @@ private:
         CMD_LOAD_CONFIG_FILE,
         CMD_CODE_TO_STRING,
         CMD_GEN_FLASH_DRIVER,
-        CMD_CRC_CALCULATOR,
         CMD_DIAG_M1A_S021,
         CMD_DIAG_M1A_S021_AUTOFILL,
         CMD_DIAG_T19_S021,
@@ -84,7 +83,7 @@ private:
     const QString TARGET_STRING_AFTER_GENERATING_BOOTCODE = "S10BFFF8FC00FC00FC00FC000D\n";//已加bootloader的app含有此内容
     const int DIAG_M1A_S021_MIN_LENGTH = 22;
     const QString DIAG_M1A_S021 = "S02100000747395957373031303030303434414120202020200130302E30302E303040";//M1A、M1D的S0行
-    const QString DIAG_T19_S021 = "to be filled";//T19、T18的S0行
+    const QString DIAG_T19_S021 = "S02100000747395957373031303030303638414120202020200130302E30302E303040";//T19、T18的S0行
 
 private:
     QStringList fileInfo;
@@ -120,8 +119,8 @@ private:
     void generateCharArray(void);
     bool sortS19Code(QStringList &originalStringList);
     int hexCharToHex(char src);
-    unsigned short calcCRC(unsigned int size, QString fileData);
-    void crcTest();
+    unsigned short calcCRC(QList<unsigned char> data_list);
+    unsigned char calcChecksum(unsigned short crc);
     void showHelpInfo(CmdType cmd);
     void procConfigFile(CmdType cmd);
 

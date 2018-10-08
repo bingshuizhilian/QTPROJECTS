@@ -154,9 +154,6 @@ void MainWindow::runCmdReturnPressed()
         generateFlashDriverForDiagnosis(dirPath, true);
         break;
     }
-    case CMD_CRC_CALCULATOR:
-        crcTest();
-        break;
     case CMD_DIAG_M1A_S021_AUTOFILL:
         m_leDiagnosisS021->setText(DIAG_M1A_S021);
     case CMD_DIAG_M1A_S021:
@@ -265,6 +262,18 @@ void MainWindow::s021ReturnPressed()
     if(originalS021Data.isEmpty())
     {
         QMessageBox::warning(this, "Warnning", "empty data, couldn't modify version", QMessageBox::Yes);
+        return;
+    }
+
+    if(":M" == m_leDiagnosisS021->text() || ":m" == m_leDiagnosisS021->text())
+    {
+        m_leDiagnosisS021->setText(DIAG_M1A_S021);
+        return;
+    }
+
+    if(":t" == m_leDiagnosisS021->text() || ":T" == m_leDiagnosisS021->text())
+    {
+        m_leDiagnosisS021->setText(DIAG_T19_S021);
         return;
     }
 
@@ -528,7 +537,9 @@ void MainWindow::generateFirmwareForDiagnosis()
     }
     else
     {
-        if(!m_leDiagnosisS021->text().startsWith("S021", Qt::CaseInsensitive) || m_leDiagnosisS021->text().size() < DIAG_M1A_S021_MIN_LENGTH)
+        if(!m_leDiagnosisS021->text().startsWith("S021", Qt::CaseInsensitive)
+                || m_leDiagnosisS021->text().size() < DIAG_M1A_S021_MIN_LENGTH
+                || m_leDiagnosisS021->text().size() % 2 != 0)
         {
             QMessageBox::warning(this, "Warnning", "Please check S021 data", QMessageBox::Yes);
             return;
@@ -597,10 +608,78 @@ void MainWindow::generateFirmwareForDiagnosis()
         return;
     }
 
-    //生成临时文件
-    QString tmpFileName = fileInfo.at(FILE_NAME);
-    tmpFileName = tmpFileName.left(tmpFileName.size() - 4);
-    tmpFileName += "_diagnosis(tmp).S19";
+    //生成参与CRC计算的数据的字符串
+    QStringList crcCalcStringList = originalS19FileStringList;
+    QString crcCalcString;
+
+    //S0和S9行不参与CRC计算
+    if(crcCalcStringList.size() >= 2)
+    {
+        crcCalcStringList.pop_front();
+        crcCalcStringList.pop_back();
+    }
+
+    for(QString &elem: crcCalcStringList)
+    {
+        if(elem.endsWith('\n'))
+            elem = elem.left(elem.size() - 1);
+
+        //最后两个字节不计算
+        elem = elem.left(elem.size() - 2);
+
+        //S1前8个字节不计算
+        if(elem.startsWith("S1", Qt::CaseInsensitive))
+            elem = elem.right(elem.size() - 8);
+
+        //S2前10个字节不计算
+        if(elem.startsWith("S2", Qt::CaseInsensitive))
+            elem = elem.right(elem.size() - 10);
+
+        crcCalcString += elem;
+    }
+
+    if(crcCalcString.size() % 2 != 0)
+    {
+        QMessageBox::warning(this, "Warnning", "data length of crc calculating error", QMessageBox::Yes);
+        return;
+    }
+
+
+    //将数字字符串重组成数字，e.g. "91b0"->0x91 0xb0
+    QList<unsigned char> dataList;
+    for(int cnt = 0; cnt < crcCalcString.size(); cnt += 2)
+        dataList.push_back(crcCalcString.mid(cnt, 2).toInt(nullptr, 16) & 0xff);
+
+    unsigned short crc = calcCRC(dataList);
+    unsigned char chkSum = calcChecksum(crc);
+
+    qDebug() << dataList.size();
+    qDebug() << "crc: 0x" + QString::number(crc, 16);
+    qDebug() << "crc high: 0x" + QString::number((crc>>8)&0xff, 16);
+    qDebug() << "crc low: 0x" + QString::number(crc&0xff, 16);
+    qDebug() << "crc checksum: 0x" + QString::number(chkSum, 16);
+
+    //S2 0C F48000 XX XX  XX XX  XX XX  XX XX  CHK
+    QString s20cText = "S20CFE8000";
+    for(int cnt = 0; cnt < 4; ++cnt)
+        s20cText.append(QString::number(crc, 16));
+
+    if(chkSum <= 0x0f)
+        s20cText += "0"+ QString::number(chkSum, 16);
+    else
+        s20cText += QString::number(chkSum, 16);
+
+    s20cText = s20cText.toUpper();
+    m_leDiagnosisS20C->setText(s20cText);
+    //将S20C数据添加换行符并写入排序完成的文件的倒数第二行
+    s20cText.append('\n');
+    originalS19FileStringList.insert(originalS19FileStringList.size() - 1, s20cText);
+
+    //生成固件并在文件夹中定位此文件
+    QString diagnosisFileName = fileInfo.at(FILE_NAME);
+    QString timeInfo = QDateTime::currentDateTime().toString("yyyy-MM-dd_HH-mm-ss");
+    diagnosisFileName = diagnosisFileName.left(diagnosisFileName.size() - 4);
+    diagnosisFileName += "_diagnosis_" + timeInfo + ".S19";
 
     QString folderName = "/generatedFirmwaresForDiagnosis/";
     QString dirPath = fileInfo.at(ABSOLUTE_PATH) + folderName;
@@ -608,11 +687,11 @@ void MainWindow::generateFirmwareForDiagnosis()
     if(!dir.exists())
         dir.mkdir(dirPath);
 
-    QString tmpFilePathName = dirPath + tmpFileName;
-    QFile newFile(tmpFilePathName);
+    QString diagnosisFilePathName = dirPath + diagnosisFileName;
+    QFile newFile(diagnosisFilePathName);
     if(!newFile.open(QIODevice::WriteOnly | QIODevice::Text))
     {
-        QMessageBox::warning(this, "Warnning", "Cannot open " + tmpFilePathName, QMessageBox::Yes);
+        QMessageBox::warning(this, "Warnning", "Cannot open " + diagnosisFilePathName, QMessageBox::Yes);
         return;
     }
 
@@ -624,78 +703,17 @@ void MainWindow::generateFirmwareForDiagnosis()
     }
     newFile.close();
 
-    //将临时文件的路径复制到系统剪贴板
-    QClipboard *clipBoard = QApplication::clipboard();
-    clipBoard->setText(dirPath);
+    //同时生成一个flash driver
+    generateFlashDriverForDiagnosis(dirPath, false);
 
-    //清空上次输入的S20CFE数据
-    m_leDiagnosisS20C->clear();
-
-    //请求用户输入S20CFE数据
-    bool isOK;
-    QString s20cQuery = QInputDialog::getText(NULL, "CRC data query",
-                                               "Please input CRC result code starts with S20CFE, using file shown as below, " \
-                                               "file directory path has been copied to system clipboard:\n" + tmpFilePathName,
-                                               QLineEdit::Normal,
-                                               "",
-                                               &isOK);
-
-    if(isOK && s20cQuery.startsWith("S20CFE", Qt::CaseInsensitive))
-    {
-        s20cQuery = s20cQuery.toUpper();
-        m_leDiagnosisS20C->setText(s20cQuery);
-        originalS19FileStringList.insert(originalS19FileStringList.size() - 1, s20cQuery + '\n');
-
-        //删除临时文件
-        QFile tmpFile(tmpFilePathName);
-        if (tmpFile.exists())
-        {
-            tmpFile.remove();
-        }
-
-        //生成固件并在文件夹中定位此文件
-        QString newFilePathName = tmpFilePathName.left(tmpFilePathName.size() - 9);
-        QString timeInfo = QDateTime::currentDateTime().toString("yyyy-MM-dd_HH-mm-ss");
-        newFilePathName += "_" + timeInfo + ".S19";
-
-        QFile newFile(newFilePathName);
-        if(!newFile.open(QIODevice::WriteOnly | QIODevice::Text))
-        {
-            QMessageBox::warning(this, "Warnning", "Cannot open " + newFilePathName, QMessageBox::Yes);
-            return;
-        }
-
-        QTextStream out(&newFile);
-        for(auto elem:originalS19FileStringList)
-        {
-            if(elem != "\n")
-                out << elem;
-        }
-        newFile.close();
-
-        //同时生成一个flash driver
-        generateFlashDriverForDiagnosis(dirPath, false);
+    //windows系统下直接打开该文件夹并选中诊断仪app文件
 #ifdef WIN32
-        QProcess process;
-        QString openNewFileName = newFilePathName;
+    QProcess process;
+    QString openNewFileName = diagnosisFilePathName;
 
-        openNewFileName.replace("/", "\\");    //***这句windows下必要***
-        process.startDetached("explorer /select," + openNewFileName);
+    openNewFileName.replace("/", "\\");    //这句windows下必要
+    process.startDetached("explorer /select," + openNewFileName);
 #endif
-    }
-    else
-    {
-        QMessageBox::warning(this, "Warnning", "please input correct CRC data", QMessageBox::Yes);
-
-        //删除临时文件
-        QFile tmpFile(tmpFilePathName);
-        if (tmpFile.exists())
-        {
-            tmpFile.remove();
-        }
-
-        return;
-    }
 }
 
 //将.S19原文件里面的S224代码段，按内存分页升序顺序重新排列（F1、F2、···、FF）
@@ -771,76 +789,36 @@ int MainWindow::hexCharToHex(char src)
 }
 
 //计算CRC，参考《ECU bootloader and programming implementation specification》
-unsigned short MainWindow::calcCRC(unsigned int size, QString fileData)
+unsigned short MainWindow::calcCRC(QList<unsigned char> data_list)
 {
     unsigned short crc = 0xffff; /* initial value */
     unsigned char tmp = 0;
-    unsigned int i = 0;
+    int cnt = 0;
 
-    QByteArray charArray = fileData.toLatin1();
-
-    for(i = 0; i < size; i++)
+    for(cnt = 0; cnt < data_list.size(); ++cnt)
     {
-        if('\n' != charArray.at(i))
-        {
-            tmp = (crc >> 8) ^ charArray.at(i);
-            crc = (crc << 8) ^ crcLookupTable[tmp];
-        }
+        tmp = (crc >> 8) ^ data_list.at(cnt);
+        crc = (crc << 8) ^ crcLookupTable[tmp];
     }
 
     return crc;
 }
 
-//crc测试
-void MainWindow::crcTest()
+//计算CRC对应的checksum
+unsigned char MainWindow::calcChecksum(unsigned short crc)
 {
-    QString filePathName = QFileDialog::getOpenFileName();
-    QString filePath = QFileInfo(filePathName).absolutePath();
+    unsigned char checkSum = 0;
+    unsigned char crcLow = 0;
+    unsigned char crcHigh = 0;
+    unsigned short temp = 0;
 
-    qDebug()<<filePathName<<filePath<<endl;
-
-    if(filePathName.isEmpty())
-    {
-        QMessageBox::warning(this, "Warnning", "generate failed, please select a file", QMessageBox::Yes);
-        return;
-    }
-
-    QFile targetFile(filePathName);
-    if(!targetFile.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
-        QMessageBox::warning(this, "Warnning", "Cannot open " + filePathName, QMessageBox::Yes);
-        return;
-    }
-
-    QTextStream targetFileIn(&targetFile);
-    QStringList targetCodeStringList;
-    while(!targetFileIn.atEnd())
-    {
-        QString readStr = targetFileIn.readLine();
-
-        if(!readStr.isEmpty())
-            targetCodeStringList.push_back(readStr);
-    }
-
-    targetFile.close();
-
-    QString file = targetCodeStringList.join('\n');
-
-    unsigned short crc = calcCRC(file.size(), file);
-
-    ptOutputWnd->clear();
-    ptOutputWnd->appendPlainText(file);
-
-    QString outStr;
-    outStr += "\n\n######################\n";
-    outStr += "filesize: " + QString::number(file.size()) + "\n";
-    outStr += "crc: 0x" + QString::number(crc, 16) + "\n";
-    outStr += "crc high: 0x" + QString::number((crc>>8)&0xff, 16) + "\n";
-    outStr += "crc low: 0x" + QString::number(crc&0xff, 16) + "\n";
-    outStr += "######################";
-    ptOutputWnd->appendPlainText(outStr);
-
-    qDebug() << crc << "----" << ((crc >> 8) & 0xff) <<"----"<< (crc & 0xff) <<endl;
+    crcLow = crc & 0xff;
+    crcHigh = (crc >> 8) & 0xff;
+    //S2 0C FE8000 XX XX  XX XX  XX XX  XX XX  CHK
+    temp = 0x0C + 0xFE + 0x80 + 0x00 + crcLow + crcHigh + crcLow + crcHigh + crcLow + crcHigh + crcLow + crcHigh;
+    checkSum = temp & 0xff;
+    checkSum = 0xff - checkSum;
+    return checkSum;
 }
 
 //帮助信息
@@ -919,13 +897,10 @@ void MainWindow::showHelpInfo(CmdType cmd)
         hlpInfo << tr("3.3.5.2 指令：<u>:t19 s021 fill</u>或<u>:ts0f</u>.");
 
         hlpInfo << tr("4 开发辅助工具.");
-        hlpInfo << tr("4.1 CRC计算工具.");
-        hlpInfo << tr("4.1.1 定义：对指定文件的所有字节进行CRC计算，并在软件屏幕上回显文件内容及计算结果.");
-        hlpInfo << tr("4.1.2 指令：<u>:crc calc</u>或<u>:crc</u>.");
-        hlpInfo << tr("4.2 文件转字符串工具.");
-        hlpInfo << tr("4.2.1 定义：将指定文件的所有字节生成C/C++语言能识别的数组，并存储为.h文件.");
-        hlpInfo << tr("4.2.2 指令：<u>:convert code to string</u>或<u>:c2s</u>.");
-        hlpInfo << tr("4.2.3 备注：本工具原用途为将默认bootloader代码转换为字符串，故相关文件名等信息将包含bootloader字样，作为他用时可自行更改相关命名.");
+        hlpInfo << tr("4.1 文件转字符串工具.");
+        hlpInfo << tr("4.1.1 定义：将指定文件的所有字节生成C/C++语言能识别的数组，并存储为.h文件.");
+        hlpInfo << tr("4.1.2 指令：<u>:convert code to string</u>或<u>:c2s</u>.");
+        hlpInfo << tr("4.1.3 备注：本工具原用途为将默认bootloader代码转换为字符串，故相关文件名等信息将包含bootloader字样，作为他用时可自行更改相关命名.");
     }
     else if(CMD_HELP_BOOTLOADER == cmd)
     {
@@ -944,11 +919,10 @@ void MainWindow::showHelpInfo(CmdType cmd)
         hlpInfo << tr("1 点击<u>load file</u>按钮选择.S19原app文件.");
         hlpInfo << tr("2 输入S021数据，该数据最终将位于app的第一行.");
         hlpInfo << tr("2.1 在命令行可查询程序预置的S021数据，请在命令行输入<u>:?</u>获取相关命令信息.");
-        hlpInfo << tr("2.2 正确输入S021数据后，将光标置于S021数据所在的输入框后，点击回车键可以修改版本号，版本号格式需严格匹配<u>xx.xx.xx</u>,x为0-9或a-f,字母不区分大小写，最终按大写字母写入文件.");
-        hlpInfo << tr("3 点击<u>generate</u>按钮生成用于计算CRC的临时文件，弹出请求S20C数据的对话框，并将临时文件的路径存入系统剪贴板.");
-        hlpInfo << tr("4 用第三方软件对临时文件计算CRC并生成S20C数据，该数据最终将位于app的倒数第二行，将S20C结果回填至对话框.");
-        hlpInfo << tr("5 点击对话框<u>OK</u>按钮，生成诊断仪app文件,并自动打开该文件所在的目录且选中该文件.");
-        hlpInfo << tr("6 该文件夹下还将自动生成flash driver文件，请将诊断仪app文件和flash driver文件一同加入压缩包提供给使用者.");
+        hlpInfo << tr("2.2 也可以在S021输入框输入<u>:t</u>并按回车键获取T18/T19预置的S021数据；输入<u>:m</u>并按回车键获取M1A/M1D预置的S021数据.");
+        hlpInfo << tr("2.3 正确输入S021数据后，将光标置于S021数据所在的输入框后，点击回车键可以修改版本号，版本号格式需严格匹配<u>xx.xx.xx</u>,x为0-9或a-f,字母不区分大小写，最终按大写字母写入文件.");
+        hlpInfo << tr("3 点击<u>generate</u>按钮，生成诊断仪app文件,并自动打开该文件所在的目录且选中该文件.");
+        hlpInfo << tr("4 该文件夹下还将自动生成flash driver文件，请将诊断仪app文件和flash driver文件一同加入压缩包提供给使用者.");
     }
 
     ptOutputWnd->clear();
@@ -1210,7 +1184,7 @@ void MainWindow::componentsInitialization(void)
     m_leDiagnosisS021->setStatusTip("press enter to modify version");
     m_leDiagnosisS20C = new QLineEdit;
     m_leDiagnosisS20C->setReadOnly(true);
-    m_leDiagnosisS20C->setStatusTip("obtain from 3rd party software");
+    m_leDiagnosisS20C->setStatusTip("crc and checksum infos");
 
     //命令行输入输出窗口
     m_leRunCommand = new QLineEdit;
@@ -1307,7 +1281,6 @@ void MainWindow::commandsInitialization()
     cmdList.push_back({ CMD_LOAD_CONFIG_FILE, {":load config file", ":lcf"} });
     cmdList.push_back({ CMD_CODE_TO_STRING, {":convert code to string", ":c2s"} });
     cmdList.push_back({ CMD_GEN_FLASH_DRIVER, {":flash driver", ":fd"} });
-    cmdList.push_back({ CMD_CRC_CALCULATOR, {":crc calc", ":crc"} });
     cmdList.push_back({ CMD_DIAG_M1A_S021, {":m1a s021", ":ms0"} });
     cmdList.push_back({ CMD_DIAG_M1A_S021_AUTOFILL, {":m1a s021 fill", ":ms0f"} });
     cmdList.push_back({ CMD_DIAG_T19_S021, {":t19 s021", ":ts0"} });
