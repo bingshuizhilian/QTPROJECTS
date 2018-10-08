@@ -652,7 +652,7 @@ void MainWindow::generateFirmwareForDiagnosis()
     for(int cnt = 0; cnt < crcCalcString.size(); cnt += 2)
         dataList.push_back(crcCalcString.mid(cnt, 2).toInt(nullptr, 16) & 0xff);
 
-    unsigned short crc = calcCRC(dataList);
+    unsigned short crc = calcCRC16(dataList);
     unsigned char chkSum = calcChecksum(crc);
 
     qDebug() << dataList.size();
@@ -790,7 +790,7 @@ int MainWindow::hexCharToHex(char src)
 }
 
 //计算CRC，参考《ECU bootloader and programming implementation specification》
-unsigned short MainWindow::calcCRC(QList<unsigned char> data_list)
+unsigned short MainWindow::calcCRC16(QList<unsigned char> data_list)
 {
     unsigned short crc = 0xffff; /* initial value */
     unsigned char tmp = 0;
@@ -805,7 +805,7 @@ unsigned short MainWindow::calcCRC(QList<unsigned char> data_list)
     return crc;
 }
 
-//计算CRC对应的checksum
+//计算S20C行的checksum
 unsigned char MainWindow::calcChecksum(unsigned short crc)
 {
     unsigned char checkSum = 0;

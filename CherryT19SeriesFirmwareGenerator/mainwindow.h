@@ -119,7 +119,7 @@ private:
     void generateCharArray(void);
     bool sortS19Code(QStringList &originalStringList);
     int hexCharToHex(char src);
-    unsigned short calcCRC(QList<unsigned char> data_list);
+    unsigned short calcCRC16(QList<unsigned char> data_list);
     unsigned char calcChecksum(unsigned short crc);
     void showHelpInfo(CmdType cmd);
     void procConfigFile(CmdType cmd);
