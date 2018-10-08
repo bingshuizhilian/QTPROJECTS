@@ -749,7 +749,6 @@ bool MainWindow::sortS19Code(QStringList &originalStringList)
                 QMessageBox::warning(this, "Warnning", "check:" + elem, QMessageBox::Yes);
                 return false;
             }
-
         }
     }
 
