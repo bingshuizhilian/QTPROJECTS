@@ -530,22 +530,6 @@ void MainWindow::generateFirmwareForDiagnosis()
         return;
     }
 
-    if(m_leDiagnosisS021->text().isEmpty())
-    {
-        QMessageBox::warning(this, "Warnning", "Please input S021 data", QMessageBox::Yes);
-        return;
-    }
-    else
-    {
-        if(!m_leDiagnosisS021->text().startsWith("S021", Qt::CaseInsensitive)
-                || m_leDiagnosisS021->text().size() < DIAG_M1A_S021_MIN_LENGTH
-                || m_leDiagnosisS021->text().size() % 2 != 0)
-        {
-            QMessageBox::warning(this, "Warnning", "Please check S021 data", QMessageBox::Yes);
-            return;
-        }
-    }
-
     //获取.S19原文件
     QString fileName =fileInfo.at(ABSOLUTE_FILE_PATH);
     QFile s19File(fileName);
@@ -593,6 +577,23 @@ void MainWindow::generateFirmwareForDiagnosis()
     {
         QMessageBox::warning(this, "Warnning", "please check the .S19 file, interrupt vector table S10B line doesn't exist", QMessageBox::Yes);
         return;
+    }
+
+    //校验S021行数据
+    if(m_leDiagnosisS021->text().isEmpty())
+    {
+        QMessageBox::warning(this, "Warnning", "Please input S021 data", QMessageBox::Yes);
+        return;
+    }
+    else
+    {
+        if(!m_leDiagnosisS021->text().startsWith("S021", Qt::CaseInsensitive)
+                || m_leDiagnosisS021->text().size() < DIAG_M1A_S021_MIN_LENGTH
+                || m_leDiagnosisS021->text().size() % 2 != 0)
+        {
+            QMessageBox::warning(this, "Warnning", "Please check S021 data", QMessageBox::Yes);
+            return;
+        }
     }
 
     //替换S0行，删除S10B行
