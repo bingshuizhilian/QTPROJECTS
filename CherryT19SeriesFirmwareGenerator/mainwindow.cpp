@@ -278,7 +278,9 @@ void MainWindow::s021ReturnPressed()
     }
 
     //S021***30302E30312E323040, 至少也要有22个有效字节(实际要更多，这里先这样校验即可)
-    if(!originalS021Data.startsWith("S021", Qt::CaseInsensitive) || originalS021Data.size() < DIAG_M1A_S021_MIN_LENGTH)
+    if(!originalS021Data.startsWith("S021", Qt::CaseInsensitive)
+            || originalS021Data.size() < DIAG_M1A_S021_MIN_LENGTH
+            || m_leDiagnosisS021->text().size() % 2 != 0)
     {
         QMessageBox::warning(this, "Warnning", "invalid data, couldn't modify version", QMessageBox::Yes);
         return;
