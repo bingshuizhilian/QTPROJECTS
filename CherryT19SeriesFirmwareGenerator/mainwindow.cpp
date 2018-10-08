@@ -645,7 +645,6 @@ void MainWindow::generateFirmwareForDiagnosis()
         return;
     }
 
-
     //将数字字符串重组成数字，e.g. "91b0"->0x91 0xb0
     QList<unsigned char> dataList;
     for(int cnt = 0; cnt < crcCalcString.size(); cnt += 2)
@@ -656,9 +655,9 @@ void MainWindow::generateFirmwareForDiagnosis()
 
     qDebug() << dataList.size();
     qDebug() << "crc: 0x" + QString::number(crc, 16);
-    qDebug() << "crc high: 0x" + QString::number((crc>>8)&0xff, 16);
-    qDebug() << "crc low: 0x" + QString::number(crc&0xff, 16);
-    qDebug() << "crc checksum: 0x" + QString::number(chkSum, 16);
+    qDebug() << "crc high: 0x" + QString::number((crc >> 8) & 0xff, 16);
+    qDebug() << "crc low: 0x" + QString::number(crc & 0xff, 16);
+    qDebug() << "checksum: 0x" + QString::number(chkSum, 16);
 
     //S2 0C F48000 XX XX  XX XX  XX XX  XX XX  CHK
     QString s20cText = "S20CFE8000";
@@ -722,7 +721,7 @@ bool MainWindow::sortS19Code(QStringList &originalStringList)
 {
     QStringList stringListS0AndS9;
     QStringList stringListS1;
-    QStringList stringListS2[16];
+    QStringList stringListS2[16]; //F0-FF最多16组
 
     //S0、S9行
     stringListS0AndS9.push_back(originalStringList.first());
