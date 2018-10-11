@@ -149,7 +149,7 @@ void MainWindow::runCmdReturnPressed()
     case CMD_GEN_FLASH_DRIVER:
     {
         QString dirPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
-        dirPath.append("/CherryT19SeriesFlashDriver/");
+        dirPath.append("/cheryT19SeriesFlashDriver/");
         ptOutputWnd->clear();
         ptOutputWnd->appendPlainText(dirPath.left(dirPath.size() - 1));
         generateFiles(findCmd, dirPath, true);
@@ -158,7 +158,7 @@ void MainWindow::runCmdReturnPressed()
     case CMD_GEN_ERASE_EEPROM:
     {
         QString dirPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
-        dirPath.append("/CherryT19SeriesEraseEepromFirmware/");
+        dirPath.append("/cheryT19SeriesEraseEepromFirmware/");
         ptOutputWnd->clear();
         ptOutputWnd->appendPlainText(dirPath.left(dirPath.size() - 1));
         generateFiles(findCmd, dirPath, true);
@@ -167,7 +167,7 @@ void MainWindow::runCmdReturnPressed()
     case CMD_GEN_BOOT_CODE:
     {
         QString dirPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
-        dirPath.append("/CherryT19SeriesBootCode/");
+        dirPath.append("/cheryT19SeriesBootCode/");
         ptOutputWnd->clear();
         ptOutputWnd->appendPlainText(dirPath.left(dirPath.size() - 1));
         generateFiles(findCmd, dirPath, true);
@@ -511,15 +511,15 @@ void MainWindow::generateFiles(CmdType cmd, QString dir_path, bool is_open_folde
     switch(cmd)
     {
     case CMD_GEN_FLASH_DRIVER:
-        filePathName += "CherryT19SeriesFlashDriver.S19";
+        filePathName += "cheryT19SeriesFlashDriver.S19";
         fileContent = DEFAULT_FLASHDRIVER_CODE;
         break;
     case CMD_GEN_ERASE_EEPROM:
-        filePathName += "CherryT19SeriesEraseEepromFirmware.S19";
+        filePathName += "cheryT19SeriesEraseEepromFirmware.S19";
         fileContent = DEFAULT_ERASE_EEPROM_CODE;
         break;
     case CMD_GEN_BOOT_CODE:
-        filePathName += "CherryT19SeriesBootCode.S19";
+        filePathName += "cheryT19SeriesBootCode.S19";
         fileContent = DEFAULT_BOOTLOADER_CODE;
         break;
     default:
