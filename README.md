@@ -1,5 +1,5 @@
 # QTPROJECTS-FIRMWARE_GENERATOR
-Cherry T19 series firmware generate tool
+Chery T19 series firmware generate tool
 
 bootloader合成页截图\
 ![bootloader合成页截图](https://github.com/bingshuizhilian/QTPROJECTS-FIRMWARE_GENERATOR/blob/master/resources/pic1.png)
