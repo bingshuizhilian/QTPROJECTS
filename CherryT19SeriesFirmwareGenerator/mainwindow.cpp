@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include "defaultBootloaderCode.h"
 #include "defaultFlashDriverCode.h"
+#include "defaultEraseEepromCode.h"
 #include "crc16.h"
 #include <QFile>
 #include <QFileDialog>
@@ -151,7 +152,25 @@ void MainWindow::runCmdReturnPressed()
         dirPath.append("/CherryT19SeriesFlashDriver/");
         ptOutputWnd->clear();
         ptOutputWnd->appendPlainText(dirPath.left(dirPath.size() - 1));
-        generateFlashDriverForDiagnosis(dirPath, true);
+        generateFiles(findCmd, dirPath, true);
+        break;
+    }
+    case CMD_GEN_ERASE_EEPROM:
+    {
+        QString dirPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
+        dirPath.append("/CherryT19SeriesEraseEepromFirmware/");
+        ptOutputWnd->clear();
+        ptOutputWnd->appendPlainText(dirPath.left(dirPath.size() - 1));
+        generateFiles(findCmd, dirPath, true);
+        break;
+    }
+    case CMD_GEN_BOOT_CODE:
+    {
+        QString dirPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
+        dirPath.append("/CherryT19SeriesBootCode/");
+        ptOutputWnd->clear();
+        ptOutputWnd->appendPlainText(dirPath.left(dirPath.size() - 1));
+        generateFiles(findCmd, dirPath, true);
         break;
     }
     case CMD_DIAG_M1A_S021_AUTOFILL:
@@ -484,9 +503,28 @@ void MainWindow::generateFirmwareWithBootloader()
 }
 
 //生成诊断仪用flash driver
-void MainWindow::generateFlashDriverForDiagnosis(QString dir_path, bool is_open_folder)
+void MainWindow::generateFiles(CmdType cmd, QString dir_path, bool is_open_folder)
 {
-    QString filePathName = dir_path + "CherryT19SeriesFlashDriver.S19";
+    QString filePathName = dir_path;
+    const char *fileContent = nullptr;
+
+    switch(cmd)
+    {
+    case CMD_GEN_FLASH_DRIVER:
+        filePathName += "CherryT19SeriesFlashDriver.S19";
+        fileContent = DEFAULT_FLASHDRIVER_CODE;
+        break;
+    case CMD_GEN_ERASE_EEPROM:
+        filePathName += "CherryT19SeriesEraseEepromFirmware.S19";
+        fileContent = DEFAULT_ERASE_EEPROM_CODE;
+        break;
+    case CMD_GEN_BOOT_CODE:
+        filePathName += "CherryT19SeriesBootCode.S19";
+        fileContent = DEFAULT_BOOTLOADER_CODE;
+        break;
+    default:
+        break;
+    }
 
     QDir dir(dir_path);
     if(!dir.exists())
@@ -507,7 +545,8 @@ void MainWindow::generateFlashDriverForDiagnosis(QString dir_path, bool is_open_
     }
 
     QTextStream out(&newFile);
-    out << DEFAULT_FLASHDRIVER_CODE;
+    out << fileContent;
+
 
     newFile.close();
 
@@ -706,7 +745,7 @@ void MainWindow::generateFirmwareForDiagnosis()
     newFile.close();
 
     //同时生成一个flash driver
-    generateFlashDriverForDiagnosis(dirPath, false);
+    generateFiles(CMD_GEN_FLASH_DRIVER, dirPath, false);
 
     //windows系统下直接打开该文件夹并选中诊断仪app文件
 #ifdef WIN32
@@ -896,12 +935,19 @@ void MainWindow::showHelpInfo(CmdType cmd)
         hlpInfo << tr("3.3.5 自动填充适用于T19的S021代码.");
         hlpInfo << tr("3.3.5.1 定义：将程序预置的适用于T19的S021代码显示在软件屏幕上，并自动输入到S021代码输入框.");
         hlpInfo << tr("3.3.5.2 指令：<u>:t19 s021 fill</u>或<u>:ts0f</u>.");
+        hlpInfo << tr("3.4 生成erase eeprom firmware文件.");
+        hlpInfo << tr("3.4.1 定义：生成用于清除仪表eeprom的.S19固件.");
+        hlpInfo << tr("3.4.2 指令：<u>:erase eeprom</u>或<u>:eep</u>.");
+        hlpInfo << tr("3.4.3 备注：烧录此固件后会擦除仪表原来的app固件，需要重新烧录app固件.");
+        hlpInfo << tr("3.5 生成boot code文件.");
+        hlpInfo << tr("3.5.1 定义：生成T19系列boot代码段的.S19固件.");
+        hlpInfo << tr("3.5.2 指令：<u>:boot code</u>或<u>:bc</u>.");
+        hlpInfo << tr("3.5.3 备注：此固件不可单独烧录至仪表，需要合成到仪表app固件中，合成方法参考3.1节.");
 
         hlpInfo << tr("4 开发辅助工具.");
         hlpInfo << tr("4.1 文件转字符串工具.");
         hlpInfo << tr("4.1.1 定义：将指定文件的所有字节生成C/C++语言能识别的数组，并存储为.h文件.");
         hlpInfo << tr("4.1.2 指令：<u>:convert code to string</u>或<u>:c2s</u>.");
-        hlpInfo << tr("4.1.3 备注：本工具原用途为将默认bootloader代码转换为字符串，故相关文件名等信息将包含bootloader字样，作为他用时可自行更改相关命名.");
     }
     else if(CMD_HELP_BOOTLOADER == cmd)
     {
@@ -1100,15 +1146,15 @@ void MainWindow::generateCharArray()
     if(!targetCodeStringList.isEmpty())
         targetCodeStringList.last().insert(targetCodeStringList.last().size() - 1, ';');
 
-    targetCodeStringList.push_front("const char* DEFAULT_BOOTLOADER_CODE =\n");
-    targetCodeStringList.push_front("#define __DEFAULT_BOOTLOADER_CODE_H__\n\n");
-    targetCodeStringList.push_front("#ifndef __DEFAULT_BOOTLOADER_CODE_H__\n");
+    targetCodeStringList.push_front("const char* DEFAULT_XX_CODE =\n");
+    targetCodeStringList.push_front("#define __DEFAULT_XX_CODE_H__\n\n");
+    targetCodeStringList.push_front("#ifndef __DEFAULT_XX_CODE_H__\n");
     targetCodeStringList.push_back("\n#endif\n");
 
     for(auto& elem:targetCodeStringList)
         qDebug()<<elem<<endl;
 
-    QString tmpFileName = "defaultBootloaderCode_";
+    QString tmpFileName = "defaultXxCode_";
     QString timeInfo = QDateTime::currentDateTime().toString("yyyy-MM-dd_HH-mm-ss");
     tmpFileName += timeInfo + ".h";
 
@@ -1282,6 +1328,8 @@ void MainWindow::commandsInitialization()
     cmdList.push_back({ CMD_LOAD_CONFIG_FILE, {":load config file", ":lcf"} });
     cmdList.push_back({ CMD_CODE_TO_STRING, {":convert code to string", ":c2s"} });
     cmdList.push_back({ CMD_GEN_FLASH_DRIVER, {":flash driver", ":fd"} });
+    cmdList.push_back({ CMD_GEN_ERASE_EEPROM, {":erase eeprom", ":ee"} });
+    cmdList.push_back({ CMD_GEN_BOOT_CODE, {":boot code", ":bc"} });
     cmdList.push_back({ CMD_DIAG_M1A_S021, {":m1a s021", ":ms0"} });
     cmdList.push_back({ CMD_DIAG_M1A_S021_AUTOFILL, {":m1a s021 fill", ":ms0f"} });
     cmdList.push_back({ CMD_DIAG_T19_S021, {":t19 s021", ":ts0"} });

@@ -53,6 +53,8 @@ private:
         CMD_LOAD_CONFIG_FILE,
         CMD_CODE_TO_STRING,
         CMD_GEN_FLASH_DRIVER,
+        CMD_GEN_ERASE_EEPROM,
+        CMD_GEN_BOOT_CODE,
         CMD_DIAG_M1A_S021,
         CMD_DIAG_M1A_S021_AUTOFILL,
         CMD_DIAG_T19_S021,
@@ -115,7 +117,7 @@ private:
     void commandsInitialization(void);
     void generateFirmwareWithBootloader();
     void generateFirmwareForDiagnosis();
-    void generateFlashDriverForDiagnosis(QString dir_path, bool is_open_folder);
+    void generateFiles(CmdType cmd, QString dir_path, bool is_open_folder);
     void generateCharArray(void);
     bool sortS19Code(QStringList &originalStringList);
     int hexCharToHex(char src);

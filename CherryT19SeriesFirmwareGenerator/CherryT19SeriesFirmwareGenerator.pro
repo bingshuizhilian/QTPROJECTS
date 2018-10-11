@@ -30,6 +30,7 @@ SOURCES += main.cpp\
 HEADERS  += mainwindow.h \
     defaultBootloaderCode.h \
     defaultFlashDriverCode.h \
-    crc16.h
+    crc16.h \
+    defaultEraseEepromCode.h
 
 FORMS    += mainwindow.ui
