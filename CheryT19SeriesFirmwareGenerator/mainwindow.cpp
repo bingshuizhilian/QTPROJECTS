@@ -1190,7 +1190,7 @@ void MainWindow::generateCharArray()
 //控件初始化
 void MainWindow::componentsInitialization(void)
 {
-    setWindowTitle(tr("CherryT19SeriesFirmwareGenerator"));
+    setWindowTitle(tr("CheryT19SeriesFirmwareGenerator"));
 
     //窗体名称及状态栏设置
     auto labelAuthorInfo = new QLabel;
