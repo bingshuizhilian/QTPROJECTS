@@ -937,7 +937,7 @@ void MainWindow::showHelpInfo(CmdType cmd)
         hlpInfo << tr("3.3.5.2 指令：<u>:t19 s021 fill</u>或<u>:ts0f</u>.");
         hlpInfo << tr("3.4 生成erase eeprom firmware文件.");
         hlpInfo << tr("3.4.1 定义：生成用于清除仪表eeprom的.S19固件.");
-        hlpInfo << tr("3.4.2 指令：<u>:erase eeprom</u>或<u>:eep</u>.");
+        hlpInfo << tr("3.4.2 指令：<u>:erase eeprom</u>或<u>:ee</u>.");
         hlpInfo << tr("3.4.3 备注：烧录此固件后会擦除仪表原来的app固件，需要重新烧录app固件.");
         hlpInfo << tr("3.5 生成boot code文件.");
         hlpInfo << tr("3.5.1 定义：生成T19系列boot代码段的.S19固件.");
