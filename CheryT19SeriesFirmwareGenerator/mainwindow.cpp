@@ -954,7 +954,7 @@ void MainWindow::showHelpInfo(CmdType cmd)
         hlpInfo << tr("《BootLoader合成工具使用方法》");
         hlpInfo << tr("0 将<u>switch function</u>（或<u>input command</u>）切换至<u>add bootloader to firmware</u>.");
         hlpInfo << tr("1 加载bootloader代码段的两种方式.");
-        hlpInfo << tr("1.1 方式一：加载默认bootloader代码段，只需勾选<u>default</u>， 程序默认设置其为勾选状态.");
+        hlpInfo << tr("1.1 方式一：加载默认bootloader代码段，勾选<u>default</u>即可，程序已经默认设置其为勾选状态.");
         hlpInfo << tr("1.2 方式二：加载其它bootloader代码段，去勾选<u>default</u>，点击<u>load bootloader</u>按钮选择其它bootloader文件.");
         hlpInfo << tr("2 点击<u>load file</u>按钮选择.S19原app文件.");
         hlpInfo << tr("3 点击<u>generate</u>按钮生成含bootloader的新app文件,并自动打开该文件所在的目录且选中该文件.");
