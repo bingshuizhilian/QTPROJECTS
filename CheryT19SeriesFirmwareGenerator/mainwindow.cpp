@@ -149,7 +149,7 @@ void MainWindow::runCmdReturnPressed()
     case CMD_GEN_FLASH_DRIVER:
     {
         QString dirPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
-        dirPath.append("/cheryT19SeriesFlashDriver/");
+        dirPath.append("/cheryM1SeriesFlashDriver/");
         ptOutputWnd->clear();
         ptOutputWnd->appendPlainText(dirPath.left(dirPath.size() - 1));
         generateFiles(findCmd, dirPath, true);
@@ -158,7 +158,7 @@ void MainWindow::runCmdReturnPressed()
     case CMD_GEN_ERASE_EEPROM:
     {
         QString dirPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
-        dirPath.append("/cheryT19SeriesEraseEepromFirmware/");
+        dirPath.append("/cheryM1SeriesEraseEepromFirmware/");
         ptOutputWnd->clear();
         ptOutputWnd->appendPlainText(dirPath.left(dirPath.size() - 1));
         generateFiles(findCmd, dirPath, true);
@@ -167,17 +167,17 @@ void MainWindow::runCmdReturnPressed()
     case CMD_GEN_BOOT_CODE:
     {
         QString dirPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
-        dirPath.append("/cheryT19SeriesBootCode/");
+        dirPath.append("/cheryM1SeriesBootCode/");
         ptOutputWnd->clear();
         ptOutputWnd->appendPlainText(dirPath.left(dirPath.size() - 1));
         generateFiles(findCmd, dirPath, true);
         break;
     }
-    case CMD_DIAG_M1A_S021_AUTOFILL:
-        m_leDiagnosisS021->setText(DIAG_M1A_S021);
-    case CMD_DIAG_M1A_S021:
+    case CMD_DIAG_M1_S021_AUTOFILL:
+        m_leDiagnosisS021->setText(DIAG_M1_S021);
+    case CMD_DIAG_M1_S021:
         ptOutputWnd->clear();
-        ptOutputWnd->appendPlainText(DIAG_M1A_S021);
+        ptOutputWnd->appendPlainText(DIAG_M1_S021);
         break;
     case CMD_DIAG_T19_S021_AUTOFILL:
         m_leDiagnosisS021->setText(DIAG_T19_S021);
@@ -286,7 +286,7 @@ void MainWindow::s021ReturnPressed()
 
     if(":M" == m_leDiagnosisS021->text() || ":m" == m_leDiagnosisS021->text())
     {
-        m_leDiagnosisS021->setText(DIAG_M1A_S021);
+        m_leDiagnosisS021->setText(DIAG_M1_S021);
         return;
     }
 
@@ -298,7 +298,7 @@ void MainWindow::s021ReturnPressed()
 
     //S021***30302E30312E323040, 至少也要有22个有效字节(实际要更多，这里先这样校验即可)
     if(!originalS021Data.startsWith("S021", Qt::CaseInsensitive)
-            || originalS021Data.size() < DIAG_M1A_S021_MIN_LENGTH
+            || originalS021Data.size() < DIAG_M1_S021_MIN_LENGTH
             || m_leDiagnosisS021->text().size() % 2 != 0)
     {
         QMessageBox::warning(this, "Warnning", "invalid data, couldn't modify version", QMessageBox::Yes);
@@ -511,15 +511,15 @@ void MainWindow::generateFiles(CmdType cmd, QString dir_path, bool is_open_folde
     switch(cmd)
     {
     case CMD_GEN_FLASH_DRIVER:
-        filePathName += "cheryT19SeriesFlashDriver.S19";
+        filePathName += "CheryM1SeriesFlashDriver.S19";
         fileContent = DEFAULT_FLASHDRIVER_CODE;
         break;
     case CMD_GEN_ERASE_EEPROM:
-        filePathName += "cheryT19SeriesEraseEepromFirmware.S19";
+        filePathName += "CheryM1SeriesEraseEepromFirmware.S19";
         fileContent = DEFAULT_ERASE_EEPROM_CODE;
         break;
     case CMD_GEN_BOOT_CODE:
-        filePathName += "cheryT19SeriesBootCode.S19";
+        filePathName += "CheryM1SeriesBootCode.S19";
         fileContent = DEFAULT_BOOTLOADER_CODE;
         break;
     default:
@@ -629,7 +629,7 @@ void MainWindow::generateFirmwareForDiagnosis()
     else
     {
         if(!m_leDiagnosisS021->text().startsWith("S021", Qt::CaseInsensitive)
-                || m_leDiagnosisS021->text().size() < DIAG_M1A_S021_MIN_LENGTH
+                || m_leDiagnosisS021->text().size() < DIAG_M1_S021_MIN_LENGTH
                 || m_leDiagnosisS021->text().size() % 2 != 0)
         {
             QMessageBox::warning(this, "Warnning", "Please check S021 data", QMessageBox::Yes);
@@ -913,22 +913,22 @@ void MainWindow::showHelpInfo(CmdType cmd)
 
         hlpInfo << tr("3 天有为开发工具功能.");
         hlpInfo << tr("3.1 bootloader合成.");
-        hlpInfo << tr("3.1.1 定义：奇瑞T19系列bootloader合成方法介绍.");
+        hlpInfo << tr("3.1.1 定义：奇瑞M1系列bootloader合成方法介绍.");
         hlpInfo << tr("3.1.2 指令：<u>:bootloader?</u>或<u>:b?</u>.");
         hlpInfo << tr("3.2 诊断仪app合成.");
-        hlpInfo << tr("3.2.1 定义：奇瑞T19系列诊断仪app合成方法介绍.");
+        hlpInfo << tr("3.2.1 定义：奇瑞M1系列诊断仪app合成方法介绍.");
         hlpInfo << tr("3.2.2 指令：<u>:diagnosis?</u>或<u>:d?</u>.");
         hlpInfo << tr("3.3 诊断仪app合成辅助工具.");
         hlpInfo << tr("3.3.1 生成flash driver文件.");
         hlpInfo << tr("3.3.1.1 定义：独立生成一个诊断仪用flash driver文件.");
         hlpInfo << tr("3.3.1.2 指令：<u>:flash driver</u>或<u>:fd</u>.");
         hlpInfo << tr("3.3.1.3 备注：用3.2节方法也会自动生成flash driver文件.");
-        hlpInfo << tr("3.3.2 生成适用于M1A的S021代码.");
-        hlpInfo << tr("3.3.2.1 定义：将程序预置的适用于M1A的S021代码显示在软件屏幕上.");
-        hlpInfo << tr("3.3.2.2 指令：<u>:m1a s021</u>或<u>:ms0</u>.");
-        hlpInfo << tr("3.3.3 自动填充适用于M1A的S021代码.");
-        hlpInfo << tr("3.3.3.1 定义：将程序预置的适用于M1A的S021代码显示在软件屏幕上，并自动输入到S021代码输入框.");
-        hlpInfo << tr("3.3.3.2 指令：<u>:m1a s021 fill</u>或<u>:ms0f</u>.");
+        hlpInfo << tr("3.3.2 生成适用于M1的S021代码.");
+        hlpInfo << tr("3.3.2.1 定义：将程序预置的适用于M1的S021代码显示在软件屏幕上.");
+        hlpInfo << tr("3.3.2.2 指令：<u>:m1 s021</u>或<u>:ms0</u>.");
+        hlpInfo << tr("3.3.3 自动填充适用于M1的S021代码.");
+        hlpInfo << tr("3.3.3.1 定义：将程序预置的适用于M1的S021代码显示在软件屏幕上，并自动输入到S021代码输入框.");
+        hlpInfo << tr("3.3.3.2 指令：<u>:m1 s021 fill</u>或<u>:ms0f</u>.");
         hlpInfo << tr("3.3.4 生成适用于T19的S021代码.");
         hlpInfo << tr("3.3.4.1 定义：将程序预置的适用于T19的S021代码显示在软件屏幕上.");
         hlpInfo << tr("3.3.4.2 指令：<u>:t19 s021</u>或<u>:ts0</u>.");
@@ -940,7 +940,7 @@ void MainWindow::showHelpInfo(CmdType cmd)
         hlpInfo << tr("3.4.2 指令：<u>:erase eeprom</u>或<u>:ee</u>.");
         hlpInfo << tr("3.4.3 备注：烧录此固件后会擦除仪表原来的app固件，需要重新烧录app固件.");
         hlpInfo << tr("3.5 生成boot code文件.");
-        hlpInfo << tr("3.5.1 定义：生成T19系列boot代码段的.S19固件.");
+        hlpInfo << tr("3.5.1 定义：生成M1系列boot代码段的.S19固件.");
         hlpInfo << tr("3.5.2 指令：<u>:boot code</u>或<u>:bc</u>.");
         hlpInfo << tr("3.5.3 备注：此固件不可单独烧录至仪表，需要合成到仪表app固件中，合成方法参考3.1节.");
 
@@ -1190,7 +1190,7 @@ void MainWindow::generateCharArray()
 //控件初始化
 void MainWindow::componentsInitialization(void)
 {
-    setWindowTitle(tr("CheryT19SeriesFirmwareGenerator"));
+    setWindowTitle(tr("CheryM1SeriesFirmwareGenerator"));
 
     //窗体名称及状态栏设置
     auto labelAuthorInfo = new QLabel;
@@ -1330,8 +1330,8 @@ void MainWindow::commandsInitialization()
     cmdList.push_back({ CMD_GEN_FLASH_DRIVER, {":flash driver", ":fd"} });
     cmdList.push_back({ CMD_GEN_ERASE_EEPROM, {":erase eeprom", ":ee"} });
     cmdList.push_back({ CMD_GEN_BOOT_CODE, {":boot code", ":bc"} });
-    cmdList.push_back({ CMD_DIAG_M1A_S021, {":m1a s021", ":ms0"} });
-    cmdList.push_back({ CMD_DIAG_M1A_S021_AUTOFILL, {":m1a s021 fill", ":ms0f"} });
+    cmdList.push_back({ CMD_DIAG_M1_S021, {":m1 s021", ":ms0"} });
+    cmdList.push_back({ CMD_DIAG_M1_S021_AUTOFILL, {":m1 s021 fill", ":ms0f"} });
     cmdList.push_back({ CMD_DIAG_T19_S021, {":t19 s021", ":ts0"} });
     cmdList.push_back({ CMD_DIAG_T19_S021_AUTOFILL, {":t19 s021 fill", ":ts0f"} });
 #if WIN32
