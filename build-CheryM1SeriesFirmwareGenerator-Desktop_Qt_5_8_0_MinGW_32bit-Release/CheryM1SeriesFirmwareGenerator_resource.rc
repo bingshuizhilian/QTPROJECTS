@@ -23,8 +23,8 @@ VS_VERSION_INFO VERSIONINFO
 				VALUE "FileDescription", "\0"
 				VALUE "FileVersion", "0.0.0.0\0"
 				VALUE "LegalCopyright", "\0"
-				VALUE "OriginalFilename", "CheryT19SeriesFirmwareGenerator.exe\0"
-				VALUE "ProductName", "CheryT19SeriesFirmwareGenerator\0"
+				VALUE "OriginalFilename", "CheryM1SeriesFirmwareGenerator.exe\0"
+				VALUE "ProductName", "CheryM1SeriesFirmwareGenerator\0"
 				VALUE "ProductVersion", "0.0.0.0\0"
 			END
 		END
