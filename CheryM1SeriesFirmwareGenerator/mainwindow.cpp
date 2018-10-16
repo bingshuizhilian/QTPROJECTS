@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "defaultBootloaderCode.h"
+#include "defaultM1SeriesBootCode.h"
+#include "defaultT1SeriesBootCode.h"
 #include "defaultFlashDriverCode.h"
 #include "defaultEraseEepromCode.h"
 #include "crc16.h"
@@ -164,10 +165,19 @@ void MainWindow::runCmdReturnPressed()
         generateFiles(findCmd, dirPath, true);
         break;
     }
-    case CMD_GEN_BOOT_CODE:
+    case CMD_GEN_M1_BOOT_CODE:
     {
         QString dirPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
         dirPath.append("/cheryM1SeriesBootCode/");
+        ptOutputWnd->clear();
+        ptOutputWnd->appendPlainText(dirPath.left(dirPath.size() - 1));
+        generateFiles(findCmd, dirPath, true);
+        break;
+    }
+    case CMD_GEN_T1_BOOT_CODE:
+    {
+        QString dirPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
+        dirPath.append("/cheryT1SeriesBootCode/");
         ptOutputWnd->clear();
         ptOutputWnd->appendPlainText(dirPath.left(dirPath.size() - 1));
         generateFiles(findCmd, dirPath, true);
@@ -224,6 +234,11 @@ void MainWindow::runCmdReturnPressed()
     }
 }
 
+void MainWindow::switchPlatformPressed()
+{
+    m_leBootloaderInfo->setText("default " + m_cmbPlatformSwitch->currentText() + " boot code loaded");
+}
+
 //处理按下generate按钮事件
 void MainWindow::generateButtonPressed()
 {
@@ -249,9 +264,10 @@ void MainWindow::useDefaultBootloaderPressed()
     if(m_ckbUseDefaultBootloader->isChecked())
     {
         m_btnLoadBootloader->setEnabled(false);
-        m_leBootloaderInfo->setText(tr("default boot code is loaded"));
+        m_leBootloaderInfo->setText("default " + m_cmbPlatformSwitch->currentText() + " boot code loaded");
         m_leBootloaderInfo->setEnabled(false);
         m_btnLoadBootloader->setStatusTip(tr("use default boot code now"));
+        m_cmbPlatformSwitch->setEnabled(true);
     }
     else
     {
@@ -259,6 +275,7 @@ void MainWindow::useDefaultBootloaderPressed()
         m_leBootloaderInfo->setEnabled(true);
         m_leBootloaderInfo->clear();
         m_btnLoadBootloader->setStatusTip(tr("select the bootloader file"));
+        m_cmbPlatformSwitch->setEnabled(false);
     }
 }
 
@@ -403,10 +420,17 @@ void MainWindow::generateFirmwareWithBootloader()
 
         bootloaderFile.close();
 
-        for(auto& elem:bootloaderCodeStringList)
+        for(QString& elem:bootloaderCodeStringList)
         {
             elem += '\n';
-            bootloaderCodeString += elem;
+
+            //原生的bootloader.S19文件有文件头和文件尾，合成的时候需要剔除
+            if(elem.startsWith("S0", Qt::CaseInsensitive))
+                QMessageBox::information(this, "Tips", "S0 line detected in the bootloader file, the tool will ignore it and will not merge it into the target file", QMessageBox::Yes);
+            else if(elem.startsWith("S9", Qt::CaseInsensitive))
+                QMessageBox::information(this, "Tips", "S9 line detected in the bootloader file, the tool will ignore it and will not merge it into the target file", QMessageBox::Yes);
+            else
+                bootloaderCodeString += elem;
         }
 
         int targetIndex = bootloaderCodeStringList.indexOf(TARGET_STRING_AFTER_GENERATING_BOOTCODE);
@@ -418,7 +442,18 @@ void MainWindow::generateFirmwareWithBootloader()
     }
     else
     {
-        bootloaderCodeString = DEFAULT_BOOTLOADER_CODE;
+        if(PLATFORM_STRING_LIST.at(M1_SERIES) == m_cmbPlatformSwitch->currentText())
+        {
+            bootloaderCodeString = DEFAULT_M1_SERIES_BOOT_CODE;
+        }
+        else if(PLATFORM_STRING_LIST.at(T1_SERIES) == m_cmbPlatformSwitch->currentText())
+        {
+            bootloaderCodeString = DEFAULT_T1_SERIES_BOOT_CODE;
+        }
+        else
+        {
+            qDebug() << "error occurred when loading default boot code";
+        }
     }
 
     qDebug()<<bootloaderCodeString<<endl;
@@ -521,9 +556,13 @@ void MainWindow::generateFiles(CmdType cmd, QString dir_path, bool is_open_folde
         filePathName += "CheryM1SeriesEraseEepromFirmware.S19";
         fileContent = DEFAULT_ERASE_EEPROM_CODE;
         break;
-    case CMD_GEN_BOOT_CODE:
+    case CMD_GEN_M1_BOOT_CODE:
         filePathName += "CheryM1SeriesBootCode.S19";
-        fileContent = DEFAULT_BOOTLOADER_CODE;
+        fileContent = DEFAULT_M1_SERIES_BOOT_CODE;
+        break;
+    case CMD_GEN_T1_BOOT_CODE:
+        filePathName += "CheryT1SeriesBootCode.S19";
+        fileContent = DEFAULT_T1_SERIES_BOOT_CODE;
         break;
     default:
         break;
@@ -942,10 +981,14 @@ void MainWindow::showHelpInfo(CmdType cmd)
         hlpInfo << tr("3.4.1 定义：生成用于清除仪表eeprom的.S19固件.");
         hlpInfo << tr("3.4.2 指令：<u>:erase eeprom</u>或<u>:ee</u>.");
         hlpInfo << tr("3.4.3 备注：烧录此固件后会擦除仪表原来的app固件，需要重新烧录app固件.");
-        hlpInfo << tr("3.5 生成boot code文件.");
+        hlpInfo << tr("3.5 生成M1系列boot code文件.");
         hlpInfo << tr("3.5.1 定义：生成M1系列boot代码段的.S19固件.");
-        hlpInfo << tr("3.5.2 指令：<u>:boot code</u>或<u>:bc</u>.");
+        hlpInfo << tr("3.5.2 指令：<u>:m boot code</u>或<u>:mbc</u>.");
         hlpInfo << tr("3.5.3 备注：此固件不可单独烧录至仪表，需要合成到仪表app固件中，合成方法参考3.1节.");
+        hlpInfo << tr("3.6 生成T1系列boot code文件.");
+        hlpInfo << tr("3.6.1 定义：生成T1系列boot代码段的.S19固件.");
+        hlpInfo << tr("3.6.2 指令：<u>:t boot code</u>或<u>:tbc</u>.");
+        hlpInfo << tr("3.6.3 备注：此固件不可单独烧录至仪表，需要合成到仪表app固件中，合成方法参考3.1节.");
 
         hlpInfo << tr("4 开发辅助工具.");
         hlpInfo << tr("4.1 文件转字符串工具.");
@@ -957,7 +1000,7 @@ void MainWindow::showHelpInfo(CmdType cmd)
         hlpInfo << tr("《BootLoader合成工具使用方法》");
         hlpInfo << tr("0 将<u>switch function</u>（或<u>input command</u>）切换至<u>add bootloader to firmware</u>.");
         hlpInfo << tr("1 加载bootloader代码段的两种方式.");
-        hlpInfo << tr("1.1 方式一：加载默认bootloader代码段，勾选<u>default</u>即可，程序已经默认设置其为勾选状态.");
+        hlpInfo << tr("1.1 方式一：加载默认bootloader代码段，先勾选<u>use default</u>，再更改其左侧的下拉选择框来选择加载M1或T1平台的默认bootloader代码段.");
         hlpInfo << tr("1.2 方式二：加载其它bootloader代码段，去勾选<u>default</u>，点击<u>load bootloader</u>按钮选择其它bootloader文件.");
         hlpInfo << tr("2 点击<u>load file</u>按钮选择.S19原app文件.");
         hlpInfo << tr("3 点击<u>generate</u>按钮生成含bootloader的新app文件,并自动打开该文件所在的目录且选中该文件.");
@@ -1218,8 +1261,17 @@ void MainWindow::componentsInitialization(void)
     m_leBootloaderInfo = new QLineEdit;
     m_leBootloaderInfo->setReadOnly(true);
 
+    //M平台或T平台选择
+    m_cmbPlatformSwitch = new QComboBox;
+    connect(m_cmbPlatformSwitch, static_cast<void (QComboBox::*)(const QString&)>(&QComboBox::currentTextChanged), this, &switchPlatformPressed);
+    m_cmbPlatformSwitch->setFixedWidth(77);
+    m_cmbPlatformSwitch->setInsertPolicy(QComboBox::NoInsert);
+    m_cmbPlatformSwitch->setStatusTip("select a platform");
+    m_cmbPlatformSwitch->addItem(PLATFORM_STRING_LIST.at(M1_SERIES), M1_SERIES);
+    m_cmbPlatformSwitch->addItem(PLATFORM_STRING_LIST.at(T1_SERIES), T1_SERIES);
+
     //是否使用默认boot code选项
-    m_ckbUseDefaultBootloader = new QCheckBox(tr("default"));
+    m_ckbUseDefaultBootloader = new QCheckBox(tr("use default"));
     connect(m_ckbUseDefaultBootloader, &m_ckbUseDefaultBootloader->stateChanged, this, &useDefaultBootloaderPressed);
     m_ckbUseDefaultBootloader->setStatusTip(tr("use default boot code when checked"));
     m_ckbUseDefaultBootloader->setChecked(true);
@@ -1269,10 +1321,11 @@ void MainWindow::layoutsInitialization()
     //bootloader控件区
     auto layoutBootloader = new QGridLayout;
     auto labelLeBootloader = new QLabel(tr("bootloader"));
-    layoutBootloader->addWidget(labelLeBootloader, 0, 0);
-    layoutBootloader->addWidget(m_leBootloaderInfo, 0, 1);
-    layoutBootloader->addWidget(m_ckbUseDefaultBootloader, 1, 0);
-    layoutBootloader->addWidget(m_btnLoadBootloader, 1, 1);
+    layoutBootloader->addWidget(labelLeBootloader, 0, 0, 1, 1);
+    layoutBootloader->addWidget(m_leBootloaderInfo, 0, 1, 1, 2);
+    layoutBootloader->addWidget(m_cmbPlatformSwitch, 1, 0, 1, 1);
+    layoutBootloader->addWidget(m_ckbUseDefaultBootloader, 1, 1, 1, 1);
+    layoutBootloader->addWidget(m_btnLoadBootloader, 1, 2, 1, 1);
     m_gbBootloader->setLayout(layoutBootloader);
 
     //select file控件区
@@ -1332,7 +1385,8 @@ void MainWindow::commandsInitialization()
     cmdList.push_back({ CMD_CODE_TO_STRING, {":convert code to string", ":c2s"} });
     cmdList.push_back({ CMD_GEN_FLASH_DRIVER, {":flash driver", ":fd"} });
     cmdList.push_back({ CMD_GEN_ERASE_EEPROM, {":erase eeprom", ":ee"} });
-    cmdList.push_back({ CMD_GEN_BOOT_CODE, {":boot code", ":bc"} });
+    cmdList.push_back({ CMD_GEN_M1_BOOT_CODE, {":m boot code", ":mbc"} });
+    cmdList.push_back({ CMD_GEN_T1_BOOT_CODE, {":t boot code", ":tbc"} });
     cmdList.push_back({ CMD_DIAG_M1_S021, {":m1 s021", ":ms0"} });
     cmdList.push_back({ CMD_DIAG_M1_S021_AUTOFILL, {":m1 s021 fill", ":ms0f"} });
     cmdList.push_back({ CMD_DIAG_T19_S021, {":t19 s021", ":ts0"} });

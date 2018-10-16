@@ -40,6 +40,12 @@ private:
         CMD_HANDLER
     };
 
+    enum PlatformType
+    {
+        M1_SERIES,
+        T1_SERIES
+    };
+
     enum CmdType
     {
         CMD_HELP,
@@ -54,7 +60,8 @@ private:
         CMD_CODE_TO_STRING,
         CMD_GEN_FLASH_DRIVER,
         CMD_GEN_ERASE_EEPROM,
-        CMD_GEN_BOOT_CODE,
+        CMD_GEN_M1_BOOT_CODE,
+        CMD_GEN_T1_BOOT_CODE,
         CMD_DIAG_M1_S021,
         CMD_DIAG_M1_S021_AUTOFILL,
         CMD_DIAG_T19_S021,
@@ -81,6 +88,11 @@ private:
         "gen firmware for diagnosis",
         "run command"
     };
+    const QStringList PLATFORM_STRING_LIST =
+    {
+        "m1 series",
+        "t1 series"
+    };
     const QString REPLACE_STRING = "S10BFFF8C000C000C000C000FD\n";//未加bootloader的app含有此内容
     const QString TARGET_STRING_AFTER_GENERATING_BOOTCODE = "S10BFFF8FC00FC00FC00FC000D\n";//已加bootloader的app含有此内容
     const int DIAG_M1_S021_MIN_LENGTH = 22;
@@ -94,6 +106,7 @@ private:
 private:
     QPushButton* m_btnChooseFile;
     QLineEdit* m_leFileInfo;
+    QComboBox* m_cmbPlatformSwitch;
     QCheckBox* m_ckbUseDefaultBootloader;
     QPushButton* m_btnLoadBootloader;
     QLineEdit* m_leBootloaderInfo;
@@ -134,6 +147,7 @@ private slots:
     void switchFunctionPressed();
     void generateButtonPressed();
     void runCmdReturnPressed();
+    void switchPlatformPressed();
 };
 
 #endif // MAINWINDOW_H

@@ -28,9 +28,10 @@ SOURCES += main.cpp\
         mainwindow.cpp
 
 HEADERS  += mainwindow.h \
-    defaultBootloaderCode.h \
     defaultFlashDriverCode.h \
     crc16.h \
-    defaultEraseEepromCode.h
+    defaultEraseEepromCode.h \
+    defaultM1SeriesBootCode.h \
+    defaultT1SeriesBootCode.h
 
 FORMS    += mainwindow.ui
