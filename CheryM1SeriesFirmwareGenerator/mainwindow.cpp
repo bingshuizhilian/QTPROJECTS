@@ -403,8 +403,11 @@ void MainWindow::generateFirmwareWithBootloader()
 
         bootloaderFile.close();
 
-        bootloaderCodeString = bootloaderCodeStringList.join('\n');
-        bootloaderCodeString += '\n';
+        for(auto& elem:bootloaderCodeStringList)
+        {
+            elem += '\n';
+            bootloaderCodeString += elem;
+        }
 
         int targetIndex = bootloaderCodeStringList.indexOf(TARGET_STRING_AFTER_GENERATING_BOOTCODE);
         if(-1 == targetIndex)
