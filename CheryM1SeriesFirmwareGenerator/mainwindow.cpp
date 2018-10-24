@@ -237,6 +237,15 @@ void MainWindow::runCmdReturnPressed()
 void MainWindow::switchPlatformPressed()
 {
     m_leBootloaderInfo->setText("default " + m_cmbPlatformSwitch->currentText() + " boot code loaded");
+
+    if(PLATFORM_STRING_LIST.at(M1_SERIES) == m_cmbPlatformSwitch->currentText())
+    {
+        m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(DEFAULT_M1_SERIES_BOOT_CODE_HARDWARE_VERSION));
+    }
+    else if(PLATFORM_STRING_LIST.at(T1_SERIES) == m_cmbPlatformSwitch->currentText())
+    {
+        m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(DEFAULT_T1_SERIES_BOOT_CODE_HARDWARE_VERSION));
+    }
 }
 
 //处理按下generate按钮事件
@@ -268,6 +277,15 @@ void MainWindow::useDefaultBootloaderPressed()
         m_leBootloaderInfo->setEnabled(false);
         m_btnLoadBootloader->setStatusTip(tr("use default boot code now"));
         m_cmbPlatformSwitch->setEnabled(true);
+
+        if(PLATFORM_STRING_LIST.at(M1_SERIES) == m_cmbPlatformSwitch->currentText())
+        {
+            m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(DEFAULT_M1_SERIES_BOOT_CODE_HARDWARE_VERSION));
+        }
+        else if(PLATFORM_STRING_LIST.at(T1_SERIES) == m_cmbPlatformSwitch->currentText())
+        {
+            m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(DEFAULT_T1_SERIES_BOOT_CODE_HARDWARE_VERSION));
+        }
     }
     else
     {
@@ -276,6 +294,7 @@ void MainWindow::useDefaultBootloaderPressed()
         m_leBootloaderInfo->clear();
         m_btnLoadBootloader->setStatusTip(tr("select the bootloader file"));
         m_cmbPlatformSwitch->setEnabled(false);
+        m_leBootloaderInfo->setStatusTip(tr(""));
     }
 }
 
@@ -557,11 +576,11 @@ void MainWindow::generateFiles(CmdType cmd, QString dir_path, bool is_open_folde
         fileContent = DEFAULT_ERASE_EEPROM_CODE;
         break;
     case CMD_GEN_M1_BOOT_CODE:
-        filePathName += "CheryM1SeriesBootCode.S19";
+        filePathName += QString("CheryM1SeriesBootCode_hw") + DEFAULT_M1_SERIES_BOOT_CODE_HARDWARE_VERSION + QString(".S19");
         fileContent = DEFAULT_M1_SERIES_BOOT_CODE;
         break;
     case CMD_GEN_T1_BOOT_CODE:
-        filePathName += "CheryT1SeriesBootCode.S19";
+        filePathName += QString("CheryT1SeriesBootCode_hw") + DEFAULT_T1_SERIES_BOOT_CODE_HARDWARE_VERSION + QString(".S19");
         fileContent = DEFAULT_T1_SERIES_BOOT_CODE;
         break;
     default:
