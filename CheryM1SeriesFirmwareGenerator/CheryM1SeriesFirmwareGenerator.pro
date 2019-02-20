@@ -32,6 +32,7 @@ HEADERS  += mainwindow.h \
     crc16.h \
     defaultEraseEepromCode.h \
     defaultM1SeriesBootCode.h \
-    defaultT1SeriesBootCode.h
+    defaultT1SeriesBootCode.h \
+    defaultS51evflBootCode.h
 
 FORMS    += mainwindow.ui
