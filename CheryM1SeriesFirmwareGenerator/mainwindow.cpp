@@ -151,7 +151,7 @@ void MainWindow::runCmdReturnPressed()
     case CMD_GEN_FLASH_DRIVER:
     {
         QString dirPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
-        dirPath.append("/cheryM1SeriesFlashDriver/");
+        dirPath.append("/cheryCommonFlashDriver/");
         ptOutputWnd->clear();
         ptOutputWnd->appendPlainText(dirPath.left(dirPath.size() - 1));
         generateFiles(findCmd, dirPath, true);
@@ -614,7 +614,7 @@ void MainWindow::generateFiles(CmdType cmd, QString dir_path, bool is_open_folde
     switch(cmd)
     {
     case CMD_GEN_FLASH_DRIVER:
-        filePathName += "CheryM1SeriesFlashDriver.S19";
+        filePathName += "CheryCommonFlashDriver.S19";
         fileContent = DEFAULT_FLASHDRIVER_CODE;
         break;
     case CMD_GEN_ERASE_EEPROM:
