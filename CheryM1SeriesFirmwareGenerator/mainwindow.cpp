@@ -148,10 +148,28 @@ void MainWindow::runCmdReturnPressed()
     case CMD_CODE_TO_STRING:
         generateCharArray();
         break;
-    case CMD_GEN_FLASH_DRIVER:
+    case CMD_GEN_M1AFL2_FLASH_DRIVER:
     {
         QString dirPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
-        dirPath.append("/cheryCommonFlashDriver/");
+        dirPath.append("/cheryM1afl2FlashDriver/");
+        ptOutputWnd->clear();
+        ptOutputWnd->appendPlainText(dirPath.left(dirPath.size() - 1));
+        generateFiles(findCmd, dirPath, true);
+        break;
+    }
+    case CMD_GEN_T19_FLASH_DRIVER:
+    {
+        QString dirPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
+        dirPath.append("/cheryT19FlashDriver/");
+        ptOutputWnd->clear();
+        ptOutputWnd->appendPlainText(dirPath.left(dirPath.size() - 1));
+        generateFiles(findCmd, dirPath, true);
+        break;
+    }
+    case CMD_GEN_S51EVFL_FLASH_DRIVER:
+    {
+        QString dirPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
+        dirPath.append("/cheryS51evflFlashDriver/");
         ptOutputWnd->clear();
         ptOutputWnd->appendPlainText(dirPath.left(dirPath.size() - 1));
         generateFiles(findCmd, dirPath, true);
@@ -613,9 +631,17 @@ void MainWindow::generateFiles(CmdType cmd, QString dir_path, bool is_open_folde
 
     switch(cmd)
     {
-    case CMD_GEN_FLASH_DRIVER:
-        filePathName += "CheryCommonFlashDriver.S19";
-        fileContent = DEFAULT_FLASHDRIVER_CODE;
+    case CMD_GEN_M1AFL2_FLASH_DRIVER:
+        filePathName += "CheryM1afl2FlashDriver.S19";
+        fileContent = DEFAULT_M1AFL2_FLASHDRIVER_CODE;
+        break;
+    case CMD_GEN_T19_FLASH_DRIVER:
+        filePathName += "CheryT19FlashDriver.S19";
+        fileContent = DEFAULT_T19_FLASHDRIVER_CODE;
+        break;
+    case CMD_GEN_S51EVFL_FLASH_DRIVER:
+        filePathName += "CheryS51evflFlashDriver.S19";
+        fileContent = DEFAULT_S51EVFL_FLASHDRIVER_CODE;
         break;
     case CMD_GEN_ERASE_EEPROM:
         filePathName += "CheryM1SeriesEraseEepromFirmware.S19";
@@ -888,7 +914,22 @@ void MainWindow::generateFirmwareForDiagnosis()
     newFile.close();
 
     //同时生成一个flash driver
-    generateFiles(CMD_GEN_FLASH_DRIVER, dirPath, false);
+    if(m_leDiagnosisS021->text().contains(DIAG_M1AFL2_PARTNUMBER.toLatin1().toHex(), Qt::CaseInsensitive))
+    {
+        generateFiles(CMD_GEN_M1AFL2_FLASH_DRIVER, dirPath, false);
+    }
+    else if(m_leDiagnosisS021->text().contains(DIAG_T19_PARTNUMBER.toLatin1().toHex(), Qt::CaseInsensitive))
+    {
+        generateFiles(CMD_GEN_T19_FLASH_DRIVER, dirPath, false);
+    }
+    else if(m_leDiagnosisS021->text().contains(DIAG_S51EVFL_PARTNUMBER.toLatin1().toHex(), Qt::CaseInsensitive))
+    {
+        generateFiles(CMD_GEN_S51EVFL_FLASH_DRIVER, dirPath, false);
+    }
+    else
+    {
+        QMessageBox::warning(this, "Warnning", "failed to generate flash driver file", QMessageBox::Yes);
+    }
 
     //windows系统下直接打开该文件夹并选中诊断仪app文件
 #ifdef WIN32
@@ -1063,9 +1104,13 @@ void MainWindow::showHelpInfo(CmdType cmd)
         hlpInfo << tr("3.2.2 指令：<u>:diagnosis?</u>或<u>:d?</u>.");
         hlpInfo << tr("3.3 诊断仪app合成辅助工具.");
         hlpInfo << tr("3.3.1 生成flash driver文件.");
-        hlpInfo << tr("3.3.1.1 定义：独立生成一个诊断仪用flash driver文件.");
-        hlpInfo << tr("3.3.1.2 指令：<u>:flash driver</u>或<u>:fd</u>.");
-        hlpInfo << tr("3.3.1.3 备注：用3.2节方法也会自动生成flash driver文件.");
+        hlpInfo << tr("3.3.1.1.1 定义：独立生成一个m1afl2诊断仪用flash driver文件.");
+        hlpInfo << tr("3.3.1.1.2 指令：<u>:m1afl2 flash driver</u>或<u>:mfd</u>.");
+        hlpInfo << tr("3.3.1.2.1 定义：独立生成一个t19诊断仪用flash driver文件.");
+        hlpInfo << tr("3.3.1.2.2 指令：<u>:t19 flash driver</u>或<u>:tfd</u>.");
+        hlpInfo << tr("3.3.1.3.1 定义：独立生成一个s51evfl诊断仪用flash driver文件.");
+        hlpInfo << tr("3.3.1.3.2 指令：<u>:s51evfl flash driver</u>或<u>:sfd</u>.");
+        hlpInfo << tr("3.3.1.4 备注：用3.2节方法也会自动生成flash driver文件.");
         hlpInfo << tr("3.3.2 生成适用于M1AFL2的S0行代码.");
         hlpInfo << tr("3.3.2.1 定义：将程序预置的适用于M1AFL2的S0行代码显示在软件屏幕上.");
         hlpInfo << tr("3.3.2.2 指令：<u>:m1afl2 s0</u>或<u>:ms0</u>.");
@@ -1111,7 +1156,7 @@ void MainWindow::showHelpInfo(CmdType cmd)
         hlpInfo << tr("《BootLoader合成工具使用方法》");
         hlpInfo << tr("0 将<u>switch function</u>（或<u>input command</u>）切换至<u>add bootloader to firmware</u>.");
         hlpInfo << tr("1 加载bootloader代码段的两种方式.");
-        hlpInfo << tr("1.1 方式一：加载默认bootloader代码段，先勾选<u>use default</u>，再更改其左侧的下拉选择框来选择加载M1或T1平台的默认bootloader代码段.");
+        hlpInfo << tr("1.1 方式一：加载默认bootloader代码段，先勾选<u>use default</u>，再更改其左侧的下拉选择框来选择加载特定型号的默认bootloader代码段.");
         hlpInfo << tr("1.2 方式二：加载其它bootloader代码段，去勾选<u>default</u>，点击<u>load bootloader</u>按钮选择其它bootloader文件.");
         hlpInfo << tr("2 点击<u>load file</u>按钮选择.S19原app文件.");
         hlpInfo << tr("3 点击<u>generate</u>按钮生成含bootloader的新app文件,并自动打开该文件所在的目录且选中该文件.");
@@ -1123,7 +1168,7 @@ void MainWindow::showHelpInfo(CmdType cmd)
         hlpInfo << tr("1 点击<u>load file</u>按钮选择.S19原app文件.");
         hlpInfo << tr("2 输入S021数据，该数据最终将位于app的第一行.");
         hlpInfo << tr("2.1 在命令行可查询程序预置的S021数据，请在命令行输入<u>:?</u>获取相关命令信息.");
-        hlpInfo << tr("2.2 也可以在S021输入框输入<u>:t</u>并按回车键获取T18/T19预置的S021数据；输入<u>:m</u>并按回车键获取M1A/M1D预置的S021数据.");
+        hlpInfo << tr("2.2 也可以在S021输入框输入<u>:t</u>并按回车键获取T19预置的S021数据；输入<u>:m</u>并按回车键获取m1afl2预置的S021数据；输入<u>:s</u>并按回车键获取s51evfl预置的S021数据.");
         hlpInfo << tr("2.3 正确输入S021数据后，将光标置于S021数据所在的输入框后，点击回车键可以修改版本号，版本号格式需严格匹配<u>xx.xx.xx</u>,x为0-9或a-f,字母不区分大小写，最终按大写字母写入文件.");
         hlpInfo << tr("3 点击<u>generate</u>按钮，生成诊断仪app文件,并自动打开该文件所在的目录且选中该文件.");
         hlpInfo << tr("4 该文件夹下还将自动生成flash driver文件，请将诊断仪app文件和flash driver文件一同加入压缩包提供给使用者.");
@@ -1496,7 +1541,9 @@ void MainWindow::commandsInitialization()
     cmdList.push_back({ CMD_SAVE_CONFIG_FILE, {":save config file", ":scf"} });
     cmdList.push_back({ CMD_LOAD_CONFIG_FILE, {":load config file", ":lcf"} });
     cmdList.push_back({ CMD_CODE_TO_STRING, {":convert code to string", ":c2s"} });
-    cmdList.push_back({ CMD_GEN_FLASH_DRIVER, {":flash driver", ":fd"} });
+    cmdList.push_back({ CMD_GEN_M1AFL2_FLASH_DRIVER, {":m1afl2 flash driver", ":mfd"} });
+    cmdList.push_back({ CMD_GEN_T19_FLASH_DRIVER, {":t19 flash driver", ":tfd"} });
+    cmdList.push_back({ CMD_GEN_S51EVFL_FLASH_DRIVER, {":s51evfl flash driver", ":sfd"} });
     cmdList.push_back({ CMD_GEN_ERASE_EEPROM, {":erase eeprom", ":ee"} });
     cmdList.push_back({ CMD_GEN_M1_BOOT_CODE, {":m boot code", ":mbc"} });
     cmdList.push_back({ CMD_GEN_T1_BOOT_CODE, {":t boot code", ":tbc"} });
