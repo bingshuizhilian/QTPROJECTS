@@ -1,5 +1,5 @@
 ﻿# QTPROJECTS-FIRMWARE_GENERATOR
-Chery M1 series firmware generate tool
+Chery common firmware generate tool
 
 bootloader合成页截图\
 ![bootloader合成页截图](https://github.com/bingshuizhilian/QTPROJECTS-FIRMWARE_GENERATOR/blob/master/resources/pic1.png)
