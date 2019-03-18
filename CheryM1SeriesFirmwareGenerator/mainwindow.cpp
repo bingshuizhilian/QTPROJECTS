@@ -122,6 +122,8 @@ void MainWindow::runCmdReturnPressed()
         }
     }
 
+    QString s021Str = DIAG_COMMON_S0;
+
     switch(findCmd)
     {
     case CMD_HELP:
@@ -175,6 +177,15 @@ void MainWindow::runCmdReturnPressed()
         generateFiles(findCmd, dirPath, true);
         break;
     }
+    case CMD_GEN_COMMON_FLASH_DRIVER:
+    {
+        QString dirPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
+        dirPath.append("/cheryCommonFlashDriver/");
+        ptOutputWnd->clear();
+        ptOutputWnd->appendPlainText(dirPath.left(dirPath.size() - 1));
+        generateFiles(findCmd, dirPath, true);
+        break;
+    }
     case CMD_GEN_ERASE_EEPROM:
     {
         QString dirPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
@@ -212,22 +223,28 @@ void MainWindow::runCmdReturnPressed()
         break;
     }
     case CMD_DIAG_M1_S021_AUTOFILL:
-        m_leDiagnosisS021->setText(DIAG_M1AFL2_S0);
+        s021Str.replace(18, DIAG_M1AFL2_PARTNUMBER.toLatin1().toHex().size(), DIAG_M1AFL2_PARTNUMBER.toLatin1().toHex());
+        m_leDiagnosisS021->setText(s021Str.toUpper());
     case CMD_DIAG_M1_S021:
+        s021Str.replace(18, DIAG_M1AFL2_PARTNUMBER.toLatin1().toHex().size(), DIAG_M1AFL2_PARTNUMBER.toLatin1().toHex());
         ptOutputWnd->clear();
-        ptOutputWnd->appendPlainText(DIAG_M1AFL2_S0);
+        ptOutputWnd->appendPlainText(s021Str.toUpper());
         break;
     case CMD_DIAG_T19_S021_AUTOFILL:
-        m_leDiagnosisS021->setText(DIAG_T19_S0);
+        s021Str.replace(18, DIAG_T19_PARTNUMBER.toLatin1().toHex().size(), DIAG_T19_PARTNUMBER.toLatin1().toHex());
+        m_leDiagnosisS021->setText(s021Str.toUpper());
     case CMD_DIAG_T19_S021:
+        s021Str.replace(18, DIAG_T19_PARTNUMBER.toLatin1().toHex().size(), DIAG_T19_PARTNUMBER.toLatin1().toHex());
         ptOutputWnd->clear();
-        ptOutputWnd->appendPlainText(DIAG_T19_S0);
+        ptOutputWnd->appendPlainText(s021Str.toUpper());
         break;
     case CMD_DIAG_S51EVFL_S0_AUTOFILL:
-        m_leDiagnosisS021->setText(DIAG_S51EVFL_S0);
+        s021Str.replace(18, DIAG_S51EVFL_PARTNUMBER.toLatin1().toHex().size(), DIAG_S51EVFL_PARTNUMBER.toLatin1().toHex());
+        m_leDiagnosisS021->setText(s021Str.toUpper());
     case CMD_DIAG_S51EVFL_S0:
+        s021Str.replace(18, DIAG_S51EVFL_PARTNUMBER.toLatin1().toHex().size(), DIAG_S51EVFL_PARTNUMBER.toLatin1().toHex());
         ptOutputWnd->clear();
-        ptOutputWnd->appendPlainText(DIAG_S51EVFL_S0);
+        ptOutputWnd->appendPlainText(s021Str.toUpper());
         break;
 #if WIN32
     case CMD_WINDOWS_COMMON:
@@ -366,32 +383,56 @@ void MainWindow::s021ReturnPressed()
 
     if(originalS021Data.isEmpty())
     {
-        QMessageBox::warning(this, "Warnning", "empty data, couldn't modify version", QMessageBox::Yes);
-        return;
+        QString tmpStr = DIAG_COMMON_S0;
+
+        //请求用户输入版本信息数据
+        bool isOK;
+        QString partnumberQueryData = QInputDialog::getText(NULL,
+                                                         "part number query",
+                                                         "Please input part number, up to 16 characters\n",
+                                                         QLineEdit::Normal,
+                                                         "",
+                                                         &isOK);
+        //校验输入信息
+        QRegExp regExp("^[\\w\\-]{0,16}$");
+
+        if(isOK && regExp.exactMatch(partnumberQueryData))
+        {
+            tmpStr.replace(18, partnumberQueryData.toLatin1().toHex().size(), partnumberQueryData.toLatin1().toHex());
+            m_leDiagnosisS021->setText(tmpStr.toUpper());
+        }
+        else
+        {
+            QMessageBox::warning(this, "Warnning", "invalid part number", QMessageBox::Yes);
+            return;
+        }
     }
 
     if(":M" == m_leDiagnosisS021->text() || ":m" == m_leDiagnosisS021->text())
     {
-        m_leDiagnosisS021->setText(DIAG_M1AFL2_S0);
-        return;
+        QString tmpStr = DIAG_COMMON_S0;
+        tmpStr.replace(18, DIAG_M1AFL2_PARTNUMBER.toLatin1().toHex().size(), DIAG_M1AFL2_PARTNUMBER.toLatin1().toHex());
+        m_leDiagnosisS021->setText(tmpStr.toUpper());
     }
 
     if(":t" == m_leDiagnosisS021->text() || ":T" == m_leDiagnosisS021->text())
     {
-        m_leDiagnosisS021->setText(DIAG_T19_S0);
-        return;
+        QString tmpStr = DIAG_COMMON_S0;
+        tmpStr.replace(18, DIAG_T19_PARTNUMBER.toLatin1().toHex().size(), DIAG_T19_PARTNUMBER.toLatin1().toHex());
+        m_leDiagnosisS021->setText(tmpStr.toUpper());
     }
 
     if(":s" == m_leDiagnosisS021->text() || ":S" == m_leDiagnosisS021->text())
     {
-        m_leDiagnosisS021->setText(DIAG_S51EVFL_S0);
-        return;
+        QString tmpStr = DIAG_COMMON_S0;
+        tmpStr.replace(18, DIAG_S51EVFL_PARTNUMBER.toLatin1().toHex().size(), DIAG_S51EVFL_PARTNUMBER.toLatin1().toHex());
+        m_leDiagnosisS021->setText(tmpStr.toUpper());
     }
 
-    //S021***30302E30312E323040, 至少也要有22个有效字节(实际要更多，这里先这样校验即可)
-    if(!originalS021Data.startsWith("S021", Qt::CaseInsensitive)
-            || originalS021Data.size() < DIAG_M1_S021_MIN_LENGTH
-            || m_leDiagnosisS021->text().size() % 2 != 0)
+    originalS021Data = m_leDiagnosisS021->text();
+
+    //S021***30302E30312E323040
+    if(!originalS021Data.startsWith("S021", Qt::CaseInsensitive) || m_leDiagnosisS021->text().size() != 70)
     {
         QMessageBox::warning(this, "Warnning", "invalid data, couldn't modify version", QMessageBox::Yes);
         return;
@@ -401,7 +442,7 @@ void MainWindow::s021ReturnPressed()
     bool isOK;
     QString versionQueryData = QInputDialog::getText(NULL,
                                                      "version data query",
-                                                     "Please input new version, format: xx.xx.xx\n",
+                                                     "Please input version info, format: xx.xx.xx\n",
                                                      QLineEdit::Normal,
                                                      "",
                                                      &isOK);
@@ -643,6 +684,10 @@ void MainWindow::generateFiles(CmdType cmd, QString dir_path, bool is_open_folde
         filePathName += "CheryS51evflFlashDriver.S19";
         fileContent = DEFAULT_S51EVFL_FLASHDRIVER_CODE;
         break;
+    case CMD_GEN_COMMON_FLASH_DRIVER:
+        filePathName += "CheryCommonFlashDriver.S19";
+        fileContent = DEFAULT_CHERY_COMMON_FLASHDRIVER_CODE;
+        break;
     case CMD_GEN_ERASE_EEPROM:
         filePathName += "CheryM1SeriesEraseEepromFirmware.S19";
         fileContent = DEFAULT_ERASE_EEPROM_CODE;
@@ -765,11 +810,9 @@ void MainWindow::generateFirmwareForDiagnosis()
     }
     else
     {
-        if(!m_leDiagnosisS021->text().startsWith("S021", Qt::CaseInsensitive)
-                || m_leDiagnosisS021->text().size() < DIAG_M1_S021_MIN_LENGTH
-                || m_leDiagnosisS021->text().size() % 2 != 0)
+        if(!m_leDiagnosisS021->text().startsWith("S021", Qt::CaseInsensitive) || m_leDiagnosisS021->text().size() != 70)
         {
-            QMessageBox::warning(this, "Warnning", "Please check S021 data", QMessageBox::Yes);
+            QMessageBox::warning(this, "Warnning", "Please check S021 data, which starts with \"S021\", and the length should be equal to 70", QMessageBox::Yes);
             return;
         }
     }
@@ -840,36 +883,33 @@ void MainWindow::generateFirmwareForDiagnosis()
     //S2 0C F48000 XX XX  XX XX  XX XX  XX XX  CHK
     QString s20cText;
     QString softwareVersion = QByteArray::fromHex(m_leDiagnosisS021->text().right(18).left(16).toLatin1());
+    QString partNumber = m_leDiagnosisS021->text().right(m_leDiagnosisS021->text().size() - 18).left(32).remove("20");
+    partNumber = QByteArray::fromHex(partNumber.toLatin1());
 
     if(m_leDiagnosisS021->text().contains(DIAG_M1AFL2_PARTNUMBER.toLatin1().toHex(), Qt::CaseInsensitive))
     {
         s20cText = "S20CFE8000";
-        QMessageBox::information(this, "Tips",
-                                 "part number: " + DIAG_M1AFL2_PARTNUMBER + ", sw ver: " + softwareVersion + ", crc address on chip: 0x" + s20cText.right(6),
-                                 QMessageBox::Yes);
-        qDebug() << "crc address: " << s20cText;
     }
     else if(m_leDiagnosisS021->text().contains(DIAG_T19_PARTNUMBER.toLatin1().toHex(), Qt::CaseInsensitive))
     {
         s20cText = "S20CFE8000";
-        QMessageBox::information(this, "Tips",
-                                 "part number: " + DIAG_T19_PARTNUMBER + ", sw ver: " + softwareVersion + ", crc address on chip: 0x" + s20cText.right(6),
-                                 QMessageBox::Yes);
-        qDebug() << "crc address: " << s20cText;
     }
     else if(m_leDiagnosisS021->text().contains(DIAG_S51EVFL_PARTNUMBER.toLatin1().toHex(), Qt::CaseInsensitive))
     {
         s20cText = "S20CFEBE00";
-        QMessageBox::information(this, "Tips",
-                                 "part number: " + DIAG_S51EVFL_PARTNUMBER + ", sw ver: " + softwareVersion + ", crc address on chip: 0x" + s20cText.right(6),
-                                 QMessageBox::Yes);
-        qDebug() << "crc address: " << s20cText;
     }
     else
     {
-        QMessageBox::warning(this, "Warnning", "part number error", QMessageBox::Yes);
-        return;
+        s20cText = "S20CFE8000";
+        QMessageBox::information(this, "Tips",
+                                 "your part number wasn't included in this program, crc address on chip was set to default value of 0xFE8000, you should validate it",
+                                 QMessageBox::Yes);
     }
+
+    QMessageBox::information(this, "Tips",
+                             "part number: " + partNumber + ", sw ver: " + softwareVersion + ", crc address on chip: 0x" + s20cText.right(6),
+                             QMessageBox::Yes);
+    qDebug() << "crc address: " << s20cText;
 
     for(int cnt = 0; cnt < 4; ++cnt)
         s20cText.append(QString::number(crc, 16));
@@ -889,7 +929,7 @@ void MainWindow::generateFirmwareForDiagnosis()
     QString diagnosisFileName = fileInfo.at(FILE_NAME);
     QString timeInfo = QDateTime::currentDateTime().toString("yyyy-MM-dd_HH-mm-ss");
     diagnosisFileName = diagnosisFileName.left(diagnosisFileName.size() - 4);
-    diagnosisFileName += "_diagnosis_" + timeInfo + ".S19";
+    diagnosisFileName += "_diagnosis_APPLICATION_FILE_" + timeInfo + ".S19";
 
     QString folderName = "/generatedFirmwaresForDiagnosis/";
     QString dirPath = fileInfo.at(ABSOLUTE_PATH) + folderName;
@@ -928,7 +968,7 @@ void MainWindow::generateFirmwareForDiagnosis()
     }
     else
     {
-        QMessageBox::warning(this, "Warnning", "failed to generate flash driver file", QMessageBox::Yes);
+        generateFiles(CMD_GEN_COMMON_FLASH_DRIVER, dirPath, false);
     }
 
     //windows系统下直接打开该文件夹并选中诊断仪app文件
@@ -1110,6 +1150,8 @@ void MainWindow::showHelpInfo(CmdType cmd)
         hlpInfo << tr("3.3.1.2.2 指令：<u>:t19 flash driver</u>或<u>:tfd</u>.");
         hlpInfo << tr("3.3.1.3.1 定义：独立生成一个s51evfl诊断仪用flash driver文件.");
         hlpInfo << tr("3.3.1.3.2 指令：<u>:s51evfl flash driver</u>或<u>:sfd</u>.");
+        hlpInfo << tr("3.3.1.4.1 定义：独立生成一个通用奇瑞诊断仪用flash driver文件.");
+        hlpInfo << tr("3.3.1.4.2 指令：<u>:common flash driver</u>或<u>:cfd</u>或<u>:fd</u>.");
         hlpInfo << tr("3.3.1.4 备注：用3.2节方法也会自动生成flash driver文件.");
         hlpInfo << tr("3.3.2 生成适用于M1AFL2的S0行代码.");
         hlpInfo << tr("3.3.2.1 定义：将程序预置的适用于M1AFL2的S0行代码显示在软件屏幕上.");
@@ -1170,6 +1212,7 @@ void MainWindow::showHelpInfo(CmdType cmd)
         hlpInfo << tr("2.1 在命令行可查询程序预置的S021数据，请在命令行输入<u>:?</u>获取相关命令信息.");
         hlpInfo << tr("2.2 也可以在S021输入框输入<u>:t</u>并按回车键获取T19预置的S021数据；输入<u>:m</u>并按回车键获取m1afl2预置的S021数据；输入<u>:s</u>并按回车键获取s51evfl预置的S021数据.");
         hlpInfo << tr("2.3 正确输入S021数据后，将光标置于S021数据所在的输入框后，点击回车键可以修改版本号，版本号格式需严格匹配<u>xx.xx.xx</u>,x为0-9或a-f,字母不区分大小写，最终按大写字母写入文件.");
+        hlpInfo << tr("2.4 将光标置于S021数据所在的输入框后，当S021输入框为空时按下回车键，会请求输入零件号，之后会请求输入软件版本信息，然后自动合成S021行数据，数据生成后依然可以使用2.3节的方法修改版本号.");
         hlpInfo << tr("3 点击<u>generate</u>按钮，生成诊断仪app文件,并自动打开该文件所在的目录且选中该文件.");
         hlpInfo << tr("4 该文件夹下还将自动生成flash driver文件，请将诊断仪app文件和flash driver文件一同加入压缩包提供给使用者.");
     }
@@ -1392,7 +1435,7 @@ void MainWindow::generateCharArray()
 //控件初始化
 void MainWindow::componentsInitialization(void)
 {
-    setWindowTitle(tr("CheryM1SeriesFirmwareGenerator"));
+    setWindowTitle(tr("CheryCommonFirmwareGenerator"));
 
     //窗体名称及状态栏设置
     auto labelAuthorInfo = new QLabel;
@@ -1544,6 +1587,7 @@ void MainWindow::commandsInitialization()
     cmdList.push_back({ CMD_GEN_M1AFL2_FLASH_DRIVER, {":m1afl2 flash driver", ":mfd"} });
     cmdList.push_back({ CMD_GEN_T19_FLASH_DRIVER, {":t19 flash driver", ":tfd"} });
     cmdList.push_back({ CMD_GEN_S51EVFL_FLASH_DRIVER, {":s51evfl flash driver", ":sfd"} });
+    cmdList.push_back({ CMD_GEN_COMMON_FLASH_DRIVER, {":common flash driver", ":cfd", ":fd"} });
     cmdList.push_back({ CMD_GEN_ERASE_EEPROM, {":erase eeprom", ":ee"} });
     cmdList.push_back({ CMD_GEN_M1_BOOT_CODE, {":m boot code", ":mbc"} });
     cmdList.push_back({ CMD_GEN_T1_BOOT_CODE, {":t boot code", ":tbc"} });
