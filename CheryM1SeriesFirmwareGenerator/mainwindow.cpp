@@ -376,7 +376,7 @@ void MainWindow::loadBootloaderPressed()
     qDebug()<<fileName<<endl;
 }
 
-//处理在S021输入框中按回车键修改版本号事件
+//处理在S021输入框中按回车键修改版本号或输入零件号事件
 void MainWindow::s021ReturnPressed()
 {
     QString originalS021Data = m_leDiagnosisS021->text();
@@ -385,7 +385,7 @@ void MainWindow::s021ReturnPressed()
     {
         QString tmpStr = DIAG_COMMON_S0;
 
-        //请求用户输入版本信息数据
+        //请求用户输入零件号
         bool isOK;
         QString partnumberQueryData = QInputDialog::getText(NULL,
                                                          "part number query",
