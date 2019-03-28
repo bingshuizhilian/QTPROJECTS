@@ -1192,7 +1192,8 @@ void MainWindow::dealWithCalculateKeyCommand(void)
             clipboard->clear();
             clipboard->setText("2704" + keyHexStr);
 
-            ptOutputWnd->appendPlainText("\n\n*************************************");
+            ptOutputWnd->clear();
+            ptOutputWnd->appendPlainText("*************************************");
             ptOutputWnd->appendPlainText("   种子: [" + seedQueryData.toUpper() + "]  ->  密钥: [" + keyHexStr + "]");
             ptOutputWnd->appendPlainText("*************************************");
             ptOutputWnd->appendPlainText("结果已经拷贝至系统剪贴板中:[2704" + keyHexStr + "]");
