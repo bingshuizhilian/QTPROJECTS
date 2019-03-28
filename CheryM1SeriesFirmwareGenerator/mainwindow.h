@@ -74,6 +74,7 @@ private:
         CMD_DIAG_T19_S021_AUTOFILL,
         CMD_DIAG_S51EVFL_S0,
         CMD_DIAG_S51EVFL_S0_AUTOFILL,
+        CMD_DIAG_CALCULATE_KEY,
 #if WIN32
         CMD_WINDOWS_COMMON,
         CMD_WINDOWS_CALCULATOR,
@@ -147,6 +148,7 @@ private:
     int hexCharToHex(char src);
     unsigned short calcCRC16(QList<unsigned char> data_list);
     unsigned char calcChecksum(unsigned short crc);
+    unsigned short CalculateKey(unsigned short seed);
     void showHelpInfo(CmdType cmd);
     void procConfigFile(CmdType cmd);
 

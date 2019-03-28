@@ -20,8 +20,8 @@
 #include <QJsonArray>
 #include <QJsonValue>
 #include <QJsonParseError>
-#include <QClipboard>
 #include <QStandardPaths>
+#include <QClipboard>
 #include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -246,6 +246,68 @@ void MainWindow::runCmdReturnPressed()
         ptOutputWnd->clear();
         ptOutputWnd->appendPlainText(s021Str.toUpper());
         break;
+    case CMD_DIAG_CALCULATE_KEY:
+    {
+        QString info = "《安全解锁操作步骤》\n";
+        info += "1.激活3E服务，在busmaster软件诊断窗口将“Send Tester Present”勾选为“ON”；\n";
+        info += "2.在busmaster软件诊断窗口发送“27 03”；\n";
+        info += "3.将busmaster软件诊断窗口收到的“67 03 xx xx”中的后两个字节即“xx xx”输入到弹出的“seed request”窗口中，不需要输入空格；\n";
+        info += "4.点击“seed request”窗口的“OK”将会返回计算好的安全密钥，格式为“yy yy”；\n";
+        info += "5.方法一：在busmaster软件诊断窗口发送“27 04 yy yy”，其中“yy yy”为第四步所得的数值；\n";
+        info += "  方法二：第4步完成后，程序已经将结果复制到系统剪贴板中，在busmaster软件诊断发送窗口，使用鼠标右键单击并选择粘贴，然后发送即可。\n";
+
+        ptOutputWnd->clear();
+        ptOutputWnd->appendPlainText(info);
+
+        //请求用户输入解锁种子
+        bool isOK;
+        QString seedQueryData = QInputDialog::getText(NULL,
+                                                      "seed query",
+                                                      "Please input seed, up to 4 characters\n",
+                                                      QLineEdit::Normal,
+                                                      "",
+                                                      &isOK);
+        //校验输入信息
+        QRegExp regExp("^[0-9a-fA-F]{4}$");
+
+        if(isOK && regExp.exactMatch(seedQueryData))
+        {
+            unsigned short seed = 0;
+            unsigned short key = 0;
+
+            bool resultOK = false;
+            seed = seedQueryData.toUShort(&resultOK, 16);
+
+            if(!resultOK)
+            {
+                QMessageBox::warning(this, "Warnning", "fialed to calculate seed", QMessageBox::Yes);
+            }
+            else
+            {
+                key = CalculateKey(seed);
+
+                QClipboard *clipboard = QApplication::clipboard();
+                clipboard->clear();
+                clipboard->setText("2704" + QString::number(key, 16).toUpper());
+
+                ptOutputWnd->appendPlainText("\n\n******************************");
+                ptOutputWnd->appendPlainText("  种子: " + seedQueryData.toUpper() + "  ->  密钥: " + QString::number(key, 16).toUpper());
+                ptOutputWnd->appendPlainText("******************************");
+                ptOutputWnd->appendPlainText("2704" + QString::number(key, 16).toUpper() + "已经拷贝至系统剪贴板中");
+                ptOutputWnd->appendPlainText("******************************");
+
+                QMessageBox::information(this, "Tips",
+                                         "the key in hexadecimal is 【" + QString::number(key, 16).toUpper() + "】, and the result has already been copyed to os clipboard",
+                                         QMessageBox::Yes);
+            }
+        }
+        else
+        {
+            QMessageBox::warning(this, "Warnning", "invalid seed", QMessageBox::Yes);
+        }
+
+        break;
+    }
 #if WIN32
     case CMD_WINDOWS_COMMON:
     {
@@ -1085,6 +1147,55 @@ unsigned char MainWindow::calcChecksum(unsigned short crc)
     return checkSum;
 }
 
+//根据seed计算得出key值
+unsigned short MainWindow::CalculateKey(unsigned short seed)
+{
+    enum
+    {
+        TOPBIT = 0x8000,
+        POLYNOM_1 = 0x8408,
+        POLYNOM_2 = 0x8025,
+        BITMASK = 0x0080,
+        INITIAL_REMINDER = 0xFFFE,
+        MSG_LEN = 2
+    };
+    unsigned char bSeed[2] = { 0 };
+    unsigned char n = 0;
+    unsigned char i = 0;
+    unsigned short remainder = INITIAL_REMINDER;
+
+    bSeed[0] = (unsigned char)(seed >> 8); /* MSB */
+    bSeed[1] = (unsigned char)seed; /* LSB */
+    for (n = 0; n < MSG_LEN; n++)
+    {
+        /* Bring the next byte into the remainder. */
+        remainder ^= ((bSeed[n]) << 8);
+
+        /* Perform modulo-2 division, a bit at a time. */
+        for (i = 0; i < 8; i++)
+        {
+            /* Try to divide the current data bit. */
+            if (remainder & TOPBIT)
+            {
+                if(remainder & BITMASK)
+                {
+                    remainder = (remainder << 1) ^ POLYNOM_1;
+                }
+                else
+                {
+                    remainder = (remainder << 1) ^ POLYNOM_2;
+                }
+            }
+            else
+            {
+                remainder = (remainder << 1);
+            }
+        }
+    }
+
+    return remainder;
+}
+
 //帮助信息
 void MainWindow::showHelpInfo(CmdType cmd)
 {
@@ -1598,6 +1709,7 @@ void MainWindow::commandsInitialization()
     cmdList.push_back({ CMD_DIAG_T19_S021_AUTOFILL, {":t19 s0 fill", ":ts0f"} });
     cmdList.push_back({ CMD_DIAG_S51EVFL_S0, {":s51evfl s0", ":s51ev s0", ":ss0"} });
     cmdList.push_back({ CMD_DIAG_S51EVFL_S0_AUTOFILL, {":s51evfl s0 fill", ":s51ev s0 fill", ":ss0f"} });
+    cmdList.push_back({ CMD_DIAG_CALCULATE_KEY, {":calculate key", ":calc key", ":ck"} });
 #if WIN32
     cmdList.push_back({ CMD_WINDOWS_COMMON, {"::"} });
     //此处要把windows能识别的命令放在stringlist的首位
