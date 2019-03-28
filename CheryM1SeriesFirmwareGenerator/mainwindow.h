@@ -52,7 +52,8 @@ private:
     {
         CMD_HELP,
         CMD_HELP_BOOTLOADER,
-        CMD_HELP_DAIGNOSIS,
+        CMD_HELP_DIAGNOSIS,
+        CMD_HELP_DIAG_CALCULATE_KEY,
         CMD_CLEAR_SCREEN,
         CMD_FULL_SCREEN,
         CMD_NORMAL_SCREEN,
@@ -148,7 +149,8 @@ private:
     int hexCharToHex(char src);
     unsigned short calcCRC16(QList<unsigned char> data_list);
     unsigned char calcChecksum(unsigned short crc);
-    unsigned short CalculateKey(unsigned short seed);
+    unsigned short calculateKey(unsigned short seed);
+    void dealWithCalculateKeyCommand(void);
     void showHelpInfo(CmdType cmd);
     void procConfigFile(CmdType cmd);
 

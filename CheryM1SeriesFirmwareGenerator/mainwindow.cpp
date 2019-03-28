@@ -128,7 +128,8 @@ void MainWindow::runCmdReturnPressed()
     {
     case CMD_HELP:
     case CMD_HELP_BOOTLOADER:
-    case CMD_HELP_DAIGNOSIS:
+    case CMD_HELP_DIAGNOSIS:
+    case CMD_HELP_DIAG_CALCULATE_KEY:
         showHelpInfo(findCmd);
         break;
     case CMD_CLEAR_SCREEN:
@@ -247,67 +248,8 @@ void MainWindow::runCmdReturnPressed()
         ptOutputWnd->appendPlainText(s021Str.toUpper());
         break;
     case CMD_DIAG_CALCULATE_KEY:
-    {
-        QString info = "《安全解锁操作步骤》\n";
-        info += "1.激活3E服务，在busmaster软件诊断窗口将“Send Tester Present”勾选为“ON”；\n";
-        info += "2.在busmaster软件诊断窗口发送“27 03”；\n";
-        info += "3.将busmaster软件诊断窗口收到的“67 03 xx xx”中的后两个字节即“xx xx”输入到弹出的“seed request”窗口中，不需要输入空格；\n";
-        info += "4.点击“seed request”窗口的“OK”将会返回计算好的安全密钥，格式为“yy yy”；\n";
-        info += "5.方法一：在busmaster软件诊断窗口发送“27 04 yy yy”，其中“yy yy”为第四步所得的数值；\n";
-        info += "  方法二：第4步完成后，程序已经将结果复制到系统剪贴板中，在busmaster软件诊断发送窗口，使用鼠标右键单击并选择粘贴，然后发送即可。\n";
-
-        ptOutputWnd->clear();
-        ptOutputWnd->appendPlainText(info);
-
-        //请求用户输入解锁种子
-        bool isOK;
-        QString seedQueryData = QInputDialog::getText(NULL,
-                                                      "seed query",
-                                                      "Please input seed, up to 4 characters\n",
-                                                      QLineEdit::Normal,
-                                                      "",
-                                                      &isOK);
-        //校验输入信息
-        QRegExp regExp("^[0-9a-fA-F]{4}$");
-
-        if(isOK && regExp.exactMatch(seedQueryData))
-        {
-            unsigned short seed = 0;
-            unsigned short key = 0;
-
-            bool resultOK = false;
-            seed = seedQueryData.toUShort(&resultOK, 16);
-
-            if(!resultOK)
-            {
-                QMessageBox::warning(this, "Warnning", "fialed to calculate seed", QMessageBox::Yes);
-            }
-            else
-            {
-                key = CalculateKey(seed);
-
-                QClipboard *clipboard = QApplication::clipboard();
-                clipboard->clear();
-                clipboard->setText("2704" + QString::number(key, 16).toUpper());
-
-                ptOutputWnd->appendPlainText("\n\n******************************");
-                ptOutputWnd->appendPlainText("  种子: " + seedQueryData.toUpper() + "  ->  密钥: " + QString::number(key, 16).toUpper());
-                ptOutputWnd->appendPlainText("******************************");
-                ptOutputWnd->appendPlainText("2704" + QString::number(key, 16).toUpper() + "已经拷贝至系统剪贴板中");
-                ptOutputWnd->appendPlainText("******************************");
-
-                QMessageBox::information(this, "Tips",
-                                         "the key in hexadecimal is 【" + QString::number(key, 16).toUpper() + "】, and the result has already been copyed to os clipboard",
-                                         QMessageBox::Yes);
-            }
-        }
-        else
-        {
-            QMessageBox::warning(this, "Warnning", "invalid seed", QMessageBox::Yes);
-        }
-
+        dealWithCalculateKeyCommand();
         break;
-    }
 #if WIN32
     case CMD_WINDOWS_COMMON:
     {
@@ -1148,7 +1090,7 @@ unsigned char MainWindow::calcChecksum(unsigned short crc)
 }
 
 //根据seed计算得出key值
-unsigned short MainWindow::CalculateKey(unsigned short seed)
+unsigned short MainWindow::calculateKey(unsigned short seed)
 {
     enum
     {
@@ -1194,6 +1136,77 @@ unsigned short MainWindow::CalculateKey(unsigned short seed)
     }
 
     return remainder;
+}
+
+//根据seed计算得出key值
+void MainWindow::dealWithCalculateKeyCommand(void)
+{
+    showHelpInfo(CMD_HELP_DIAG_CALCULATE_KEY);
+
+    //请求用户输入解锁种子
+    bool isOK;
+    QString seedQueryData = QInputDialog::getText(NULL,
+                                                  "seed query",
+                                                  "Please input seed, up to 4 characters\nin addition to whitespace\n",
+                                                  QLineEdit::Normal,
+                                                  "",
+                                                  &isOK);
+
+    //删除输入的空格等空白符
+    seedQueryData.remove(QRegExp("\\s"));
+    qDebug() << seedQueryData;
+
+    //校验输入信息
+    QRegExp regExp("^[0-9a-fA-F]{4}$");
+
+    if(isOK && regExp.exactMatch(seedQueryData))
+    {
+        unsigned short seed = 0;
+        unsigned short key = 0;
+
+        bool resultOK = false;
+        seed = seedQueryData.toUShort(&resultOK, 16);
+
+        if(!resultOK)
+        {
+            QMessageBox::warning(this, "Warnning", "fialed to calculate seed", QMessageBox::Yes);
+        }
+        else
+        {
+            key = calculateKey(seed);
+            QString keyHexStr = QString::number(key, 16).toUpper();
+
+            if(keyHexStr.size() > 4)
+            {
+                QMessageBox::warning(this, "Warnning", "length of key should not be greater than 4", QMessageBox::Yes);
+                return;
+            }
+
+            //若结果的十六进制字符数小于4，则在前面补0，最终要补齐至4个字符
+            for(int cnt = 0; cnt < 4 - keyHexStr.size(); ++cnt)
+                keyHexStr.prepend('0');
+
+            qDebug() << keyHexStr;
+
+            QClipboard *clipboard = QApplication::clipboard();
+            clipboard->clear();
+            clipboard->setText("2704" + keyHexStr);
+
+            ptOutputWnd->appendPlainText("\n\n*************************************");
+            ptOutputWnd->appendPlainText("   种子: [" + seedQueryData.toUpper() + "]  ->  密钥: [" + keyHexStr + "]");
+            ptOutputWnd->appendPlainText("*************************************");
+            ptOutputWnd->appendPlainText("结果已经拷贝至系统剪贴板中:[2704" + keyHexStr + "]");
+            ptOutputWnd->appendPlainText("*************************************");
+
+            QMessageBox::information(this, "Tips",
+                                     "the key in hexadecimal is 【" + keyHexStr + "】, and the result has already been copyed to os clipboard",
+                                     QMessageBox::Yes);
+        }
+    }
+    else
+    {
+        QMessageBox::warning(this, "Warnning", "invalid seed", QMessageBox::Yes);
+    }
 }
 
 //帮助信息
@@ -1303,6 +1316,10 @@ void MainWindow::showHelpInfo(CmdType cmd)
         hlpInfo << tr("4.1 文件转字符串工具.");
         hlpInfo << tr("4.1.1 定义：将指定文件的所有字节生成C/C++语言能识别的数组，并存储为.h文件.");
         hlpInfo << tr("4.1.2 指令：<u>:convert code to string</u>或<u>:c2s</u>.");
+        hlpInfo << tr("4.2 根据种子计算密钥.");
+        hlpInfo << tr("4.2.1 定义：某些诊断服务需要解锁，本功能根据输入的种子来计算对应的密钥.");
+        hlpInfo << tr("4.2.2 指令：<u>:calculate key</u>或<u>:calc key</u>或<u>:ck</u>.");
+        hlpInfo << tr("4.2.3 备注：输入<u>:calculate key?</u>或<u>:calc key?</u>或<u>:ck?</u>，显示安全解锁操作步骤帮助信息.");
     }
     else if(CMD_HELP_BOOTLOADER == cmd)
     {
@@ -1314,7 +1331,7 @@ void MainWindow::showHelpInfo(CmdType cmd)
         hlpInfo << tr("2 点击<u>load file</u>按钮选择.S19原app文件.");
         hlpInfo << tr("3 点击<u>generate</u>按钮生成含bootloader的新app文件,并自动打开该文件所在的目录且选中该文件.");
     }
-    else if(CMD_HELP_DAIGNOSIS == cmd)
+    else if(CMD_HELP_DIAGNOSIS == cmd)
     {
         hlpInfo << tr("《诊断仪app生成工具使用方法》");
         hlpInfo << tr("0 将<u>switch function</u>（或<u>input command</u>）切换至<u>gen firmware for diagnosis</u>.");
@@ -1326,6 +1343,17 @@ void MainWindow::showHelpInfo(CmdType cmd)
         hlpInfo << tr("2.4 将光标置于S021数据所在的输入框后，当S021输入框为空时按下回车键，会请求输入零件号，之后会请求输入软件版本信息，然后自动合成S021行数据，数据生成后依然可以使用2.3节的方法修改版本号.");
         hlpInfo << tr("3 点击<u>generate</u>按钮，生成诊断仪app文件,并自动打开该文件所在的目录且选中该文件.");
         hlpInfo << tr("4 该文件夹下还将自动生成flash driver文件，请将诊断仪app文件和flash driver文件一同加入压缩包提供给使用者.");
+    }
+    else if(CMD_HELP_DIAG_CALCULATE_KEY == cmd)
+    {
+        hlpInfo << tr("《安全解锁操作步骤》");
+        hlpInfo << tr("0 激活3E服务，在busmaster软件诊断窗口将[Send Tester Present]勾选为[ON].");
+        hlpInfo << tr("1 在busmaster软件诊断窗口发送[27 03].");
+        hlpInfo << tr("2 将busmaster软件诊断窗口收到的[67 03 xx xx]中的后两个字节即[xx xx]输入到弹出的[seed request]窗口中.");
+        hlpInfo << tr("3 点击[seed request]窗口的[OK]将会返回计算好的安全密钥.");
+        hlpInfo << tr("4 输入密钥.");
+        hlpInfo << tr("4.1 方法一：在busmaster软件诊断窗口发送[27 04 hh hh]，其中[hh hh]为第3步所得的数值.");
+        hlpInfo << tr("4.2 方法二：第3步完成后，程序已经将结果复制到系统剪贴板中，在busmaster软件诊断发送窗口，使用鼠标右键单击并选择粘贴，然后发送即可.");
     }
 
     ptOutputWnd->clear();
@@ -1687,7 +1715,8 @@ void MainWindow::commandsInitialization()
 {
     cmdList.push_back({ CMD_HELP, {":help", ":hlp", ":?"} });
     cmdList.push_back({ CMD_HELP_BOOTLOADER, {":bootloader?", ":b?"} });
-    cmdList.push_back({ CMD_HELP_DAIGNOSIS, {":diagnosis?", ":d?"} });
+    cmdList.push_back({ CMD_HELP_DIAGNOSIS, {":diagnosis?", ":d?"} });
+    cmdList.push_back({ CMD_HELP_DIAG_CALCULATE_KEY, {":calculate key?", ":calc key?", ":ck?"} });
     cmdList.push_back({ CMD_CLEAR_SCREEN, {":clear screen", ":cs"} });
     cmdList.push_back({ CMD_FULL_SCREEN, {":full screen", ":fs"} });
     cmdList.push_back({ CMD_NORMAL_SCREEN, {":normal screen", ":ns"} });
