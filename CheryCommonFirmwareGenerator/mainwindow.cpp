@@ -1362,7 +1362,7 @@ void MainWindow::showHelpInfo(CmdType cmd)
     foreach(QString elem, hlpInfo)
     {
         //另起一个新段落
-        if(elem.startsWith("0 ") || elem.startsWith("1 ") || elem.startsWith("2 ") || elem.startsWith("3 ") || elem.startsWith("4 "))
+        if(elem.startsWith("0 ") || elem.startsWith("1 ") || elem.startsWith("2 ") || elem.startsWith("3 ") || elem.startsWith("4 ") || elem.startsWith("5 "))
         {
             ptOutputWnd->appendPlainText(QString());
         }
