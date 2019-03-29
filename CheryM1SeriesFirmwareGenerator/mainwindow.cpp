@@ -1200,7 +1200,7 @@ void MainWindow::dealWithCalculateKeyCommand(void)
             ptOutputWnd->appendPlainText("*************************************");
 
             QMessageBox::information(this, "Tips",
-                                     "the key in hexadecimal is 【" + keyHexStr + "】, and the result has already been copyed to os clipboard",
+                                     "the key in hexadecimal is 【" + keyHexStr + "】, and the result has already been copied to os clipboard",
                                      QMessageBox::Yes);
         }
     }

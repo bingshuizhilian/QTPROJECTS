@@ -8,7 +8,7 @@ QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = CheryM1SeriesFirmwareGenerator
+TARGET = CheryCommonFirmwareGenerator
 TEMPLATE = app
 RC_ICONS = ../resources/appicon.ico
 
