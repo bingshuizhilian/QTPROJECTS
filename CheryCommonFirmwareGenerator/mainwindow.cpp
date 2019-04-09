@@ -1354,8 +1354,8 @@ void MainWindow::showHelpInfo(CmdType cmd)
         hlpInfo << tr("3 将busmaster软件诊断窗口收到的[67 03 xx xx]中的后两个字节即[xx xx]输入到弹出的[seed request]窗口中.");
         hlpInfo << tr("4 点击[seed request]窗口的[OK]将会返回计算好的安全密钥.");
         hlpInfo << tr("5 输入密钥.");
-        hlpInfo << tr("5.1 方法一：在busmaster软件诊断窗口发送[27 04 hh hh]，其中[hh hh]为第3步所得的数值.");
-        hlpInfo << tr("5.2 方法二：第3步完成后，程序已经将结果复制到系统剪贴板中，在busmaster软件诊断发送窗口，使用鼠标右键单击并选择粘贴，然后发送即可.");
+        hlpInfo << tr("5.1 方法一：在busmaster软件诊断窗口发送[27 04 hh hh]，其中[hh hh]为第4步所得的数值.");
+        hlpInfo << tr("5.2 方法二：第4步完成后，程序已经将结果复制到系统剪贴板中，在busmaster软件诊断发送窗口，使用鼠标右键单击并选择粘贴，然后发送即可.");
     }
 
     ptOutputWnd->clear();
