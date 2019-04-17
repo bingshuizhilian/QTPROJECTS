@@ -45,7 +45,8 @@ private:
         M1AFL2,
         T18,
         T19,
-        S51EVFL
+        S51EVFL,
+        A13TEV
     };
 
     enum CmdType
@@ -64,17 +65,12 @@ private:
         CMD_GEN_M1AFL2_FLASH_DRIVER,
         CMD_GEN_T19_FLASH_DRIVER,
         CMD_GEN_S51EVFL_FLASH_DRIVER,
+        CMD_GEN_A13TEV_FLASH_DRIVER,
         CMD_GEN_COMMON_FLASH_DRIVER,
         CMD_GEN_ERASE_EEPROM,
         CMD_GEN_M1_BOOT_CODE,
         CMD_GEN_T1_BOOT_CODE,
         CMD_GEN_S51EVFL_BOOT_CODE,
-        CMD_DIAG_M1_S021,
-        CMD_DIAG_M1_S021_AUTOFILL,
-        CMD_DIAG_T19_S021,
-        CMD_DIAG_T19_S021_AUTOFILL,
-        CMD_DIAG_S51EVFL_S0,
-        CMD_DIAG_S51EVFL_S0_AUTOFILL,
         CMD_DIAG_CALCULATE_KEY,
 #if WIN32
         CMD_WINDOWS_COMMON,
@@ -103,14 +99,16 @@ private:
         "m1afl2",
         "t18",
         "t19",
-        "s51evfl"
+        "s51evfl",
+        "a13tev"
     };
     const QString REPLACE_STRING = "S10BFFF8C000C000C000C000FD\n";//未加bootloader的app含有此内容
     const QString TARGET_STRING_AFTER_GENERATING_BOOTCODE = "S10BFFF8FC00FC00FC00FC000D\n";//已加bootloader的app含有此内容
     const QString DIAG_COMMON_S0  = "S02100000747395957202020202020202020202020202020200130302E30302E303040";//通用的S021行
-    const QString DIAG_M1AFL2_PARTNUMBER = "701000044AA";//M1AFL2的part number
-    const QString DIAG_T19_PARTNUMBER = "701000068AA";//T19、T18的part number
-    const QString DIAG_S51EVFL_PARTNUMBER = "J72-3820010FA";//S51EVFL的part number
+    const QString DIAG_M1AFL2_PARTNUMBER = "701000044AA";
+    const QString DIAG_T19_PARTNUMBER = "701000068AA";
+    const QString DIAG_S51EVFL_PARTNUMBER = "J72-3820010FA";
+    const QString DIAG_A13TEV_PARTNUMBER = "A13TEV-pn001";
 
 private:
     QStringList fileInfo;

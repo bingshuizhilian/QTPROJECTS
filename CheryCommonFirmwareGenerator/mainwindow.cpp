@@ -3,6 +3,7 @@
 #include "defaultM1SeriesBootCode.h"
 #include "defaultT1SeriesBootCode.h"
 #include "defaultS51evflBootCode.h"
+#include "defaultA13tevflBootCode.h"
 #include "defaultFlashDriverCode.h"
 #include "defaultEraseEepromCode.h"
 #include "crc16.h"
@@ -178,6 +179,15 @@ void MainWindow::runCmdReturnPressed()
         generateFiles(findCmd, dirPath, true);
         break;
     }
+    case CMD_GEN_A13TEV_FLASH_DRIVER:
+    {
+        QString dirPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
+        dirPath.append("/cheryA13tevFlashDriver/");
+        ptOutputWnd->clear();
+        ptOutputWnd->appendPlainText(dirPath.left(dirPath.size() - 1));
+        generateFiles(findCmd, dirPath, true);
+        break;
+    }
     case CMD_GEN_COMMON_FLASH_DRIVER:
     {
         QString dirPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
@@ -223,30 +233,6 @@ void MainWindow::runCmdReturnPressed()
         generateFiles(findCmd, dirPath, true);
         break;
     }
-    case CMD_DIAG_M1_S021_AUTOFILL:
-        s021Str.replace(18, DIAG_M1AFL2_PARTNUMBER.toLatin1().toHex().size(), DIAG_M1AFL2_PARTNUMBER.toLatin1().toHex());
-        m_leDiagnosisS021->setText(s021Str.toUpper());
-    case CMD_DIAG_M1_S021:
-        s021Str.replace(18, DIAG_M1AFL2_PARTNUMBER.toLatin1().toHex().size(), DIAG_M1AFL2_PARTNUMBER.toLatin1().toHex());
-        ptOutputWnd->clear();
-        ptOutputWnd->appendPlainText(s021Str.toUpper());
-        break;
-    case CMD_DIAG_T19_S021_AUTOFILL:
-        s021Str.replace(18, DIAG_T19_PARTNUMBER.toLatin1().toHex().size(), DIAG_T19_PARTNUMBER.toLatin1().toHex());
-        m_leDiagnosisS021->setText(s021Str.toUpper());
-    case CMD_DIAG_T19_S021:
-        s021Str.replace(18, DIAG_T19_PARTNUMBER.toLatin1().toHex().size(), DIAG_T19_PARTNUMBER.toLatin1().toHex());
-        ptOutputWnd->clear();
-        ptOutputWnd->appendPlainText(s021Str.toUpper());
-        break;
-    case CMD_DIAG_S51EVFL_S0_AUTOFILL:
-        s021Str.replace(18, DIAG_S51EVFL_PARTNUMBER.toLatin1().toHex().size(), DIAG_S51EVFL_PARTNUMBER.toLatin1().toHex());
-        m_leDiagnosisS021->setText(s021Str.toUpper());
-    case CMD_DIAG_S51EVFL_S0:
-        s021Str.replace(18, DIAG_S51EVFL_PARTNUMBER.toLatin1().toHex().size(), DIAG_S51EVFL_PARTNUMBER.toLatin1().toHex());
-        ptOutputWnd->clear();
-        ptOutputWnd->appendPlainText(s021Str.toUpper());
-        break;
     case CMD_DIAG_CALCULATE_KEY:
         dealWithCalculateKeyCommand();
         break;
@@ -309,6 +295,10 @@ void MainWindow::switchPlatformPressed()
     {
         m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(DEFAULT_S51EVFL_BOOT_CODE_HARDWARE_VERSION));
     }
+    else if(PLATFORM_STRING_LIST.at(A13TEV) == m_cmbPlatformSwitch->currentText())
+    {
+        m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(DEFAULT_A13TEV_BOOT_CODE_HARDWARE_VERSION));
+    }
 }
 
 //处理按下generate按钮事件
@@ -356,6 +346,10 @@ void MainWindow::useDefaultBootloaderPressed()
         else if(PLATFORM_STRING_LIST.at(S51EVFL) == m_cmbPlatformSwitch->currentText())
         {
             m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(DEFAULT_S51EVFL_BOOT_CODE_HARDWARE_VERSION));
+        }
+        else if(PLATFORM_STRING_LIST.at(A13TEV) == m_cmbPlatformSwitch->currentText())
+        {
+            m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(DEFAULT_A13TEV_BOOT_CODE_HARDWARE_VERSION));
         }
     }
     else
@@ -430,6 +424,13 @@ void MainWindow::s021ReturnPressed()
     {
         QString tmpStr = DIAG_COMMON_S0;
         tmpStr.replace(18, DIAG_S51EVFL_PARTNUMBER.toLatin1().toHex().size(), DIAG_S51EVFL_PARTNUMBER.toLatin1().toHex());
+        m_leDiagnosisS021->setText(tmpStr.toUpper());
+    }
+
+    if(":a" == m_leDiagnosisS021->text() || ":A" == m_leDiagnosisS021->text())
+    {
+        QString tmpStr = DIAG_COMMON_S0;
+        tmpStr.replace(18, DIAG_A13TEV_PARTNUMBER.toLatin1().toHex().size(), DIAG_A13TEV_PARTNUMBER.toLatin1().toHex());
         m_leDiagnosisS021->setText(tmpStr.toUpper());
     }
 
@@ -578,6 +579,10 @@ void MainWindow::generateFirmwareWithBootloader()
         {
             bootloaderCodeString = DEFAULT_S51EVFL_BOOT_CODE;
         }
+        else if(PLATFORM_STRING_LIST.at(A13TEV) == m_cmbPlatformSwitch->currentText())
+        {
+            bootloaderCodeString = DEFAULT_A13TEV_BOOT_CODE;
+        }
         else
         {
             qDebug() << "error occurred when loading default boot code";
@@ -687,6 +692,10 @@ void MainWindow::generateFiles(CmdType cmd, QString dir_path, bool is_open_folde
     case CMD_GEN_S51EVFL_FLASH_DRIVER:
         filePathName += "CheryS51evflFlashDriver.S19";
         fileContent = DEFAULT_S51EVFL_FLASHDRIVER_CODE;
+        break;
+    case CMD_GEN_A13TEV_FLASH_DRIVER:
+        filePathName += "CheryA13tevFlashDriver.S19";
+        fileContent = DEFAULT_A13TEV_FLASHDRIVER_CODE;
         break;
     case CMD_GEN_COMMON_FLASH_DRIVER:
         filePathName += "CheryCommonFlashDriver.S19";
@@ -902,6 +911,10 @@ void MainWindow::generateFirmwareForDiagnosis()
     {
         s20cText = "S20CFEBE00";
     }
+    else if(m_leDiagnosisS021->text().contains(DIAG_A13TEV_PARTNUMBER.toLatin1().toHex(), Qt::CaseInsensitive))
+    {
+        s20cText = "S20CFEBE00";
+    }
     else
     {
         s20cText = "S20CFE8000";
@@ -969,6 +982,10 @@ void MainWindow::generateFirmwareForDiagnosis()
     else if(m_leDiagnosisS021->text().contains(DIAG_S51EVFL_PARTNUMBER.toLatin1().toHex(), Qt::CaseInsensitive))
     {
         generateFiles(CMD_GEN_S51EVFL_FLASH_DRIVER, dirPath, false);
+    }
+    else if(m_leDiagnosisS021->text().contains(DIAG_A13TEV_PARTNUMBER.toLatin1().toHex(), Qt::CaseInsensitive))
+    {
+        generateFiles(CMD_GEN_A13TEV_FLASH_DRIVER, dirPath, false);
     }
     else
     {
@@ -1278,24 +1295,6 @@ void MainWindow::showHelpInfo(CmdType cmd)
         hlpInfo << tr("3.3.1.4.1 定义：独立生成一个通用奇瑞诊断仪用flash driver文件.");
         hlpInfo << tr("3.3.1.4.2 指令：<u>:common flash driver</u>或<u>:cfd</u>或<u>:fd</u>.");
         hlpInfo << tr("3.3.1.4 备注：用3.2节方法也会自动生成flash driver文件.");
-        hlpInfo << tr("3.3.2 生成适用于M1AFL2的S0行代码.");
-        hlpInfo << tr("3.3.2.1 定义：将程序预置的适用于M1AFL2的S0行代码显示在软件屏幕上.");
-        hlpInfo << tr("3.3.2.2 指令：<u>:m1afl2 s0</u>或<u>:ms0</u>.");
-        hlpInfo << tr("3.3.3 自动填充适用于M1AFL2的S0行代码.");
-        hlpInfo << tr("3.3.3.1 定义：将程序预置的适用于M1AFL2的S0行代码显示在软件屏幕上，并自动输入到S0行代码输入框.");
-        hlpInfo << tr("3.3.3.2 指令：<u>:m1afl2 s0 fill</u>或<u>:ms0f</u>.");
-        hlpInfo << tr("3.3.4 生成适用于T19的S0行代码.");
-        hlpInfo << tr("3.3.4.1 定义：将程序预置的适用于T19的S0行代码显示在软件屏幕上.");
-        hlpInfo << tr("3.3.4.2 指令：<u>:t19 s0</u>或<u>:ts0</u>.");
-        hlpInfo << tr("3.3.5 自动填充适用于T19的S0行代码.");
-        hlpInfo << tr("3.3.5.1 定义：将程序预置的适用于T19的S0行代码显示在软件屏幕上，并自动输入到S0行代码输入框.");
-        hlpInfo << tr("3.3.5.2 指令：<u>:t19 s0 fill</u>或<u>:ts0f</u>.");
-        hlpInfo << tr("3.3.6 生成适用于S51EVFL的S0行代码.");
-        hlpInfo << tr("3.3.6.1 定义：将程序预置的适用于S51EVFL的S0行代码显示在软件屏幕上.");
-        hlpInfo << tr("3.3.6.2 指令：<u>:s51evfl s0</u>或<u>:ss0</u>.");
-        hlpInfo << tr("3.3.7 自动填充适用于S51EVFL的S0行代码.");
-        hlpInfo << tr("3.3.7.1 定义：将程序预置的适用于S51EVFL的S0行代码显示在软件屏幕上，并自动输入到S0行代码输入框.");
-        hlpInfo << tr("3.3.7.2 指令：<u>:s51evfl s0 fill</u>或<u>:ss0f</u>.");
         hlpInfo << tr("3.4 生成erase eeprom firmware文件.");
         hlpInfo << tr("3.4.1 定义：生成用于清除仪表eeprom的.S19固件.");
         hlpInfo << tr("3.4.2 指令：<u>:erase eeprom</u>或<u>:ee</u>.");
@@ -1312,7 +1311,6 @@ void MainWindow::showHelpInfo(CmdType cmd)
         hlpInfo << tr("3.7.1 定义：生成S51EVFL的boot代码段的.S19固件.");
         hlpInfo << tr("3.7.2 指令：<u>:s boot code</u>或<u>:sbc</u>.");
         hlpInfo << tr("3.7.3 备注：此固件不可单独烧录至仪表，需要合成到仪表app固件中，合成方法参考3.1节.");
-
         hlpInfo << tr("4 开发辅助工具.");
         hlpInfo << tr("4.1 文件转字符串工具.");
         hlpInfo << tr("4.1.1 定义：将指定文件的所有字节生成C/C++语言能识别的数组，并存储为.h文件.");
@@ -1338,10 +1336,10 @@ void MainWindow::showHelpInfo(CmdType cmd)
         hlpInfo << tr("0 将<u>switch function</u>（或<u>input command</u>）切换至<u>gen firmware for diagnosis</u>.");
         hlpInfo << tr("1 点击<u>load file</u>按钮选择.S19原app文件.");
         hlpInfo << tr("2 输入S021数据，该数据最终将位于app的第一行.");
-        hlpInfo << tr("2.1 在命令行可查询程序预置的S021数据，请在命令行输入<u>:?</u>获取相关命令信息.");
-        hlpInfo << tr("2.2 也可以在S021输入框输入<u>:t</u>并按回车键获取T19预置的S021数据；输入<u>:m</u>并按回车键获取m1afl2预置的S021数据；输入<u>:s</u>并按回车键获取s51evfl预置的S021数据.");
-        hlpInfo << tr("2.3 正确输入S021数据后，将光标置于S021数据所在的输入框后，点击回车键可以修改版本号，版本号格式需严格匹配<u>xx.xx.xx</u>,x为0-9或a-f,字母不区分大小写，最终按大写字母写入文件.");
-        hlpInfo << tr("2.4 将光标置于S021数据所在的输入框后，当S021输入框为空时按下回车键，会请求输入零件号，之后会请求输入软件版本信息，然后自动合成S021行数据，数据生成后依然可以使用2.3节的方法修改版本号.");
+        hlpInfo << tr("2.1 在S021输入框输入<u>:t</u>并按回车键获取T19预置的S021数据；输入<u>:m</u>并按回车键获取m1afl2预置的S021数据；"
+                      "输入<u>:s</u>并按回车键获取s51evfl预置的S021数据；输入<u>:a</u>并按回车键获取a13tev预置的S021数据.");
+        hlpInfo << tr("2.2 正确输入S021数据后，将光标置于S021数据所在的输入框后，点击回车键可以修改版本号，版本号格式需严格匹配<u>xx.xx.xx</u>,x为0-9或a-f,字母不区分大小写，最终按大写字母写入文件.");
+        hlpInfo << tr("2.3 将光标置于S021数据所在的输入框后，当S021输入框为空时按下回车键，会请求输入零件号，之后会请求输入软件版本信息，然后自动合成S021行数据，数据生成后依然可以使用2.3节的方法修改版本号.");
         hlpInfo << tr("3 点击<u>generate</u>按钮，生成诊断仪app文件,并自动打开该文件所在的目录且选中该文件.");
         hlpInfo << tr("4 该文件夹下还将自动生成flash driver文件，请将诊断仪app文件和flash driver文件一同加入压缩包提供给使用者.");
     }
@@ -1601,7 +1599,7 @@ void MainWindow::componentsInitialization(void)
     m_leBootloaderInfo = new QLineEdit;
     m_leBootloaderInfo->setReadOnly(true);
 
-    //M平台或T平台选择
+    //机型选择
     m_cmbPlatformSwitch = new QComboBox;
     connect(m_cmbPlatformSwitch, static_cast<void (QComboBox::*)(const QString&)>(&QComboBox::currentTextChanged), this, &switchPlatformPressed);
     m_cmbPlatformSwitch->setFixedWidth(77);
@@ -1611,6 +1609,7 @@ void MainWindow::componentsInitialization(void)
     m_cmbPlatformSwitch->addItem(PLATFORM_STRING_LIST.at(T18), T18);
     m_cmbPlatformSwitch->addItem(PLATFORM_STRING_LIST.at(T19), T19);
     m_cmbPlatformSwitch->addItem(PLATFORM_STRING_LIST.at(S51EVFL), S51EVFL);
+    m_cmbPlatformSwitch->addItem(PLATFORM_STRING_LIST.at(A13TEV), A13TEV);
 
     //是否使用默认boot code选项
     m_ckbUseDefaultBootloader = new QCheckBox(tr("use default"));
@@ -1729,17 +1728,12 @@ void MainWindow::commandsInitialization()
     cmdList.push_back({ CMD_GEN_M1AFL2_FLASH_DRIVER, {":m1afl2 flash driver", ":mfd"} });
     cmdList.push_back({ CMD_GEN_T19_FLASH_DRIVER, {":t19 flash driver", ":tfd"} });
     cmdList.push_back({ CMD_GEN_S51EVFL_FLASH_DRIVER, {":s51evfl flash driver", ":sfd"} });
+    cmdList.push_back({ CMD_GEN_A13TEV_FLASH_DRIVER, {":a13tev flash driver", ":afd"} });
     cmdList.push_back({ CMD_GEN_COMMON_FLASH_DRIVER, {":common flash driver", ":cfd", ":fd"} });
     cmdList.push_back({ CMD_GEN_ERASE_EEPROM, {":erase eeprom", ":ee"} });
     cmdList.push_back({ CMD_GEN_M1_BOOT_CODE, {":m boot code", ":mbc"} });
     cmdList.push_back({ CMD_GEN_T1_BOOT_CODE, {":t boot code", ":tbc"} });
     cmdList.push_back({ CMD_GEN_S51EVFL_BOOT_CODE, {":s boot code", ":sbc"} });
-    cmdList.push_back({ CMD_DIAG_M1_S021, {":m1afl2 s0", ":ms0"} });
-    cmdList.push_back({ CMD_DIAG_M1_S021_AUTOFILL, {":m1afl2 s0 fill", ":ms0f"} });
-    cmdList.push_back({ CMD_DIAG_T19_S021, {":t19 s0", ":ts0"} });
-    cmdList.push_back({ CMD_DIAG_T19_S021_AUTOFILL, {":t19 s0 fill", ":ts0f"} });
-    cmdList.push_back({ CMD_DIAG_S51EVFL_S0, {":s51evfl s0", ":s51ev s0", ":ss0"} });
-    cmdList.push_back({ CMD_DIAG_S51EVFL_S0_AUTOFILL, {":s51evfl s0 fill", ":s51ev s0 fill", ":ss0f"} });
     cmdList.push_back({ CMD_DIAG_CALCULATE_KEY, {":calculate key", ":calc key", ":ck"} });
 #if WIN32
     cmdList.push_back({ CMD_WINDOWS_COMMON, {"::"} });
