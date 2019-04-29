@@ -62,6 +62,7 @@ private:
         CMD_SAVE_CONFIG_FILE,
         CMD_LOAD_CONFIG_FILE,
         CMD_CODE_TO_STRING,
+        CMD_COMPRESS_BMP,
         CMD_GEN_M1AFL2_FLASH_DRIVER,
         CMD_GEN_T19_FLASH_DRIVER,
         CMD_GEN_S51EVFL_FLASH_DRIVER,
@@ -71,6 +72,7 @@ private:
         CMD_GEN_M1_BOOT_CODE,
         CMD_GEN_T1_BOOT_CODE,
         CMD_GEN_S51EVFL_BOOT_CODE,
+        CMD_GEN_A13TEV_BOOT_CODE,
         CMD_DIAG_CALCULATE_KEY,
 #if WIN32
         CMD_WINDOWS_COMMON,
@@ -143,6 +145,7 @@ private:
     void generateFirmwareForDiagnosis();
     void generateFiles(CmdType cmd, QString dir_path, bool is_open_folder);
     void generateCharArray(void);
+    void compressCArrayOfBitmap(void);
     bool sortS19Code(QStringList &originalStringList);
     int hexCharToHex(char src);
     unsigned short calcCRC16(QList<unsigned char> data_list);

@@ -152,6 +152,9 @@ void MainWindow::runCmdReturnPressed()
     case CMD_CODE_TO_STRING:
         generateCharArray();
         break;
+    case CMD_COMPRESS_BMP:
+        compressCArrayOfBitmap();
+        break;
     case CMD_GEN_M1AFL2_FLASH_DRIVER:
     {
         QString dirPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
@@ -228,6 +231,15 @@ void MainWindow::runCmdReturnPressed()
     {
         QString dirPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
         dirPath.append("/cheryS51evflBootCode/");
+        ptOutputWnd->clear();
+        ptOutputWnd->appendPlainText(dirPath.left(dirPath.size() - 1));
+        generateFiles(findCmd, dirPath, true);
+        break;
+    }
+    case CMD_GEN_A13TEV_BOOT_CODE:
+    {
+        QString dirPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
+        dirPath.append("/cheryA13tevBootCode/");
         ptOutputWnd->clear();
         ptOutputWnd->appendPlainText(dirPath.left(dirPath.size() - 1));
         generateFiles(findCmd, dirPath, true);
@@ -716,6 +728,10 @@ void MainWindow::generateFiles(CmdType cmd, QString dir_path, bool is_open_folde
     case CMD_GEN_S51EVFL_BOOT_CODE:
         filePathName += QString("CheryS51evflBootCode_hw") + DEFAULT_S51EVFL_BOOT_CODE_HARDWARE_VERSION + QString(".S19");
         fileContent = DEFAULT_S51EVFL_BOOT_CODE;
+        break;
+    case CMD_GEN_A13TEV_BOOT_CODE:
+        filePathName += QString("CheryA13tevBootCode_hw") + DEFAULT_A13TEV_BOOT_CODE_HARDWARE_VERSION + QString(".S19");
+        fileContent = DEFAULT_A13TEV_BOOT_CODE;
         break;
     default:
         break;
@@ -1339,7 +1355,7 @@ void MainWindow::showHelpInfo(CmdType cmd)
         hlpInfo << tr("2.1 在S021输入框输入<u>:t</u>并按回车键获取T19预置的S021数据；输入<u>:m</u>并按回车键获取m1afl2预置的S021数据；"
                       "输入<u>:s</u>并按回车键获取s51evfl预置的S021数据；输入<u>:a</u>并按回车键获取a13tev预置的S021数据.");
         hlpInfo << tr("2.2 正确输入S021数据后，将光标置于S021数据所在的输入框后，点击回车键可以修改版本号，版本号格式需严格匹配<u>xx.xx.xx</u>,x为0-9或a-f,字母不区分大小写，最终按大写字母写入文件.");
-        hlpInfo << tr("2.3 将光标置于S021数据所在的输入框后，当S021输入框为空时按下回车键，会请求输入零件号，之后会请求输入软件版本信息，然后自动合成S021行数据，数据生成后依然可以使用2.3节的方法修改版本号.");
+        hlpInfo << tr("2.3 将光标置于S021数据所在的输入框后，当S021输入框为空时按下回车键，会请求输入零件号，之后会请求输入软件版本信息，然后自动合成S021行数据，数据生成后依然可以使用2.1节的方法修改版本号.");
         hlpInfo << tr("3 点击<u>generate</u>按钮，生成诊断仪app文件,并自动打开该文件所在的目录且选中该文件.");
         hlpInfo << tr("4 该文件夹下还将自动生成flash driver文件，请将诊断仪app文件和flash driver文件一同加入压缩包提供给使用者.");
     }
@@ -1571,6 +1587,192 @@ void MainWindow::generateCharArray()
 #endif
 }
 
+void MainWindow::compressCArrayOfBitmap()
+{
+    QString filePathName = QFileDialog::getOpenFileName();
+    QString filePath = QFileInfo(filePathName).absolutePath();
+
+    qDebug()<<filePathName<<endl<<filePath<<endl;
+
+    if(filePathName.isEmpty())
+    {
+        QMessageBox::warning(this, "Warnning", "generate failed, please select a file", QMessageBox::Yes);
+        return;
+    }
+
+    QFile targetFile(filePathName);
+    if(!targetFile.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        QMessageBox::warning(this, "Warnning", "Cannot open " + filePathName, QMessageBox::Yes);
+        return;
+    }
+
+    this->resize(640, 460);
+
+    QTextStream targetFileIn(&targetFile);
+    QStringList originalCodeStringList;
+    while(!targetFileIn.atEnd())
+    {
+        QString readStr = targetFileIn.readLine();
+
+        if(!readStr.isEmpty())
+            originalCodeStringList.push_back(readStr);
+    }
+
+    targetFile.close();
+
+    QString tmpStr = originalCodeStringList.first();
+    //暂未考虑bmp宽或高大于256的情况，因为3.5" TFT实际使用到的图片尺寸在任意方向上不会且不能超过248
+    QString widthAndHeight = tmpStr.mid(tmpStr.lastIndexOf(',') - 14, 4);
+    widthAndHeight += ", ";
+    widthAndHeight += tmpStr.mid(tmpStr.lastIndexOf(',') - 4, 4);
+    widthAndHeight += ", //width: " + QString::number(tmpStr.mid(tmpStr.lastIndexOf(',') - 12, 2).toInt(nullptr, 16));
+    widthAndHeight += ", height: " + QString::number(tmpStr.mid(tmpStr.lastIndexOf(',') - 2, 2).toInt(nullptr, 16));
+
+    QStringList targetFormattedStringList;
+    targetFormattedStringList << "static const unsigned char bmp[] =\n{" << widthAndHeight;
+    originalCodeStringList.removeFirst();
+    originalCodeStringList.removeLast();
+
+    QStringList tmpStringList;
+    for(auto elem: originalCodeStringList)
+        tmpStringList += elem.split(',');
+
+    tmpStringList.removeAll("");
+    //在结尾添加一个结束标记，否则当数据全为0x00或0xff且数据量较大时，下面的正则表达式查找第一个不为0x00或0xff的数据非常耗时
+    tmpStringList.append("END_FLAG");
+
+    QStringList targetStringList;
+    for(int index = 0; index < tmpStringList.size(); ++index)
+    {
+        if(0 == tmpStringList.at(index).compare("0X00", Qt::CaseInsensitive))
+        {
+            targetStringList << tmpStringList.at(index);
+
+            if(tmpStringList.size() - 1 == index)
+            {
+                targetStringList << "1";
+            }
+            else
+            {
+                int matchIndex = tmpStringList.indexOf(QRegExp("^((?!0[xX]00).)*$"), index);
+                if(matchIndex <= UCHAR_MAX)
+                {
+                    targetStringList << QString::number(matchIndex - index);
+                }
+                else
+                {
+                    for(int cnt = 0; cnt < matchIndex / UCHAR_MAX; ++cnt)
+                    {
+                        targetStringList << QString::number(UCHAR_MAX);
+                        targetStringList << tmpStringList.at(index);
+                    }
+
+                    if((matchIndex - index) % UCHAR_MAX != 0)
+                    {
+                        targetStringList << QString::number((matchIndex - index) % UCHAR_MAX);
+                    }
+                    else
+                    {
+                        //移除多添加的0x00
+                        targetStringList.removeLast();
+                    }
+                }
+
+                index = matchIndex - 1;
+            }
+        }
+        else if(0 == tmpStringList.at(index).compare("0XFF", Qt::CaseInsensitive))
+        {
+            targetStringList << tmpStringList.at(index);
+
+            if(tmpStringList.size() - 1 == index)
+            {
+                targetStringList << "1";
+            }
+            else
+            {
+                int matchIndex = tmpStringList.indexOf(QRegExp("^((?!0[xX][fF][fF]).)*$"), index);
+                if(matchIndex <= UCHAR_MAX)
+                {
+                    targetStringList << QString::number(matchIndex - index);
+                }
+                else
+                {
+                    for(int cnt = 0; cnt < matchIndex / UCHAR_MAX; ++cnt)
+                    {
+                        targetStringList << QString::number(UCHAR_MAX);
+                        targetStringList << tmpStringList.at(index);
+                    }
+
+                    if((matchIndex - index) % UCHAR_MAX != 0)
+                    {
+                        targetStringList << QString::number((matchIndex - index) % UCHAR_MAX);
+                    }
+                    else
+                    {
+                        //移除多添加的0xff
+                        targetStringList.removeLast();
+                    }
+                }
+
+                index = matchIndex - 1;
+            }
+        }
+        else
+        {
+            targetStringList << tmpStringList.at(index);
+        }
+    }
+
+    //移除设置的"END_FLAG"
+    targetStringList.removeLast();
+
+    for(auto& elem: targetStringList)
+    {
+        int numOfCharInElem = elem.size();
+        for(int cnt = 0; numOfCharInElem < 4 && cnt < 4 - numOfCharInElem; ++cnt)
+            elem.prepend(' ');
+
+        elem += ", ";
+    }
+
+    //移除最后一个','
+    targetStringList.last().remove(", ");
+
+    QString tmpStr2;
+    for(int index = 0; index < targetStringList.size(); ++index)
+    {
+        if(index % 16 == 0)
+        {
+            if(!tmpStr2.isEmpty())
+                targetFormattedStringList << tmpStr2;
+
+            tmpStr2.clear();
+        }
+
+        tmpStr2 += targetStringList.at(index);
+
+        if(index == targetStringList.size() - 1)
+            targetFormattedStringList << tmpStr2;
+    }
+
+    targetFormattedStringList << "}; //total bytes: " + QString::number(targetStringList.size() + 2);
+
+    for(auto iter = targetFormattedStringList.begin() + 1; iter != targetFormattedStringList.end() - 1; ++iter)
+        *iter = (*iter).prepend("    ");
+
+    for(auto& elem: targetFormattedStringList)
+    {
+        elem = elem.toLower();
+        ptOutputWnd->appendPlainText(elem);
+    }
+
+    QClipboard *clipboard = QApplication::clipboard();
+    clipboard->clear();
+    clipboard->setText(ptOutputWnd->document()->toPlainText());
+}
+
 //控件初始化
 void MainWindow::componentsInitialization(void)
 {
@@ -1725,6 +1927,7 @@ void MainWindow::commandsInitialization()
     cmdList.push_back({ CMD_SAVE_CONFIG_FILE, {":save config file", ":scf"} });
     cmdList.push_back({ CMD_LOAD_CONFIG_FILE, {":load config file", ":lcf"} });
     cmdList.push_back({ CMD_CODE_TO_STRING, {":convert code to string", ":c2s"} });
+    cmdList.push_back({ CMD_COMPRESS_BMP, {":compress bmp", ":cb"} });
     cmdList.push_back({ CMD_GEN_M1AFL2_FLASH_DRIVER, {":m1afl2 flash driver", ":mfd"} });
     cmdList.push_back({ CMD_GEN_T19_FLASH_DRIVER, {":t19 flash driver", ":tfd"} });
     cmdList.push_back({ CMD_GEN_S51EVFL_FLASH_DRIVER, {":s51evfl flash driver", ":sfd"} });
@@ -1734,6 +1937,7 @@ void MainWindow::commandsInitialization()
     cmdList.push_back({ CMD_GEN_M1_BOOT_CODE, {":m boot code", ":mbc"} });
     cmdList.push_back({ CMD_GEN_T1_BOOT_CODE, {":t boot code", ":tbc"} });
     cmdList.push_back({ CMD_GEN_S51EVFL_BOOT_CODE, {":s boot code", ":sbc"} });
+    cmdList.push_back({ CMD_GEN_A13TEV_BOOT_CODE, {":a boot code", ":abc"} });
     cmdList.push_back({ CMD_DIAG_CALCULATE_KEY, {":calculate key", ":calc key", ":ck"} });
 #if WIN32
     cmdList.push_back({ CMD_WINDOWS_COMMON, {"::"} });
