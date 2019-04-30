@@ -1664,16 +1664,8 @@ void MainWindow::compressCArrayOfBitmap()
     QStringList targetStringList;
     for(int index = 0; index < tmpStringList.size(); ++index)
     {
-        if(18381 == index)
+        if(0 == tmpStringList.at(index).compare("0X00", Qt::CaseInsensitive) || 0 == tmpStringList.at(index).compare("0XFF", Qt::CaseInsensitive))
         {
-            widthAndHeight += "";
-            qDebug() << tmpStringList.at(index - 1) << tmpStringList.at(index) << tmpStringList.at(index + 1);
-        }
-
-        if(0 == tmpStringList.at(index).compare("0X00", Qt::CaseInsensitive))
-        {
-            qDebug() << index;
-
             targetStringList << tmpStringList.at(index);
 
             if(tmpStringList.size() - 1 == index)
@@ -1682,7 +1674,13 @@ void MainWindow::compressCArrayOfBitmap()
             }
             else
             {
-                int matchIndex = tmpStringList.indexOf(QRegExp("^((?!0[xX]00).)*$"), index);
+                QRegExp regexp;
+                if(0 == tmpStringList.at(index).compare("0X00", Qt::CaseInsensitive))
+                    regexp.setPattern("^((?!0[xX]00).)*$");
+                else
+                    regexp.setPattern("^((?!0[xX][fF][fF]).)*$");
+
+                int matchIndex = tmpStringList.indexOf(regexp, index);
                 if(matchIndex - index <= DEVIDE_AMOUNT)
                 {
                     targetStringList << QString::number(matchIndex - index);
@@ -1701,48 +1699,12 @@ void MainWindow::compressCArrayOfBitmap()
                     }
                     else
                     {
-                        //移除多添加的0x00
+                        //移除多添加的0x00或0xff
                         targetStringList.removeLast();
                     }
                 }
 
-                index = matchIndex - 1;
-            }
-        }
-        else if(0 == tmpStringList.at(index).compare("0XFF", Qt::CaseInsensitive))
-        {
-            targetStringList << tmpStringList.at(index);
-
-            if(tmpStringList.size() - 1 == index)
-            {
-                targetStringList << "1";
-            }
-            else
-            {
-                int matchIndex = tmpStringList.indexOf(QRegExp("^((?!0[xX][fF][fF]).)*$"), index);
-                if(matchIndex - index <= UCHAR_MAX)
-                {
-                    targetStringList << QString::number(matchIndex - index);
-                }
-                else
-                {
-                    for(int cnt = 0; cnt < (matchIndex - index) / UCHAR_MAX; ++cnt)
-                    {
-                        targetStringList << QString::number(UCHAR_MAX);
-                        targetStringList << tmpStringList.at(index);
-                    }
-
-                    if((matchIndex - index) % UCHAR_MAX != 0)
-                    {
-                        targetStringList << QString::number((matchIndex - index) % UCHAR_MAX);
-                    }
-                    else
-                    {
-                        //移除多添加的0xff
-                        targetStringList.removeLast();
-                    }
-                }
-
+                //for循环马上会另index自增1，提前减去1后接下来才能定位到下一个非0x00或0xff的元素，即matchIndex所指向的元素
                 index = matchIndex - 1;
             }
         }
@@ -1797,7 +1759,7 @@ void MainWindow::compressCArrayOfBitmap()
 
     //宽度和高度用小写字母
     if(!targetFormattedStringList.isEmpty())
-        targetFormattedStringList[1] = targetFormattedStringList[1].left(10) + targetFormattedStringList[1].right(targetFormattedStringList[1].size() - 10).toLower();
+        targetFormattedStringList[1] = targetFormattedStringList[1].left(14) + targetFormattedStringList[1].right(targetFormattedStringList[1].size() - 14).toLower();
 
     for(auto& elem: targetFormattedStringList)
         ptOutputWnd->appendPlainText(elem);
