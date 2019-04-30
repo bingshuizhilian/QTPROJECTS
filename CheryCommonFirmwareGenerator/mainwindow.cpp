@@ -1335,6 +1335,9 @@ void MainWindow::showHelpInfo(CmdType cmd)
         hlpInfo << tr("4.2.1 定义：某些诊断服务需要解锁，本功能根据输入的种子来计算对应的密钥.");
         hlpInfo << tr("4.2.2 指令：<u>:calculate key</u>或<u>:calc key</u>或<u>:ck</u>.");
         hlpInfo << tr("4.2.3 备注：输入<u>:calculate key?</u>或<u>:calc key?</u>或<u>:ck?</u>，显示安全解锁操作步骤帮助信息.");
+        hlpInfo << tr("4.3 由Img2Lcd生成的位图C数组数据压缩工具.");
+        hlpInfo << tr("4.3.1 定义：由Img2Lcd生成的位图C数组数据，将其中的全部0x00或0xff，按照出现的次数进行压缩.");
+        hlpInfo << tr("4.3.2 指令：<u>:compress bmp</u>或<u>:cb</u>.");
     }
     else if(CMD_HELP_BOOTLOADER == cmd)
     {
@@ -1589,6 +1592,7 @@ void MainWindow::generateCharArray()
 
 void MainWindow::compressCArrayOfBitmap()
 {
+    const int DEVIDE_AMOUNT = 255; //下位机存储宽和高各用一个字节，此处应确保此值不大于255（即0xff）
     QString filePathName = QFileDialog::getOpenFileName();
     QString filePath = QFileInfo(filePathName).absolutePath();
 
@@ -1596,7 +1600,7 @@ void MainWindow::compressCArrayOfBitmap()
 
     if(filePathName.isEmpty())
     {
-        QMessageBox::warning(this, "Warnning", "generate failed, please select a file", QMessageBox::Yes);
+        QMessageBox::warning(this, "Warnning", "compress failed, please select a file", QMessageBox::Yes);
         return;
     }
 
@@ -1608,6 +1612,7 @@ void MainWindow::compressCArrayOfBitmap()
     }
 
     this->resize(640, 460);
+    ptOutputWnd->clear();
 
     QTextStream targetFileIn(&targetFile);
     QStringList originalCodeStringList;
@@ -1617,6 +1622,8 @@ void MainWindow::compressCArrayOfBitmap()
 
         if(!readStr.isEmpty())
             originalCodeStringList.push_back(readStr);
+
+//        ptOutputWnd->appendPlainText(readStr); //debug
     }
 
     targetFile.close();
@@ -1629,10 +1636,18 @@ void MainWindow::compressCArrayOfBitmap()
     widthAndHeight += ", //width: " + QString::number(tmpStr.mid(tmpStr.lastIndexOf(',') - 12, 2).toInt(nullptr, 16));
     widthAndHeight += ", height: " + QString::number(tmpStr.mid(tmpStr.lastIndexOf(',') - 2, 2).toInt(nullptr, 16));
 
+    if(tmpStr.mid(tmpStr.lastIndexOf(',') - 17, 2).toInt(nullptr, 16) != 0 || tmpStr.mid(tmpStr.lastIndexOf(',') - 7, 2).toInt(nullptr, 16) != 0)
+    {
+        int realWidth = 0, realHeight = 0;
+        realWidth = tmpStr.mid(tmpStr.lastIndexOf(',') - 17, 2).toInt(nullptr, 16) << 8 | tmpStr.mid(tmpStr.lastIndexOf(',') - 12, 2).toInt(nullptr, 16);
+        realHeight = tmpStr.mid(tmpStr.lastIndexOf(',') - 7, 2).toInt(nullptr, 16) << 8 | tmpStr.mid(tmpStr.lastIndexOf(',') - 2, 2).toInt(nullptr, 16);
+        widthAndHeight += " [!!! Be careful, realWidth: " + QString::number(realWidth) + ", realHeight: " + QString::number(realHeight) + " !!!]";
+    }
+
     QStringList targetFormattedStringList;
     targetFormattedStringList << "static const unsigned char bmp[] =\n{" << widthAndHeight;
     originalCodeStringList.removeFirst();
-    originalCodeStringList.removeLast();
+    originalCodeStringList.last().remove("};");
 
     QStringList tmpStringList;
     for(auto elem: originalCodeStringList)
@@ -1642,11 +1657,23 @@ void MainWindow::compressCArrayOfBitmap()
     //在结尾添加一个结束标记，否则当数据全为0x00或0xff且数据量较大时，下面的正则表达式查找第一个不为0x00或0xff的数据非常耗时
     tmpStringList.append("END_FLAG");
 
+    //debug
+//    for(auto elem: tmpStringList)
+//        ptOutputWnd->appendPlainText(elem);
+
     QStringList targetStringList;
     for(int index = 0; index < tmpStringList.size(); ++index)
     {
+        if(18381 == index)
+        {
+            widthAndHeight += "";
+            qDebug() << tmpStringList.at(index - 1) << tmpStringList.at(index) << tmpStringList.at(index + 1);
+        }
+
         if(0 == tmpStringList.at(index).compare("0X00", Qt::CaseInsensitive))
         {
+            qDebug() << index;
+
             targetStringList << tmpStringList.at(index);
 
             if(tmpStringList.size() - 1 == index)
@@ -1656,21 +1683,21 @@ void MainWindow::compressCArrayOfBitmap()
             else
             {
                 int matchIndex = tmpStringList.indexOf(QRegExp("^((?!0[xX]00).)*$"), index);
-                if(matchIndex <= UCHAR_MAX)
+                if(matchIndex - index <= DEVIDE_AMOUNT)
                 {
                     targetStringList << QString::number(matchIndex - index);
                 }
                 else
                 {
-                    for(int cnt = 0; cnt < matchIndex / UCHAR_MAX; ++cnt)
+                    for(int cnt = 0; cnt < (matchIndex - index) / DEVIDE_AMOUNT; ++cnt)
                     {
-                        targetStringList << QString::number(UCHAR_MAX);
+                        targetStringList << QString::number(DEVIDE_AMOUNT);
                         targetStringList << tmpStringList.at(index);
                     }
 
-                    if((matchIndex - index) % UCHAR_MAX != 0)
+                    if((matchIndex - index) % DEVIDE_AMOUNT != 0)
                     {
-                        targetStringList << QString::number((matchIndex - index) % UCHAR_MAX);
+                        targetStringList << QString::number((matchIndex - index) % DEVIDE_AMOUNT);
                     }
                     else
                     {
@@ -1693,13 +1720,13 @@ void MainWindow::compressCArrayOfBitmap()
             else
             {
                 int matchIndex = tmpStringList.indexOf(QRegExp("^((?!0[xX][fF][fF]).)*$"), index);
-                if(matchIndex <= UCHAR_MAX)
+                if(matchIndex - index <= UCHAR_MAX)
                 {
                     targetStringList << QString::number(matchIndex - index);
                 }
                 else
                 {
-                    for(int cnt = 0; cnt < matchIndex / UCHAR_MAX; ++cnt)
+                    for(int cnt = 0; cnt < (matchIndex - index) / UCHAR_MAX; ++cnt)
                     {
                         targetStringList << QString::number(UCHAR_MAX);
                         targetStringList << tmpStringList.at(index);
@@ -1728,16 +1755,19 @@ void MainWindow::compressCArrayOfBitmap()
     //移除设置的"END_FLAG"
     targetStringList.removeLast();
 
-    for(auto& elem: targetStringList)
+    for(int index = 0; index < targetStringList.size(); ++index)
     {
-        int numOfCharInElem = elem.size();
+        int numOfCharInElem = targetStringList.at(index).size();
         for(int cnt = 0; numOfCharInElem < 4 && cnt < 4 - numOfCharInElem; ++cnt)
-            elem.prepend(' ');
+            targetStringList[index].prepend(' ');
 
-        elem += ", ";
+        if(0 == (index + 1) % 16)
+            targetStringList[index] += ",";
+        else
+            targetStringList[index] += ", ";
     }
 
-    //移除最后一个','
+    //移除最后一个", "
     targetStringList.last().remove(", ");
 
     QString tmpStr2;
@@ -1760,17 +1790,23 @@ void MainWindow::compressCArrayOfBitmap()
     targetFormattedStringList << "}; //total bytes: " + QString::number(targetStringList.size() + 2);
 
     for(auto iter = targetFormattedStringList.begin() + 1; iter != targetFormattedStringList.end() - 1; ++iter)
+    {
         *iter = (*iter).prepend("    ");
+        *iter = (*iter).toUpper();
+    }
+
+    //宽度和高度用小写字母
+    if(!targetFormattedStringList.isEmpty())
+        targetFormattedStringList[1] = targetFormattedStringList[1].left(10) + targetFormattedStringList[1].right(targetFormattedStringList[1].size() - 10).toLower();
 
     for(auto& elem: targetFormattedStringList)
-    {
-        elem = elem.toLower();
         ptOutputWnd->appendPlainText(elem);
-    }
 
     QClipboard *clipboard = QApplication::clipboard();
     clipboard->clear();
     clipboard->setText(ptOutputWnd->document()->toPlainText());
+
+    ptOutputWnd->appendPlainText("\n\n***上述结果已经拷贝至系统剪贴板中***");
 }
 
 //控件初始化
