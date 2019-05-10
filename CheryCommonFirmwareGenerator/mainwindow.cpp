@@ -1509,6 +1509,9 @@ void MainWindow::procConfigFile(CmdType cmd)
 //将boot code生成为字符串常量，当boot code更新时，调用此函数将其转换为数组
 void MainWindow::generateCharArray()
 {
+    ptOutputWnd->clear();
+    ptOutputWnd->appendPlainText("欢迎使用文件转字符串工具");
+
     QString filePathName = QFileDialog::getOpenFileName();
     QString filePath = QFileInfo(filePathName).absolutePath();
 
@@ -1592,6 +1595,9 @@ void MainWindow::generateCharArray()
 
 void MainWindow::compressCArrayOfBitmap()
 {
+    ptOutputWnd->clear();
+    ptOutputWnd->appendPlainText("欢迎使用Image2Lcd生成的C数组的数组压缩工具");
+
     const int DEVIDE_AMOUNT = 255; //下位机存储宽和高各用一个字节，此处应确保此值不大于255（即0xff）
     QString filePathName = QFileDialog::getOpenFileName();
     QString filePath = QFileInfo(filePathName).absolutePath();
