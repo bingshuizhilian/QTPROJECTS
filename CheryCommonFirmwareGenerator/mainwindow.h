@@ -110,7 +110,7 @@ private:
     const QString DIAG_M1AFL2_PARTNUMBER = "701000044AA";
     const QString DIAG_T19_PARTNUMBER = "701000068AA";
     const QString DIAG_S51EVFL_PARTNUMBER = "J72-3820010FA";
-    const QString DIAG_A13TEV_PARTNUMBER = "A13TEV-pn001";
+    const QString DIAG_A13TEV_PARTNUMBER = "701000095AA";
 
 private:
     QStringList fileInfo;
