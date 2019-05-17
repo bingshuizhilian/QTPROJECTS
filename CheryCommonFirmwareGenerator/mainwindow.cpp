@@ -933,10 +933,26 @@ void MainWindow::generateFirmwareForDiagnosis()
     }
     else
     {
-        s20cText = "S20CFE8000";
-        QMessageBox::information(this, "Tips",
-                                 "your part number wasn't included in this program, crc address on chip was set to default value of 0xFE8000, you should validate it",
-                                 QMessageBox::Yes);
+        //请求用户输入CRC在仪表中的存储位置
+        bool isOK;
+        QString crcAddressQueryData = QInputDialog::getText(NULL,
+                                                         "crc address on chip query",
+                                                         "Please input crc address on chip, which must\ninclude 6 hexadecimal characters(e.g. FEBE00)\n",
+                                                         QLineEdit::Normal,
+                                                         "",
+                                                         &isOK);
+        //校验输入信息
+        QRegExp regExp("^[a-fA-F\\d]{6}$");
+
+        if(isOK && regExp.exactMatch(crcAddressQueryData))
+        {
+            s20cText = "S20C" + crcAddressQueryData.toUpper();
+        }
+        else
+        {
+            QMessageBox::warning(this, "Warnning", "invalid address on chip", QMessageBox::Yes);
+            return;
+        }
     }
 
     QMessageBox::information(this, "Tips",
