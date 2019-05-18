@@ -1758,8 +1758,9 @@ void MainWindow::compressCArrayOfBitmap()
             targetStringList[index] += ", ";
     }
 
-    //移除最后一个", "
+    //移除最后一个", "或","，(肯定为二者之一，两个都remove即可保证)
     targetStringList.last().remove(", ");
+    targetStringList.last().remove(",");
 
     QString tmpStr2;
     for(int index = 0; index < targetStringList.size(); ++index)
