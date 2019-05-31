@@ -1381,8 +1381,8 @@ void MainWindow::showHelpInfo(CmdType cmd)
     else if(CMD_HELP_DIAG_CALCULATE_KEY == cmd)
     {
         hlpInfo << tr("《安全解锁操作步骤》");
-        hlpInfo << tr("0 在busmaster软件诊断窗口发送[10 03]，切换到扩展会话.");
-        hlpInfo << tr("1 在busmaster软件诊断窗口将[Send Tester Present]勾选为[ON]，激活3E服务.");
+        hlpInfo << tr("0 在busmaster软件诊断窗口将[Send Tester Present]勾选为[ON]，激活3E服务.");
+        hlpInfo << tr("1 在busmaster软件诊断窗口发送[10 03]，切换到扩展会话.");
         hlpInfo << tr("2 在busmaster软件诊断窗口发送[27 03]，请求计算安全密钥的种子.");
         hlpInfo << tr("3 将busmaster软件诊断窗口收到的[67 03 xx xx]中的后两个字节即[xx xx]输入到弹出的[seed query]窗口中.");
         hlpInfo << tr("4 点击[seed query]窗口的[OK]将会返回计算好的安全密钥.");
