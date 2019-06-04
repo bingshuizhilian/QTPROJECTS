@@ -23,6 +23,8 @@
 #include <QJsonParseError>
 #include <QStandardPaths>
 #include <QClipboard>
+#include <QUrl>
+#include <QProgressBar>
 #include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -37,6 +39,9 @@ MainWindow::MainWindow(QWidget *parent) :
     layoutsInitialization();
     //命令行初始化
     commandsInitialization();
+
+    //升级检测
+    procConfigFile(CMD_LOAD_CONFIG_FILE);
 }
 
 MainWindow::~MainWindow()
@@ -122,8 +127,6 @@ void MainWindow::runCmdReturnPressed()
                 break;
         }
     }
-
-    QString s021Str = DIAG_COMMON_S0;
 
     switch(findCmd)
     {
@@ -1422,27 +1425,14 @@ void MainWindow::procConfigFile(CmdType cmd)
             return;
         }
 
-        QJsonObject jsonSettings;
-        jsonSettings.insert("ComName", "json test");
-
-        QJsonObject jsonEdit;
-        jsonEdit.insert("Showhex", true);
-
-        QJsonArray jsonExtraHexBox;
-        for(auto i = 0; i < 10; ++i)
-        {
-            jsonExtraHexBox.append(i);
-        }
-
         QJsonObject jsonConfig;
-        jsonConfig.insert("Settings", jsonSettings);
-        jsonConfig.insert("Edit", jsonEdit);
-        jsonConfig.insert("ExtraHexBox", jsonExtraHexBox);
+        jsonConfig.insert("version", SOFTWARE_VERSION);
+        jsonConfig.insert("autoupdate", true);
 
         QJsonDocument document;
         document.setObject(jsonConfig);
-        QByteArray byte_array = document.toJson(QJsonDocument::Indented);
-        QString jsonEncodedString(byte_array);
+        QByteArray byteArray = document.toJson(QJsonDocument::Indented);
+        QString jsonEncodedString(byteArray);
 
         QTextStream out(&file);
         out << jsonEncodedString;
@@ -1454,7 +1444,7 @@ void MainWindow::procConfigFile(CmdType cmd)
         QFile file(fileName);
         if(!file.open(QIODevice::ReadOnly | QIODevice::Text))
         {
-            QMessageBox::warning(this, "Warnning", "Cannot open " + fileName, QMessageBox::Yes);
+            QMessageBox::warning(this, "Warnning", "Cannot find " + fileName, QMessageBox::Yes);
             return;
         }
 
@@ -1469,57 +1459,62 @@ void MainWindow::procConfigFile(CmdType cmd)
             if(parseDoucment.isObject())
             {
                 QJsonObject docObj = parseDoucment.object();
-                if(docObj.contains("Settings"))
+                if(docObj.contains("autoupdate"))
                 {
-                    QJsonValue value = docObj.take("Settings");
-                    if(value.isObject())
+                    QJsonValue value = docObj.take("autoupdate");
+                    if(value.isBool())
                     {
-                        QJsonObject settingsObj = value.toObject();
-
-                        if(settingsObj.contains("ComName"))
+                        if(value.toBool())
                         {
-                            QJsonValue value = settingsObj.take("ComName");
-                            if(value.isString())
+                            if(docObj.contains("version"))
                             {
-                                ptOutputWnd->appendPlainText(value.toString() + '\n');
+                                QJsonValue value = docObj.take("version");
+                                if(value.isString())
+                                {
+                                    autoUpdate(value.toString());
+                                }
                             }
-                        }
-                    }
-                }
-
-                if(docObj.contains("Edit"))
-                {
-                    QJsonValue value = docObj.take("Edit");
-                    if(value.isObject())
-                    {
-                        QJsonObject editObj = value.toObject();
-
-                        if(editObj.contains("Showhex"))
-                        {
-                            QJsonValue value = editObj.take("Showhex");
-                            if(value.isBool())
-                            {
-                                ptOutputWnd->appendPlainText(QString::number(value.toBool()) + '\n');
-                            }
-                        }
-                    }
-                }
-
-                if(docObj.contains("ExtraHexBox"))
-                {
-                    QJsonValue value = docObj.take("ExtraHexBox");
-                    if(value.isArray())
-                    {
-                        QJsonArray exHexBoxArray = value.toArray();
-                        for(auto i = 0; i < 10; ++i)
-                        {
-                            ptOutputWnd->appendPlainText(QString::number(exHexBoxArray.at(i).toInt()) + ' ');
                         }
                     }
                 }
             }
         }
     }
+}
+
+void MainWindow::autoUpdate(QString local_version)
+{
+    //检测服务器上的软件版本号
+    m_networkMngr = new QNetworkAccessManager;
+
+//    connect(m_networkMngr, SIGNAL(finished(QNetworkReply*)), this, SLOT(downloadFinished(QNetworkReply*)));
+    m_httpReply = m_networkMngr->get(QNetworkRequest(QUrl(VERSION_DOWNLOAD_URL)));//发送请求
+
+    connect(m_httpReply, SIGNAL(downloadProgress(qint64, qint64)), this, SLOT(onDownloadProgress(qint64, qint64)));
+    connect(m_httpReply, SIGNAL(readyRead()), this, SLOT(downloadFinished()));
+//    connect(m_httpReply, SIGNAL(finished()), this, SLOT(downloadFinished()));
+//    connect(m_httpReply, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(onError(QNetworkReply::NetworkError)));
+
+    //询问是否需要升级
+    int ret = QMessageBox::question(this, tr("自动升级"), tr("需要更新到最新版本程序吗？"), QMessageBox::Yes, QMessageBox::No);
+    if(QMessageBox::No == ret)
+        return;
+
+    //下载服务器上的最新版本软件
+
+
+}
+
+void MainWindow::downloadFinished()
+{
+    QString str = m_httpReply->readAll();
+    ptOutputWnd->appendPlainText(str);
+    //    reply->deleteLater();//最后要释放replay对象
+}
+
+void MainWindow::onDownloadProgress(qint64 bytes_received, qint64 bytes_total)
+{
+    qDebug() << bytes_received << bytes_total;
 }
 
 //将boot code生成为字符串常量，当boot code更新时，调用此函数将其转换为数组

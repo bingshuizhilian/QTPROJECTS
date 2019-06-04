@@ -9,6 +9,9 @@
 #include <QGroupBox>
 #include <QLayout>
 #include <QPlainTextEdit>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
 
 namespace Ui {
 class MainWindow;
@@ -90,12 +93,17 @@ private:
     };
 
     const QString CONFIG_FILE_NAME = "config.json";
+    const QString SOFTWARE_VERSION = "0.6.2";
+    const QString VERSION_DOWNLOAD_URL = "http://apistore.baidu.com/microservice/weather?cityid=成都";
+//            "https://raw.githubusercontent.com/bingshuizhilian/QTPROJECTS-FIRMWARE_GENERATOR/add-update-online-feature/autoupdate/version.txt";
+
     const QStringList FUNCTION_STRING_LIST =
     {
         "add bootloader to firmware",
         "gen firmware for diagnosis",
         "run command"
     };
+
     const QStringList PLATFORM_STRING_LIST =
     {
         "m1afl2",
@@ -104,6 +112,7 @@ private:
         "s51evfl",
         "a13tev"
     };
+
     const QString REPLACE_STRING = "S10BFFF8C000C000C000C000FD\n";//未加bootloader的app含有此内容
     const QString TARGET_STRING_AFTER_GENERATING_BOOTCODE = "S10BFFF8FC00FC00FC00FC000D\n";//已加bootloader的app含有此内容
     const QString DIAG_COMMON_S0  = "S02100000747395957202020202020202020202020202020200130302E30302E303040";//通用的S021行
@@ -154,6 +163,11 @@ private:
     void dealWithCalculateKeyCommand(void);
     void showHelpInfo(CmdType cmd);
     void procConfigFile(CmdType cmd);
+    void autoUpdate(QString local_version);
+
+private:
+    QNetworkAccessManager* m_networkMngr;
+    QNetworkReply* m_httpReply;
 
 private slots:
     void selectFilePressed();
@@ -164,6 +178,8 @@ private slots:
     void generateButtonPressed();
     void runCmdReturnPressed();
     void switchPlatformPressed();
+    void downloadFinished();
+    void onDownloadProgress(qint64 bytes_received, qint64 bytes_total);
 };
 
 #endif // MAINWINDOW_H
