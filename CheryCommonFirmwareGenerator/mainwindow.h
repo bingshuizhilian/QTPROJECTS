@@ -96,9 +96,11 @@ private:
     const QString CONFIG_FILE_NAME = "config.json";
     const QString SOFTWARE_VERSION = "6.2";
     const QString versionFilePathName = "C:\\version.txt";
+    const QString appNameFirst = "CheryCommonFirmwareGenerator_";
+    const QString appNameLast = "_boxed.exe";
 
     const QString VERSION_DOWNLOAD_URL = "https://raw.githubusercontent.com/bingshuizhilian/QTPROJECTS-FIRMWARE_GENERATOR/add-update-online-feature/autoupdate/version.txt";
-    const QString APP_DOWNLOAD_URL = "https://raw.githubusercontent.com/bingshuizhilian/QTPROJECTS-FIRMWARE_GENERATOR/add-update-online-feature/autoupdate/CheryCommonFirmwareGenerator_";
+    const QString APP_DOWNLOAD_URL = "https://raw.githubusercontent.com/bingshuizhilian/QTPROJECTS-FIRMWARE_GENERATOR/add-update-online-feature/autoupdate/";
 
     const QStringList FUNCTION_STRING_LIST =
     {

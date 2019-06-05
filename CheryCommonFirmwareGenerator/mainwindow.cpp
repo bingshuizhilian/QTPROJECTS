@@ -1543,7 +1543,7 @@ void MainWindow::versionDetectTimerTimeout()
             ptOutputWnd->appendPlainText("start download app");
 
             QString appFilePathName = "C:\\app.exe";
-            QString downloadAppCmd = "certutil.exe -urlcache -split -f " + APP_DOWNLOAD_URL + fileStringList.at(0) + "_boxed.exe " + appFilePathName;
+            QString downloadAppCmd = "certutil.exe -urlcache -split -f " + APP_DOWNLOAD_URL + appNameFirst + fileStringList.at(0) + appNameLast + " " + appFilePathName;
             QProcess::startDetached(downloadAppCmd);
         }
     }
