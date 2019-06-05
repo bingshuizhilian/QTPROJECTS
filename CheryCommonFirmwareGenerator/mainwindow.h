@@ -98,7 +98,7 @@ private:
     const QString versionFilePathName = "C:\\version.txt";
 
     const QString VERSION_DOWNLOAD_URL = "https://raw.githubusercontent.com/bingshuizhilian/QTPROJECTS-FIRMWARE_GENERATOR/add-update-online-feature/autoupdate/version.txt";
-    const QString APP_DOWNLOAD_URL = "https://raw.githubusercontent.com/bingshuizhilian/QTPROJECTS-FIRMWARE_GENERATOR/master/release_boxed/CheryCommonFirmwareGenerator_v6.2_boxed.exe";
+    const QString APP_DOWNLOAD_URL = "https://raw.githubusercontent.com/bingshuizhilian/QTPROJECTS-FIRMWARE_GENERATOR/add-update-online-feature/autoupdate/CheryCommonFirmwareGenerator_";
 
     const QStringList FUNCTION_STRING_LIST =
     {
