@@ -12,6 +12,7 @@
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QNetworkReply>
+#include <QTimer>
 
 namespace Ui {
 class MainWindow;
@@ -93,9 +94,11 @@ private:
     };
 
     const QString CONFIG_FILE_NAME = "config.json";
-    const QString SOFTWARE_VERSION = "0.6.2";
-    const QString VERSION_DOWNLOAD_URL = "http://apistore.baidu.com/microservice/weather?cityid=成都";
-//            "https://raw.githubusercontent.com/bingshuizhilian/QTPROJECTS-FIRMWARE_GENERATOR/add-update-online-feature/autoupdate/version.txt";
+    const QString SOFTWARE_VERSION = "6.2";
+    const QString versionFilePathName = "C:\\version.txt";
+
+    const QString VERSION_DOWNLOAD_URL = "https://raw.githubusercontent.com/bingshuizhilian/QTPROJECTS-FIRMWARE_GENERATOR/add-update-online-feature/autoupdate/version.txt";
+    const QString APP_DOWNLOAD_URL = "https://raw.githubusercontent.com/bingshuizhilian/QTPROJECTS-FIRMWARE_GENERATOR/master/release_boxed/CheryCommonFirmwareGenerator_v6.2_boxed.exe";
 
     const QStringList FUNCTION_STRING_LIST =
     {
@@ -164,10 +167,13 @@ private:
     void showHelpInfo(CmdType cmd);
     void procConfigFile(CmdType cmd);
     void autoUpdate(QString local_version);
+    void autoUpdateTypeB(void);
 
 private:
-    QNetworkAccessManager* m_networkMngr;
+    QNetworkAccessManager* m_networkAccessMngr;
     QNetworkReply* m_httpReply;
+    QFile* downloadFile;
+    QTimer* versionDetectTimer;
 
 private slots:
     void selectFilePressed();
@@ -178,8 +184,11 @@ private slots:
     void generateButtonPressed();
     void runCmdReturnPressed();
     void switchPlatformPressed();
-    void downloadFinished();
-    void onDownloadProgress(qint64 bytes_received, qint64 bytes_total);
+    void httpReadContent();
+    void httpReplyFinished(QNetworkReply* reply);
+    void httpDownloadError(QNetworkReply::NetworkError error);
+    void httpDownloadProgress(qint64 bytes_received, qint64 bytes_total);
+    void versionDetectTimerTimeout();
 };
 
 #endif // MAINWINDOW_H

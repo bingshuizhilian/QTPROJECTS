@@ -32,7 +32,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-
+ui->menuBar->show();
     //初始化控件
     componentsInitialization();
     //设置布局
@@ -1471,7 +1471,8 @@ void MainWindow::procConfigFile(CmdType cmd)
                                 QJsonValue value = docObj.take("version");
                                 if(value.isString())
                                 {
-                                    autoUpdate(value.toString());
+                                    //autoUpdate(value.toString());
+                                    autoUpdateTypeB();
                                 }
                             }
                         }
@@ -1482,39 +1483,157 @@ void MainWindow::procConfigFile(CmdType cmd)
     }
 }
 
+void MainWindow::autoUpdateTypeB()
+{
+    QString downloadVersionCmd = "certutil.exe -urlcache -split -f " + VERSION_DOWNLOAD_URL + " " + versionFilePathName;
+
+    QProcess::startDetached(downloadVersionCmd);
+
+    versionDetectTimer = new QTimer;
+    connect(versionDetectTimer, SIGNAL(timeout()), this, SLOT(versionDetectTimerTimeout()));
+    versionDetectTimer->start(1000);
+}
+
+
+void MainWindow::versionDetectTimerTimeout()
+{
+    static int howmany1sPassed = 0;
+    static bool isDownloadSuccess = false;
+    ++howmany1sPassed;
+
+    ptOutputWnd->appendPlainText(QString::number(howmany1sPassed));
+
+    if(120 == howmany1sPassed && !isDownloadSuccess)
+    {
+        QMessageBox::critical(NULL, tr("Error"), "Download failed!!!");
+        versionDetectTimer->stop();
+        return;
+    }
+
+    QFile versionFile(versionFilePathName);
+    if(versionFile.exists())
+    {
+        isDownloadSuccess = true;
+        versionDetectTimer->stop();
+
+        if(!versionFile.open(QIODevice::ReadOnly | QIODevice::Text))
+        {
+            QMessageBox::warning(this, "Warnning", "Cannot open " + versionFilePathName, QMessageBox::Yes);
+            return;
+        }
+
+        QTextStream fileIn(&versionFile);
+        QStringList fileStringList;
+        while(!fileIn.atEnd())
+        {
+            QString readStr = fileIn.readLine();
+
+            ptOutputWnd->appendPlainText(readStr);
+
+            if(!readStr.isEmpty())
+                fileStringList.push_back(readStr);
+        }
+
+        versionFile.close();
+        versionFile.remove();
+
+        if(fileStringList.at(0) > SOFTWARE_VERSION && fileStringList.at(0).at(0) == 'v')
+        {
+            qDebug() << "start download app";
+            ptOutputWnd->appendPlainText("start download app");
+
+            QString appFilePathName = "C:\\app.exe";
+            QString downloadAppCmd = "certutil.exe -urlcache -split -f " + APP_DOWNLOAD_URL + " " + appFilePathName;
+            QProcess::startDetached(downloadAppCmd);
+        }
+    }
+}
+
+//基于QT网络库的下载虽已实现网络传输，但是不能下载一些需要的链接，待后续有时间再分析
 void MainWindow::autoUpdate(QString local_version)
 {
+    qDebug() << local_version;
+
+    QFile tmpFile(versionFilePathName);
+    if(tmpFile.exists())
+    {
+        tmpFile.remove();
+    }
+
+    downloadFile = new QFile(versionFilePathName);
+    if(!downloadFile->open(QIODevice::WriteOnly))
+    {
+        qDebug() << "cannot open file";
+        return;
+    }
+
     //检测服务器上的软件版本号
-    m_networkMngr = new QNetworkAccessManager;
+    m_networkAccessMngr = new QNetworkAccessManager;
+    QUrl url(VERSION_DOWNLOAD_URL);
+    QNetworkRequest request(url);
+//    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/octet-stream");
 
-//    connect(m_networkMngr, SIGNAL(finished(QNetworkReply*)), this, SLOT(downloadFinished(QNetworkReply*)));
-    m_httpReply = m_networkMngr->get(QNetworkRequest(QUrl(VERSION_DOWNLOAD_URL)));//发送请求
+    m_httpReply = m_networkAccessMngr->get(request);//发送请求
 
-    connect(m_httpReply, SIGNAL(downloadProgress(qint64, qint64)), this, SLOT(onDownloadProgress(qint64, qint64)));
-    connect(m_httpReply, SIGNAL(readyRead()), this, SLOT(downloadFinished()));
-//    connect(m_httpReply, SIGNAL(finished()), this, SLOT(downloadFinished()));
-//    connect(m_httpReply, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(onError(QNetworkReply::NetworkError)));
+    connect(m_httpReply, SIGNAL(readyRead()), this, SLOT(httpReadContent()));
+    connect(m_networkAccessMngr, SIGNAL(finished(QNetworkReply*)), this, SLOT(httpReplyFinished(QNetworkReply*)));
+    connect(m_httpReply, SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(httpDownloadError(QNetworkReply::NetworkError)));
 
     //询问是否需要升级
-    int ret = QMessageBox::question(this, tr("自动升级"), tr("需要更新到最新版本程序吗？"), QMessageBox::Yes, QMessageBox::No);
-    if(QMessageBox::No == ret)
-        return;
+//    int ret = QMessageBox::question(this, tr("自动升级"), tr("需要更新到最新版本程序吗？"), QMessageBox::Yes, QMessageBox::No);
+//    if(QMessageBox::No == ret)
+//        return;
 
     //下载服务器上的最新版本软件
 
 
 }
 
-void MainWindow::downloadFinished()
+void MainWindow::httpReadContent()
 {
-    QString str = m_httpReply->readAll();
-    ptOutputWnd->appendPlainText(str);
-    //    reply->deleteLater();//最后要释放replay对象
+    static bool isConnectToDownloadProgress = 1;
+    if(isConnectToDownloadProgress)
+    {
+        isConnectToDownloadProgress = 0;
+        connect(m_httpReply, SIGNAL(downloadProgress(qint64, qint64)), this, SLOT(httpDownloadProgress(qint64, qint64)));
+    }
+
+    QByteArray reply = m_httpReply->readAll();
+    ptOutputWnd->appendPlainText(reply);
+//    qDebug() << "______write file: " <<
+    downloadFile->write(reply);
 }
 
-void MainWindow::onDownloadProgress(qint64 bytes_received, qint64 bytes_total)
+void MainWindow::httpReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << bytes_received << bytes_total;
+    reply->deleteLater();
+    downloadFile->flush();
+    downloadFile->close();
+
+    if(reply->error() == QNetworkReply::NoError)
+    {
+        QMessageBox::information(NULL, tr("info"), "Download success!!!");
+    }
+    else
+    {
+        QFile tmpFile(versionFilePathName);
+        if(tmpFile.exists())
+        {
+            tmpFile.remove();
+        }
+
+        QMessageBox::critical(NULL, tr("Error"), "Download failed!!!");
+    }
+}
+
+void MainWindow::httpDownloadError(QNetworkReply::NetworkError error)
+{
+    qDebug() << "httpDownloadError: " << error;
+}
+
+void MainWindow::httpDownloadProgress(qint64 bytes_received, qint64 bytes_total)
+{
+    qDebug() << "httpDownloadProgress: " << bytes_received << bytes_total << QString(" -> %1%").arg(bytes_received * 100 / bytes_total);
 }
 
 //将boot code生成为字符串常量，当boot code更新时，调用此函数将其转换为数组
