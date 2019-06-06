@@ -23,6 +23,9 @@
 #include <QJsonParseError>
 #include <QStandardPaths>
 #include <QClipboard>
+#include <QUrl>
+#include <QProgressBar>
+#include <QDesktopServices>
 #include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -30,13 +33,16 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-
+ui->menuBar->show();
     //初始化控件
     componentsInitialization();
     //设置布局
     layoutsInitialization();
     //命令行初始化
     commandsInitialization();
+
+    //升级检测
+    procConfigFile(CMD_LOAD_CONFIG_FILE);
 }
 
 MainWindow::~MainWindow()
@@ -122,8 +128,6 @@ void MainWindow::runCmdReturnPressed()
                 break;
         }
     }
-
-    QString s021Str = DIAG_COMMON_S0;
 
     switch(findCmd)
     {
@@ -1422,27 +1426,14 @@ void MainWindow::procConfigFile(CmdType cmd)
             return;
         }
 
-        QJsonObject jsonSettings;
-        jsonSettings.insert("ComName", "json test");
-
-        QJsonObject jsonEdit;
-        jsonEdit.insert("Showhex", true);
-
-        QJsonArray jsonExtraHexBox;
-        for(auto i = 0; i < 10; ++i)
-        {
-            jsonExtraHexBox.append(i);
-        }
-
         QJsonObject jsonConfig;
-        jsonConfig.insert("Settings", jsonSettings);
-        jsonConfig.insert("Edit", jsonEdit);
-        jsonConfig.insert("ExtraHexBox", jsonExtraHexBox);
+        jsonConfig.insert("version", SOFTWARE_VERSION);
+        jsonConfig.insert("autoupdate", true);
 
         QJsonDocument document;
         document.setObject(jsonConfig);
-        QByteArray byte_array = document.toJson(QJsonDocument::Indented);
-        QString jsonEncodedString(byte_array);
+        QByteArray byteArray = document.toJson(QJsonDocument::Indented);
+        QString jsonEncodedString(byteArray);
 
         QTextStream out(&file);
         out << jsonEncodedString;
@@ -1454,7 +1445,7 @@ void MainWindow::procConfigFile(CmdType cmd)
         QFile file(fileName);
         if(!file.open(QIODevice::ReadOnly | QIODevice::Text))
         {
-            QMessageBox::warning(this, "Warnning", "Cannot open " + fileName, QMessageBox::Yes);
+//            QMessageBox::warning(this, "Warnning", "Cannot find " + fileName, QMessageBox::Yes);
             return;
         }
 
@@ -1469,57 +1460,252 @@ void MainWindow::procConfigFile(CmdType cmd)
             if(parseDoucment.isObject())
             {
                 QJsonObject docObj = parseDoucment.object();
-                if(docObj.contains("Settings"))
+                if(docObj.contains("autoupdate"))
                 {
-                    QJsonValue value = docObj.take("Settings");
-                    if(value.isObject())
+                    QJsonValue value = docObj.take("autoupdate");
+                    if(value.isBool())
                     {
-                        QJsonObject settingsObj = value.toObject();
-
-                        if(settingsObj.contains("ComName"))
+                        if(value.toBool())
                         {
-                            QJsonValue value = settingsObj.take("ComName");
-                            if(value.isString())
+                            autoUpdateTypeB();
+
+                            if(docObj.contains("version"))
                             {
-                                ptOutputWnd->appendPlainText(value.toString() + '\n');
+                                QJsonValue value = docObj.take("version");
+                                if(value.isString())
+                                {
+                                    //autoUpdate(value.toString());
+                                }
                             }
-                        }
-                    }
-                }
-
-                if(docObj.contains("Edit"))
-                {
-                    QJsonValue value = docObj.take("Edit");
-                    if(value.isObject())
-                    {
-                        QJsonObject editObj = value.toObject();
-
-                        if(editObj.contains("Showhex"))
-                        {
-                            QJsonValue value = editObj.take("Showhex");
-                            if(value.isBool())
-                            {
-                                ptOutputWnd->appendPlainText(QString::number(value.toBool()) + '\n');
-                            }
-                        }
-                    }
-                }
-
-                if(docObj.contains("ExtraHexBox"))
-                {
-                    QJsonValue value = docObj.take("ExtraHexBox");
-                    if(value.isArray())
-                    {
-                        QJsonArray exHexBoxArray = value.toArray();
-                        for(auto i = 0; i < 10; ++i)
-                        {
-                            ptOutputWnd->appendPlainText(QString::number(exHexBoxArray.at(i).toInt()) + ' ');
                         }
                     }
                 }
             }
         }
     }
+}
+
+void MainWindow::autoUpdateTypeB()
+{
+    versionFilePathName = QCoreApplication::applicationDirPath() + versionFilePathName;
+
+    QFile tmpFile(versionFilePathName);
+    if(tmpFile.exists())
+    {
+        tmpFile.remove();
+    }
+
+    qDebug() << "start download version.txt";
+
+    QString downloadVersionCmd = "certutil.exe -urlcache -split -f " + VERSION_DOWNLOAD_URL + " " + versionFilePathName;
+    QProcess::startDetached(downloadVersionCmd);
+
+    versionDetectTimer = new QTimer;
+    connect(versionDetectTimer, SIGNAL(timeout()), this, SLOT(versionDetectTimerTimeout()));
+    versionDetectTimer->start(1000);
+}
+
+void MainWindow::versionDetectTimerTimeout()
+{
+    static int howmany1sPassed = 0;
+    static bool isDownloadSuccess = false;
+    ++howmany1sPassed;
+
+    qDebug() << "howmany1sPassed(version): " << howmany1sPassed;
+
+    if(120 == howmany1sPassed && !isDownloadSuccess)
+    {
+        versionDetectTimer->stop();
+        return;
+    }
+
+    QFile versionFile(versionFilePathName);
+    if(versionFile.exists())
+    {
+        isDownloadSuccess = true;
+        versionDetectTimer->stop();
+
+        if(!versionFile.open(QIODevice::ReadOnly | QIODevice::Text))
+        {
+            QMessageBox::warning(this, "Warnning", "Cannot open " + versionFilePathName, QMessageBox::Yes);
+            return;
+        }
+
+        QTextStream fileIn(&versionFile);
+        QStringList fileStringList;
+        while(!fileIn.atEnd())
+        {
+            QString readStr = fileIn.readLine();
+
+            qDebug() << "version on server: " << readStr;
+
+            if(!readStr.isEmpty())
+                fileStringList.push_back(readStr);
+        }
+
+        versionFile.close();
+        versionFile.remove();
+
+        if(fileStringList.at(0) > SOFTWARE_VERSION && fileStringList.at(0).startsWith('v'))
+        {
+            int ret = QMessageBox::question(this, tr("自动升级"), "检测到新版本" + fileStringList.at(0) + "，当前版本" + SOFTWARE_VERSION + "，是否升级？", QMessageBox::Yes, QMessageBox::No);
+            if(QMessageBox::No == ret)
+                return;
+
+            appDetectTimer = new QTimer;
+            connect(appDetectTimer, SIGNAL(timeout()), this, SLOT(appDetectTimerTimeout()));
+            appDetectTimer->start(1000);
+
+            qDebug() << "start download app";
+
+            QString fileName = appNameFirst + fileStringList.at(0) + appNameLast;
+            appFilePathName = QCoreApplication::applicationDirPath() + '/' + fileName;
+
+            QFile tmpFile(appFilePathName);
+            if(tmpFile.exists())
+            {
+                tmpFile.remove();
+            }
+
+            QString downloadAppCmd = "certutil.exe -urlcache -split -f " + APP_DOWNLOAD_URL + fileName + " " + appFilePathName;
+            QProcess::startDetached(downloadAppCmd);
+        }
+    }
+}
+
+void MainWindow::appDetectTimerTimeout()
+{
+    static int howmany1sPassed = 0;
+    static bool isDownloadSuccess = false;
+    ++howmany1sPassed;
+
+    qDebug() << "howmany1sPassed(app): " << howmany1sPassed;
+
+    if(300 == howmany1sPassed && !isDownloadSuccess)
+    {
+        QMessageBox::critical(NULL, tr("自动升级"), tr("更新可能失败了..."));
+        appDetectTimer->stop();
+        return;
+    }
+
+    QFile appFile(appFilePathName);
+    if(appFile.exists())
+    {
+        isDownloadSuccess = true;
+        appDetectTimer->stop();
+
+        qDebug() << "app file size: " << appFile.size();
+
+        if(appFile.size() >= 500 * 1024)
+        {
+            int ret = QMessageBox::information(this, tr("自动升级"), "更新成功，是否查看版本更新日志？", QMessageBox::Yes, QMessageBox::No);
+            if(QMessageBox::Yes == ret)
+                QDesktopServices::openUrl(QUrl(QLatin1String("https://github.com/bingshuizhilian/QTPROJECTS-FIRMWARE_GENERATOR/releases")));
+
+            //WINDOWS环境下，选中该文件
+#ifdef WIN32
+            QProcess process;
+            QString openFileName = appFilePathName;
+
+            openFileName.replace("/", "\\");    //***这句windows下必要***
+            process.startDetached("explorer /select," + openFileName);
+#endif
+        }
+        else
+        {
+            appFile.remove();
+            QMessageBox::critical(NULL, tr("自动升级"), "更新失败了...");
+        }
+    }
+}
+
+//基于QT网络库的下载虽已实现网络传输，但是不能下载一些需要的链接，待后续有时间再分析
+void MainWindow::autoUpdate(QString local_version)
+{
+    qDebug() << local_version;
+
+    versionFilePathName = QCoreApplication::applicationDirPath() + versionFilePathName;
+
+    QFile tmpFile(versionFilePathName);
+    if(tmpFile.exists())
+    {
+        tmpFile.remove();
+    }
+
+    downloadFile = new QFile(versionFilePathName);
+    if(!downloadFile->open(QIODevice::WriteOnly))
+    {
+        qDebug() << "cannot open file";
+        return;
+    }
+
+    //检测服务器上的软件版本号
+    m_networkAccessMngr = new QNetworkAccessManager;
+    QUrl url(VERSION_DOWNLOAD_URL);
+    QNetworkRequest request(url);
+//    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/octet-stream");
+
+    m_httpReply = m_networkAccessMngr->get(request);//发送请求
+
+    connect(m_httpReply, SIGNAL(readyRead()), this, SLOT(httpReadContent()));
+    connect(m_networkAccessMngr, SIGNAL(finished(QNetworkReply*)), this, SLOT(httpReplyFinished(QNetworkReply*)));
+    connect(m_httpReply, SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(httpDownloadError(QNetworkReply::NetworkError)));
+
+    //询问是否需要升级
+//    int ret = QMessageBox::question(this, tr("自动升级"), tr("需要更新到最新版本程序吗？"), QMessageBox::Yes, QMessageBox::No);
+//    if(QMessageBox::No == ret)
+//        return;
+
+    //下载服务器上的最新版本软件
+
+
+}
+
+void MainWindow::httpReadContent()
+{
+    static bool isConnectToDownloadProgress = 1;
+    if(isConnectToDownloadProgress)
+    {
+        isConnectToDownloadProgress = 0;
+        connect(m_httpReply, SIGNAL(downloadProgress(qint64, qint64)), this, SLOT(httpDownloadProgress(qint64, qint64)));
+    }
+
+    QByteArray reply = m_httpReply->readAll();
+    ptOutputWnd->appendPlainText(reply);
+//    qDebug() << "______write file: " <<
+    downloadFile->write(reply);
+}
+
+void MainWindow::httpReplyFinished(QNetworkReply *reply)
+{
+    reply->deleteLater();
+    downloadFile->flush();
+    downloadFile->close();
+
+    if(reply->error() == QNetworkReply::NoError)
+    {
+        QMessageBox::information(NULL, tr("info"), "Download success!!!");
+    }
+    else
+    {
+        QFile tmpFile(versionFilePathName);
+        if(tmpFile.exists())
+        {
+            tmpFile.remove();
+        }
+
+        QMessageBox::critical(NULL, tr("Error"), "Download failed!!!");
+    }
+}
+
+void MainWindow::httpDownloadError(QNetworkReply::NetworkError error)
+{
+    qDebug() << "httpDownloadError: " << error;
+}
+
+void MainWindow::httpDownloadProgress(qint64 bytes_received, qint64 bytes_total)
+{
+    qDebug() << "httpDownloadProgress: " << bytes_received << bytes_total << QString(" -> %1%").arg(bytes_received * 100 / bytes_total);
 }
 
 //将boot code生成为字符串常量，当boot code更新时，调用此函数将其转换为数组

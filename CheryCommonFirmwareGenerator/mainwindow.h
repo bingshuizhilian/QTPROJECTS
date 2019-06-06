@@ -9,6 +9,10 @@
 #include <QGroupBox>
 #include <QLayout>
 #include <QPlainTextEdit>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QTimer>
 
 namespace Ui {
 class MainWindow;
@@ -89,13 +93,23 @@ private:
         WINDOW_WIDTH  = 334
     };
 
+    const QString SOFTWARE_VERSION = "v7.0";
     const QString CONFIG_FILE_NAME = "config.json";
+    QString versionFilePathName = "/version.txt";
+    const QString appNameFirst = "CheryCommonFirmwareGenerator_";
+    const QString appNameLast = "_boxed.exe";
+    QString appFilePathName;
+
+    const QString VERSION_DOWNLOAD_URL = "https://raw.githubusercontent.com/bingshuizhilian/QTPROJECTS-FIRMWARE_GENERATOR/add-update-online-feature/autoupdate/version.txt";
+    const QString APP_DOWNLOAD_URL = "https://raw.githubusercontent.com/bingshuizhilian/QTPROJECTS-FIRMWARE_GENERATOR/add-update-online-feature/autoupdate/";
+
     const QStringList FUNCTION_STRING_LIST =
     {
         "add bootloader to firmware",
         "gen firmware for diagnosis",
         "run command"
     };
+
     const QStringList PLATFORM_STRING_LIST =
     {
         "m1afl2",
@@ -104,6 +118,7 @@ private:
         "s51evfl",
         "a13tev"
     };
+
     const QString REPLACE_STRING = "S10BFFF8C000C000C000C000FD\n";//未加bootloader的app含有此内容
     const QString TARGET_STRING_AFTER_GENERATING_BOOTCODE = "S10BFFF8FC00FC00FC00FC000D\n";//已加bootloader的app含有此内容
     const QString DIAG_COMMON_S0  = "S02100000747395957202020202020202020202020202020200130302E30302E303040";//通用的S021行
@@ -154,6 +169,15 @@ private:
     void dealWithCalculateKeyCommand(void);
     void showHelpInfo(CmdType cmd);
     void procConfigFile(CmdType cmd);
+    void autoUpdate(QString local_version);
+    void autoUpdateTypeB(void);
+
+private:
+    QNetworkAccessManager* m_networkAccessMngr;
+    QNetworkReply* m_httpReply;
+    QFile* downloadFile;
+    QTimer* versionDetectTimer;
+    QTimer* appDetectTimer;
 
 private slots:
     void selectFilePressed();
@@ -164,6 +188,12 @@ private slots:
     void generateButtonPressed();
     void runCmdReturnPressed();
     void switchPlatformPressed();
+    void httpReadContent();
+    void httpReplyFinished(QNetworkReply* reply);
+    void httpDownloadError(QNetworkReply::NetworkError error);
+    void httpDownloadProgress(qint64 bytes_received, qint64 bytes_total);
+    void versionDetectTimerTimeout();
+    void appDetectTimerTimeout();
 };
 
 #endif // MAINWINDOW_H
