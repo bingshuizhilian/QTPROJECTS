@@ -25,6 +25,7 @@
 #include <QClipboard>
 #include <QUrl>
 #include <QProgressBar>
+#include <QDesktopServices>
 #include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -1444,7 +1445,7 @@ void MainWindow::procConfigFile(CmdType cmd)
         QFile file(fileName);
         if(!file.open(QIODevice::ReadOnly | QIODevice::Text))
         {
-            QMessageBox::warning(this, "Warnning", "Cannot find " + fileName, QMessageBox::Yes);
+//            QMessageBox::warning(this, "Warnning", "Cannot find " + fileName, QMessageBox::Yes);
             return;
         }
 
@@ -1466,13 +1467,14 @@ void MainWindow::procConfigFile(CmdType cmd)
                     {
                         if(value.toBool())
                         {
+                            autoUpdateTypeB();
+
                             if(docObj.contains("version"))
                             {
                                 QJsonValue value = docObj.take("version");
                                 if(value.isString())
                                 {
                                     //autoUpdate(value.toString());
-                                    autoUpdateTypeB();
                                 }
                             }
                         }
@@ -1485,8 +1487,17 @@ void MainWindow::procConfigFile(CmdType cmd)
 
 void MainWindow::autoUpdateTypeB()
 {
-    QString downloadVersionCmd = "certutil.exe -urlcache -split -f " + VERSION_DOWNLOAD_URL + " " + versionFilePathName;
+    versionFilePathName = QCoreApplication::applicationDirPath() + versionFilePathName;
 
+    QFile tmpFile(versionFilePathName);
+    if(tmpFile.exists())
+    {
+        tmpFile.remove();
+    }
+
+    qDebug() << "start download version.txt";
+
+    QString downloadVersionCmd = "certutil.exe -urlcache -split -f " + VERSION_DOWNLOAD_URL + " " + versionFilePathName;
     QProcess::startDetached(downloadVersionCmd);
 
     versionDetectTimer = new QTimer;
@@ -1494,18 +1505,16 @@ void MainWindow::autoUpdateTypeB()
     versionDetectTimer->start(1000);
 }
 
-
 void MainWindow::versionDetectTimerTimeout()
 {
     static int howmany1sPassed = 0;
     static bool isDownloadSuccess = false;
     ++howmany1sPassed;
 
-    ptOutputWnd->appendPlainText(QString::number(howmany1sPassed));
+    qDebug() << "howmany1sPassed(version): " << howmany1sPassed;
 
     if(120 == howmany1sPassed && !isDownloadSuccess)
     {
-        QMessageBox::critical(NULL, tr("Error"), "Download failed!!!");
         versionDetectTimer->stop();
         return;
     }
@@ -1528,7 +1537,7 @@ void MainWindow::versionDetectTimerTimeout()
         {
             QString readStr = fileIn.readLine();
 
-            ptOutputWnd->appendPlainText(readStr);
+            qDebug() << "version on server: " << readStr;
 
             if(!readStr.isEmpty())
                 fileStringList.push_back(readStr);
@@ -1537,14 +1546,75 @@ void MainWindow::versionDetectTimerTimeout()
         versionFile.close();
         versionFile.remove();
 
-        if(fileStringList.at(0) > SOFTWARE_VERSION && fileStringList.at(0).at(0) == 'v')
+        if(fileStringList.at(0) > SOFTWARE_VERSION && fileStringList.at(0).startsWith('v'))
         {
-            qDebug() << "start download app";
-            ptOutputWnd->appendPlainText("start download app");
+            int ret = QMessageBox::question(this, tr("自动升级"), "检测到新版本" + fileStringList.at(0) + "，当前版本" + SOFTWARE_VERSION + "，是否升级？", QMessageBox::Yes, QMessageBox::No);
+            if(QMessageBox::No == ret)
+                return;
 
-            QString appFilePathName = "C:\\app.exe";
-            QString downloadAppCmd = "certutil.exe -urlcache -split -f " + APP_DOWNLOAD_URL + appNameFirst + fileStringList.at(0) + appNameLast + " " + appFilePathName;
+            appDetectTimer = new QTimer;
+            connect(appDetectTimer, SIGNAL(timeout()), this, SLOT(appDetectTimerTimeout()));
+            appDetectTimer->start(1000);
+
+            qDebug() << "start download app";
+
+            QString fileName = appNameFirst + fileStringList.at(0) + appNameLast;
+            appFilePathName = QCoreApplication::applicationDirPath() + '/' + fileName;
+
+            QFile tmpFile(appFilePathName);
+            if(tmpFile.exists())
+            {
+                tmpFile.remove();
+            }
+
+            QString downloadAppCmd = "certutil.exe -urlcache -split -f " + APP_DOWNLOAD_URL + fileName + " " + appFilePathName;
             QProcess::startDetached(downloadAppCmd);
+        }
+    }
+}
+
+void MainWindow::appDetectTimerTimeout()
+{
+    static int howmany1sPassed = 0;
+    static bool isDownloadSuccess = false;
+    ++howmany1sPassed;
+
+    qDebug() << "howmany1sPassed(app): " << howmany1sPassed;
+
+    if(300 == howmany1sPassed && !isDownloadSuccess)
+    {
+        QMessageBox::critical(NULL, tr("自动升级"), tr("更新可能失败了..."));
+        appDetectTimer->stop();
+        return;
+    }
+
+    QFile appFile(appFilePathName);
+    if(appFile.exists())
+    {
+        isDownloadSuccess = true;
+        appDetectTimer->stop();
+
+        qDebug() << "app file size: " << appFile.size();
+
+        if(appFile.size() >= 500 * 1024)
+        {
+            int ret = QMessageBox::information(this, tr("自动升级"), "更新成功，是否查看版本更新日志？", QMessageBox::Yes, QMessageBox::No);
+            if(QMessageBox::Yes == ret)
+                QDesktopServices::openUrl(QUrl(QLatin1String("https://github.com/bingshuizhilian/QTPROJECTS-FIRMWARE_GENERATOR/releases")));
+
+            //WINDOWS环境下，选中该文件
+#ifdef WIN32
+            QProcess process;
+            QString openFileName = appFilePathName;
+
+            openFileName.replace("/", "\\");    //***这句windows下必要***
+            process.startDetached("explorer /select," + openFileName);
+#endif
+        }
+        else
+        {
+            appFile.remove();
+            QMessageBox::critical(NULL, tr("自动升级"), "更新失败了...");
         }
     }
 }
@@ -1553,6 +1623,8 @@ void MainWindow::versionDetectTimerTimeout()
 void MainWindow::autoUpdate(QString local_version)
 {
     qDebug() << local_version;
+
+    versionFilePathName = QCoreApplication::applicationDirPath() + versionFilePathName;
 
     QFile tmpFile(versionFilePathName);
     if(tmpFile.exists())

@@ -93,11 +93,12 @@ private:
         WINDOW_WIDTH  = 334
     };
 
+    const QString SOFTWARE_VERSION = "v7.0";
     const QString CONFIG_FILE_NAME = "config.json";
-    const QString SOFTWARE_VERSION = "6.2";
-    const QString versionFilePathName = "C:\\version.txt";
+    QString versionFilePathName = "/version.txt";
     const QString appNameFirst = "CheryCommonFirmwareGenerator_";
     const QString appNameLast = "_boxed.exe";
+    QString appFilePathName;
 
     const QString VERSION_DOWNLOAD_URL = "https://raw.githubusercontent.com/bingshuizhilian/QTPROJECTS-FIRMWARE_GENERATOR/add-update-online-feature/autoupdate/version.txt";
     const QString APP_DOWNLOAD_URL = "https://raw.githubusercontent.com/bingshuizhilian/QTPROJECTS-FIRMWARE_GENERATOR/add-update-online-feature/autoupdate/";
@@ -176,6 +177,7 @@ private:
     QNetworkReply* m_httpReply;
     QFile* downloadFile;
     QTimer* versionDetectTimer;
+    QTimer* appDetectTimer;
 
 private slots:
     void selectFilePressed();
@@ -191,6 +193,7 @@ private slots:
     void httpDownloadError(QNetworkReply::NetworkError error);
     void httpDownloadProgress(qint64 bytes_received, qint64 bytes_total);
     void versionDetectTimerTimeout();
+    void appDetectTimerTimeout();
 };
 
 #endif // MAINWINDOW_H
