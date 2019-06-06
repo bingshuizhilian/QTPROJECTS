@@ -1496,6 +1496,7 @@ void MainWindow::autoUpdateTypeB()
     }
 
     qDebug() << "start download version.txt";
+//    ptOutputWnd->appendPlainText("start download version.txt");
 
     QString downloadVersionCmd = "certutil.exe -urlcache -split -f " + VERSION_DOWNLOAD_URL + " " + versionFilePathName;
     QProcess::startDetached(downloadVersionCmd);
@@ -1512,6 +1513,7 @@ void MainWindow::versionDetectTimerTimeout()
     ++howmany1sPassed;
 
     qDebug() << "howmany1sPassed(version): " << howmany1sPassed;
+//    ptOutputWnd->appendPlainText("howmany1sPassed(version): " + QString::number(howmany1sPassed));
 
     if(120 == howmany1sPassed && !isDownloadSuccess)
     {
@@ -1538,6 +1540,7 @@ void MainWindow::versionDetectTimerTimeout()
             QString readStr = fileIn.readLine();
 
             qDebug() << "version on server: " << readStr;
+//            ptOutputWnd->appendPlainText("version on server: " + readStr);
 
             if(!readStr.isEmpty())
                 fileStringList.push_back(readStr);
@@ -1557,6 +1560,7 @@ void MainWindow::versionDetectTimerTimeout()
             appDetectTimer->start(1000);
 
             qDebug() << "start download app";
+//            ptOutputWnd->appendPlainText("start download app");
 
             QString fileName = appNameFirst + fileStringList.at(0) + appNameLast;
             appFilePathName = QCoreApplication::applicationDirPath() + '/' + fileName;
@@ -1580,6 +1584,7 @@ void MainWindow::appDetectTimerTimeout()
     ++howmany1sPassed;
 
     qDebug() << "howmany1sPassed(app): " << howmany1sPassed;
+//    ptOutputWnd->appendPlainText("howmany1sPassed(app): " + QString::number(howmany1sPassed));
 
     if(300 == howmany1sPassed && !isDownloadSuccess)
     {
@@ -1595,6 +1600,7 @@ void MainWindow::appDetectTimerTimeout()
         appDetectTimer->stop();
 
         qDebug() << "app file size: " << appFile.size();
+//        ptOutputWnd->appendPlainText("app file size: " + QString::number(appFile.size()));
 
         if(appFile.size() >= 500 * 1024)
         {
