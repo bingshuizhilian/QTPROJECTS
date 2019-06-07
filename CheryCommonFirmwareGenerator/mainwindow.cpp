@@ -1549,7 +1549,7 @@ void MainWindow::versionDetectTimerTimeout()
         versionFile.close();
         versionFile.remove();
 
-        if(fileStringList.at(0) > SOFTWARE_VERSION && fileStringList.at(0).startsWith('v'))
+        if(!fileStringList.isEmpty() && fileStringList.at(0) > SOFTWARE_VERSION && fileStringList.at(0).startsWith('v'))
         {
             int ret = QMessageBox::question(this, tr("自动升级"), "检测到新版本" + fileStringList.at(0) + "，当前版本" + SOFTWARE_VERSION + "，是否升级？", QMessageBox::Yes, QMessageBox::No);
             if(QMessageBox::No == ret)
