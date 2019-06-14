@@ -13,6 +13,7 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QTimer>
+#include "bitmapprocess.h"
 
 namespace Ui {
 class MainWindow;
@@ -178,7 +179,7 @@ private:
     QFile* downloadFile;
     QTimer* versionDetectTimer;
     QTimer* appDetectTimer;
-
+BitmapProcess* b;
 private slots:
     void selectFilePressed();
     void useDefaultBootloaderPressed();

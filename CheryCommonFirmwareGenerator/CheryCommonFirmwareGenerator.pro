@@ -26,7 +26,9 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 
 SOURCES += main.cpp \
-        mainwindow.cpp
+        mainwindow.cpp \
+    bitmapprocess.cpp \
+    bmp.cpp
 
 HEADERS  += mainwindow.h \
     defaultFlashDriverCode.h \
@@ -35,6 +37,9 @@ HEADERS  += mainwindow.h \
     defaultM1SeriesBootCode.h \
     defaultT1SeriesBootCode.h \
     defaultS51evflBootCode.h \
-    defaultA13tevflBootCode.h
+    defaultA13tevflBootCode.h \
+    bitmapprocess.h \
+    bmp.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    bitmapprocess.ui
