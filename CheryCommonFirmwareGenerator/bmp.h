@@ -2,7 +2,6 @@
  * 参考文章：
  * https://www.cnblogs.com/magiccaptain/archive/2011/10/28/2228254.html
  */
-//<html><head/><body><p><a href="www.baidu.com"><span style=" text-decoration: underline; color:#0000ff;">www.baidu.com</span></a></p></body></html>
 
 #ifndef BITMAPCLASS_H_
 #define BITMAPCLASS_H_
@@ -11,7 +10,8 @@
 #include <QFile>
 #include <QString>
 #include <QMessageBox>
-#include <Cmath>
+#include <QByteArray>
+#include <QList>
 
 typedef quint8 BYTE; //BYTE表示8位无符号整数，一个字节
 typedef quint16 WORD; //WORD表示16位无符号整数，两个字节
@@ -67,32 +67,54 @@ typedef struct tagRGBQUAD
     BYTE rgbReserved;
 } RGBQUAD;
 
+//运算相关的重要参数，通过位图数据分析获得，可以直接调用
+typedef struct tagBITMAPCALCULATEPARAMETER
+{
+    qint32 totalBytesPerLine; //扫描一行的总字节数（包含padding）
+    qint32 paddingBytesPerLine; //扫描一行的补位的字节数，非图像有效数据区，为了windows的数据对齐而补充（扫描一行的总字节数为4的倍数）
+    qint32 imageDataRealSize; //位图数据区实际大小（待确定：此值比infoheader的biSizeImage大2，观察得知可能是bmp文件尾多了2个0x00）
+} BMPCALCPARAM;
+
+enum BMPSCANDIRECTION
+{
+    BMPSCANDIRECTION_DOWNTOUP = 0, //自底至顶扫描，此为多数情况
+    BMPSCANDIRECTION_UPTODOWN = 1 //自顶至底扫描
+};
+
 class BitmapHandler
 {
 public:
-    explicit BitmapHandler(QString filename = "");
+    explicit BitmapHandler(QString filename = QString());
     ~BitmapHandler();
 
 private:
-    BITMAPFILEHEADER BitMapFileHeader;
-    BITMAPINFOHEADER BitMapInfoHeader;
-    RGBQUAD *pColorTable; //记录颜色表的指针
-    BYTE *bmpData; //记录位图数据的指针
+    BITMAPFILEHEADER bitmapFileHeader; //文件头
+    BITMAPINFOHEADER bitmapInfoHeader; //数据信息头
+    QList<RGBQUAD> colorTable; //颜色表
+    QByteArray bmpData; //位图数据
 
 private:
+    //内部接口，读取文件、字节序转换
     bool readBitmapFile(QString filename);
     quint32 DWORDtoQuint32(DWORD n);
     quint16 WORDtoQuint16(WORD n);
     qint32 LONGtoQint32(LONG n);
 
 public:
-    bool load(QString filename);
+    //提供获取/修改图像原始数据的接口
+    BITMAPFILEHEADER& fileheader(void); //文件头
+    BITMAPINFOHEADER& infoheader(void); //数据信息头
+    QList<RGBQUAD>& colortable(void); //颜色表
+    QByteArray& bmpdata(void); //位图数据
+    //提供位图相关实用接口
+    bool load(QString filename); //加载新位图
     quint32 filesize(void); //文件的大小
-    quint16 bitperpixel(void); //图像的颜色位数
+    quint16 bitsperpixel(void); //图像的颜色位数
     quint32 datasize(void); //位图数据的大小
     qint32 width(void); //位图的宽度
     qint32 height(void); //位图的高度
-    bool hasColorTable(void); //是否有颜色表
+    BMPSCANDIRECTION bmpscandirection(void); //位图扫描的方向
+    BMPCALCPARAM calcparam(void); //位图运算相关的重要参数
 };
 
 #endif /* BITMAPCLASS_H_ */

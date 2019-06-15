@@ -1,13 +1,9 @@
 #include "bmp.h"
+#include <cmath>
 #include <QDebug>
 
-BitmapHandler::BitmapHandler(QString filename) :
-    pColorTable(nullptr),
-    bmpData(nullptr)
+BitmapHandler::BitmapHandler(QString filename)
 {
-    memset(&BitMapFileHeader, 0, sizeof(BITMAPFILEHEADER));
-    memset(&BitMapInfoHeader, 0, sizeof(BITMAPINFOHEADER));
-
     bool ret = readBitmapFile(filename);
 
     qDebug() << "BitmapHandler construct result: " << ret;
@@ -15,11 +11,7 @@ BitmapHandler::BitmapHandler(QString filename) :
 
 BitmapHandler::~BitmapHandler()
 {
-    if(nullptr != pColorTable)
-        delete pColorTable;
 
-    if(nullptr != bmpData)
-        delete bmpData;
 }
 
 bool BitmapHandler::readBitmapFile(QString filename)
@@ -39,62 +31,57 @@ bool BitmapHandler::readBitmapFile(QString filename)
 
         /*开始读取文件头信息*/
         /*===================================*/
-        in >> BitMapFileHeader.bfType; //读取文件类型
-        in >> BitMapFileHeader.bfSize; //读取文件大小
-        in >> BitMapFileHeader.bfReserved1; //读取两个保留字
-        in >> BitMapFileHeader.bfReserved2;
-        in >> BitMapFileHeader.bfOffBits; //读取偏移量
+        in >> bitmapFileHeader.bfType; //读取文件类型
+        in >> bitmapFileHeader.bfSize; //读取文件大小
+        in >> bitmapFileHeader.bfReserved1; //读取两个保留字
+        in >> bitmapFileHeader.bfReserved2;
+        in >> bitmapFileHeader.bfOffBits; //读取偏移量
         /*===================================*/
         /**文件头信息读取结束*/
 
         /*开始读取位图信息头*/
         /*====================================*/
-        in >> BitMapInfoHeader.biSize;
-        in >> BitMapInfoHeader.biWidth;
-        in >> BitMapInfoHeader.biHeight;
-        in >> BitMapInfoHeader.biPlanes;
-        in >> BitMapInfoHeader.biBitCount;
-        in >> BitMapInfoHeader.biCompression;
-        in >> BitMapInfoHeader.biSizeImage;
-        in >> BitMapInfoHeader.biXPelsPerMeter;
-        in >> BitMapInfoHeader.biYPelsPerMeter;
-        in >> BitMapInfoHeader.biClrUsed;
-        in >> BitMapInfoHeader.biClrImportant;
+        in >> bitmapInfoHeader.biSize;
+        in >> bitmapInfoHeader.biWidth;
+        in >> bitmapInfoHeader.biHeight;
+        in >> bitmapInfoHeader.biPlanes;
+        in >> bitmapInfoHeader.biBitCount;
+        in >> bitmapInfoHeader.biCompression;
+        in >> bitmapInfoHeader.biSizeImage;
+        in >> bitmapInfoHeader.biXPelsPerMeter;
+        in >> bitmapInfoHeader.biYPelsPerMeter;
+        in >> bitmapInfoHeader.biClrUsed;
+        in >> bitmapInfoHeader.biClrImportant;
         /*====================================*/
         /*位图信息头读取结束*/
 
         /*开始读取颜色表*/
         /*====================================*/
-        quint16 bpp = WORDtoQuint16(BitMapInfoHeader.biBitCount);
+        quint16 bpp = WORDtoQuint16(bitmapInfoHeader.biBitCount);
 
-        if (1 == bpp) //对于黑白图
+        if (1 == bpp || 8 == bpp) //对于黑白图
         {
-            pColorTable = new RGBQUAD[2];
             //读入颜色表
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i < pow(2, bpp); i++)
             {
-                in >> pColorTable[i].rgbBlue;
-                in >> pColorTable[i].rgbGreen;
-                in >> pColorTable[i].rgbRed;
-                in >> pColorTable[i].rgbReserved;
+                RGBQUAD ct = { 0, 0, 0, 0 };
+
+                in >> ct.rgbBlue;
+                in >> ct.rgbGreen;
+                in >> ct.rgbRed;
+                in >> ct.rgbReserved;
+
+                colorTable.append(ct);
             }
         }
-        else if (8 == bpp) //对于灰度图，共有256种颜色
-        {
-            pColorTable = new RGBQUAD[256];
-            //读入颜色表
-            for (int i = 0; i < 256; i++)
-            {
-                in >> pColorTable[i].rgbBlue;
-                in >> pColorTable[i].rgbGreen;
-                in >> pColorTable[i].rgbRed;
-                in >> pColorTable[i].rgbReserved;
-            }
-        }
-        else
-        {
-            ;//颜色位数大于8时没有颜色表
-        }
+
+        qDebug() << "color table start";
+
+        qDebug() << colorTable.size();
+        foreach(auto elem, colorTable)
+            qDebug() << elem.rgbRed << elem.rgbGreen << elem.rgbBlue;
+
+        qDebug() << "color table end";
 
         /*====================================*/
         /*颜色表读取结束*/
@@ -102,15 +89,23 @@ bool BitmapHandler::readBitmapFile(QString filename)
         /*开始读取位图数据*/
         /*====================================*/
         //求得图像数据的字节数
-        quint32 length = DWORDtoQuint32(BitMapFileHeader.bfSize) - DWORDtoQuint32(BitMapFileHeader.bfOffBits);
-        bmpData = new BYTE[length];
+        quint32 length = DWORDtoQuint32(bitmapFileHeader.bfSize) - DWORDtoQuint32(bitmapFileHeader.bfOffBits);
 
         for (quint32 i = 0; i < length; i++)
         {
-            in >> bmpData[i];
+            quint8 readByte = 0;
+            in >> readByte;
+            bmpData.append(readByte);
         }
         /*====================================*/
         /*位图数据读取结束*/
+
+        qDebug() << "bmp data start";
+
+        qDebug() << bmpData.size();
+        qDebug() << bmpData.toHex();
+
+        qDebug() << "bmp data end";
     }
 
     file.close();
@@ -169,24 +164,35 @@ qint32 BitmapHandler::LONGtoQint32(LONG n)
     return r;
 }
 
+BITMAPFILEHEADER& BitmapHandler::fileheader(void)
+{
+    return bitmapFileHeader;
+}
+
+BITMAPINFOHEADER& BitmapHandler::infoheader(void)
+{
+    return bitmapInfoHeader;
+}
+
+QList<RGBQUAD>& BitmapHandler::colortable(void)
+{
+    return colorTable;
+}
+
+QByteArray& BitmapHandler::bmpdata(void)
+{
+    return bmpData;
+}
+
 bool BitmapHandler::load(QString filename)
 {
     bool ret = false;
 
-    memset(&BitMapFileHeader, 0, sizeof(BITMAPFILEHEADER));
-    memset(&BitMapInfoHeader, 0, sizeof(BITMAPINFOHEADER));
+    memset(&bitmapFileHeader, 0, sizeof(BITMAPFILEHEADER));
+    memset(&bitmapInfoHeader, 0, sizeof(BITMAPINFOHEADER));
 
-    if(nullptr != pColorTable)
-    {
-        delete pColorTable;
-        pColorTable = nullptr;
-    }
-
-    if(nullptr != bmpData)
-    {
-        delete bmpData;
-        bmpData = nullptr;
-    }
+    colorTable.clear();
+    bmpData.clear();
 
     ret = readBitmapFile(filename);
 
@@ -197,35 +203,54 @@ bool BitmapHandler::load(QString filename)
 
 quint32 BitmapHandler::filesize(void)
 {
-    return DWORDtoQuint32(BitMapFileHeader.bfSize);
+    return DWORDtoQuint32(bitmapFileHeader.bfSize);
 }
 
-quint16 BitmapHandler::bitperpixel(void)
+quint16 BitmapHandler::bitsperpixel(void)
 {
-    return WORDtoQuint16(BitMapInfoHeader.biBitCount);
+    return WORDtoQuint16(bitmapInfoHeader.biBitCount);
 }
 
 quint32 BitmapHandler::datasize(void)
 {
-    return DWORDtoQuint32(BitMapFileHeader.bfSize) - DWORDtoQuint32(BitMapFileHeader.bfOffBits);
+    return DWORDtoQuint32(bitmapFileHeader.bfSize) - DWORDtoQuint32(bitmapFileHeader.bfOffBits);
 }
 
 qint32 BitmapHandler::width(void)
 {
-    return LONGtoQint32(BitMapInfoHeader.biWidth);
+    return LONGtoQint32(bitmapInfoHeader.biWidth);
 }
 
 qint32 BitmapHandler::height(void)
 {
-    return LONGtoQint32(BitMapInfoHeader.biHeight);
+    return abs(LONGtoQint32(bitmapInfoHeader.biHeight));
 }
 
-bool BitmapHandler::hasColorTable()
+BMPSCANDIRECTION BitmapHandler::bmpscandirection(void)
 {
-    bool ret = false;
+    BMPSCANDIRECTION bsd = BMPSCANDIRECTION_DOWNTOUP;
 
-    if(1 == bitperpixel() || 8 == bitperpixel())
-        ret = true;
+    if(LONGtoQint32(bitmapInfoHeader.biHeight) < 0)
+        bsd = BMPSCANDIRECTION_UPTODOWN;
 
-    return ret;
+    qDebug() << bsd;
+
+    return bsd;
 }
+
+BMPCALCPARAM BitmapHandler::calcparam()
+{
+    BMPCALCPARAM bcp;
+
+    bcp.totalBytesPerLine = (((this->width() * this->bitsperpixel()) + 31) >> 5) << 2;
+    bcp.paddingBytesPerLine = (4 - ((this->width() * this->bitsperpixel()) >> 3)) & 3;
+    bcp.imageDataRealSize = bcp.totalBytesPerLine * this->height();
+
+    qDebug() << QString("totalBytesPerLine: %1, paddingBytesPerLine: %2, imageDataRealSize: %3")
+                .arg(bcp.totalBytesPerLine)
+                .arg(bcp.paddingBytesPerLine)
+                .arg(bcp.imageDataRealSize);
+
+    return bcp;
+}
+

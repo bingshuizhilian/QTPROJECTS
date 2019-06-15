@@ -58,8 +58,8 @@ BitmapHandler bmp;
 void BitmapProcess::on_btn_openBmp_clicked()
 {
     selectedFilePathName = QFileDialog::getOpenFileName(this, tr("Open Picture"),
-                                                "",
-                                                tr("Images (*.bmp *.png *.jpg *.jpeg)"));
+                                                        "",
+                                                        tr("Images (*.bmp *.png *.jpg *.jpeg)"));
 
     selectedFilePath = QFileInfo(selectedFilePathName).absolutePath();
 
@@ -83,16 +83,21 @@ void BitmapProcess::on_btn_openBmp_clicked()
     ui->label_showPicSize->setText(QString("%1x%2").arg(image->width()).arg(image->height()));
     ui->btn_generateCArray->setEnabled(true);
 
+    qDebug() << image->bytesPerLine();
+    image->scanLine(0);
+
     qDebug() << image->byteCount() << image->bits();
 
     bmp.load(selectedFilePathName);
-    qDebug() << QString("filesize:%1, bpp:%2, datasize:%3, width:%4, height:%5, hasColorTable:%6")
+    qDebug() << QString("filesize:%1, bpp:%2, datasize:%3, width:%4, height:%5")
                 .arg(bmp.filesize())
-                .arg(bmp.bitperpixel())
+                .arg(bmp.bitsperpixel())
                 .arg(bmp.datasize())
                 .arg(bmp.width())
-                .arg(bmp.height())
-                .arg(bmp.hasColorTable());
+                .arg(bmp.height());
+
+    bmp.calcparam();
+    bmp.bmpscandirection();
 
     int index = allImageNamesList.indexOf(QFileInfo(selectedFilePathName).fileName());
     ui->btn_prevPic->setEnabled(0 != index ? true : false);
