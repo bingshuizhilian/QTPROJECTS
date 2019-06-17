@@ -81,10 +81,21 @@ enum BMPSCANDIRECTION
     BMPSCANDIRECTION_UPTODOWN = 1 //自顶至底扫描
 };
 
+//每个像素的颜色等级用多少个bit来表示
+enum BMPBITPERPIXEL
+{
+    BMP_1BITPERPIXEL = 1,
+    BMP_2BITSPERPIXEL = 2,
+    BMP_8BITSPERPIXEL = 8,
+    BMP_16BITSPERPIXEL = 16,
+    BMP_24BITSPERPIXEL = 24,
+    BMP_32BITSPERPIXEL = 32
+};
+
 class BitmapHandler
 {
 public:
-    explicit BitmapHandler(QString filename = QString());
+    explicit BitmapHandler(QString filepathname = QString());
     ~BitmapHandler();
 
 private:
@@ -95,7 +106,7 @@ private:
 
 private:
     //内部接口，读取文件、字节序转换
-    bool readBitmapFile(QString filename);
+    bool readBitmapFile(QString filepathname);
     quint32 DWORDtoQuint32(DWORD n);
     quint16 WORDtoQuint16(WORD n);
     qint32 LONGtoQint32(LONG n);
@@ -107,7 +118,12 @@ public:
     QList<RGBQUAD>& colortable(void); //颜色表
     QByteArray& bmpdata(void); //位图数据
     //提供位图相关实用接口
-    bool load(QString filename); //加载新位图
+    bool load(QString filename); //加载位图
+    bool save(void); //保存位图
+    bool flipcolor(void); //翻转颜色
+    QString toctypearray(BMPBITPERPIXEL bpp); //生成C语言形式数组
+    void clear(void); //清空加载的位图信息
+    bool isvalid(void); //当前加载的位图是否有效
     quint32 filesize(void); //文件的大小
     quint16 bitsperpixel(void); //图像的颜色位数
     quint32 datasize(void); //位图数据的大小

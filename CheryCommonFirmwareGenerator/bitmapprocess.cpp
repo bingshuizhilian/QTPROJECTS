@@ -1,6 +1,5 @@
 #include "bitmapprocess.h"
 #include "ui_bitmapprocess.h"
-#include "bmp.h"
 #include <QFile>
 #include <QFileInfo>
 #include <QFileDialog>
@@ -54,7 +53,7 @@ QStringList BitmapProcess::getDirFilesName(QString pathsDir)
 
     return imageNamesList;
 }
-BitmapHandler bmp;
+
 void BitmapProcess::on_btn_openBmp_clicked()
 {
     selectedFilePathName = QFileDialog::getOpenFileName(this, tr("Open Picture"),
@@ -84,20 +83,8 @@ void BitmapProcess::on_btn_openBmp_clicked()
     ui->btn_generateCArray->setEnabled(true);
 
     qDebug() << image->bytesPerLine();
-    image->scanLine(0);
 
     qDebug() << image->byteCount() << image->bits();
-
-    bmp.load(selectedFilePathName);
-    qDebug() << QString("filesize:%1, bpp:%2, datasize:%3, width:%4, height:%5")
-                .arg(bmp.filesize())
-                .arg(bmp.bitsperpixel())
-                .arg(bmp.datasize())
-                .arg(bmp.width())
-                .arg(bmp.height());
-
-    bmp.calcparam();
-    bmp.bmpscandirection();
 
     int index = allImageNamesList.indexOf(QFileInfo(selectedFilePathName).fileName());
     ui->btn_prevPic->setEnabled(0 != index ? true : false);
@@ -108,10 +95,17 @@ void BitmapProcess::on_btn_openBmp_clicked()
 
 void BitmapProcess::on_btn_generateCArray_clicked()
 {
-    setWindowFlags(Qt::FramelessWindowHint);
-    setAttribute(Qt::WA_TranslucentBackground);
-    if(ui->cb_isCompress)
-        compressCArrayOfBitmap();
+    bmp.load(selectedFilePathName);
+
+    if(ui->cb_flipColor->isChecked())
+        bmp.flipcolor();
+
+//    bmp.save();
+
+    QString saveFilePathName = bmp.toctypearray(ui->rbtn_grayLv1bit->isChecked() ? BMP_1BITPERPIXEL : BMP_2BITSPERPIXEL);
+
+    if(ui->cb_isCompress->isChecked())
+        compressCArrayOfBitmap(saveFilePathName);
 }
 
 void BitmapProcess::on_btn_prevPic_clicked()
@@ -156,10 +150,13 @@ void BitmapProcess::on_btn_nextPic_clicked()
     qDebug() << QString("[0 - %2]:%1 -> ").arg(newIndex).arg(allImageNamesList.size() - 1) + QFileInfo(selectedFilePathName).fileName();
 }
 
-void BitmapProcess::compressCArrayOfBitmap()
+void BitmapProcess::compressCArrayOfBitmap(QString filepathname)
 {
+    if(filepathname.isEmpty())
+        return;
+
     const int DEVIDE_AMOUNT = 255; //下位机存储宽和高各用一个字节，此处应确保此值不大于255（即0xff）
-    QString filePathName = QFileDialog::getOpenFileName();
+    QString filePathName = filepathname;
     QString filePath = QFileInfo(filePathName).absolutePath();
 
     qDebug()<<filePathName<<endl<<filePath<<endl;
@@ -176,8 +173,6 @@ void BitmapProcess::compressCArrayOfBitmap()
         QMessageBox::warning(this, "Warnning", "Cannot open " + filePathName, QMessageBox::Yes);
         return;
     }
-
-//    this->resize(640, 460);
 
     QTextStream targetFileIn(&targetFile);
     QStringList originalCodeStringList;

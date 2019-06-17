@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QImage>
+#include "bmp.h"
 
 namespace Ui {
 class BitmapProcess;
@@ -36,9 +37,10 @@ private:
     QString selectedFilePathName;
     QString selectedFilePath;
     QStringList allImageNamesList;
+    BitmapHandler bmp;
 
 private:
-    void compressCArrayOfBitmap();
+    void compressCArrayOfBitmap(QString filepathname);
     QStringList getDirFilesName(QString pathsDir);
 
 private slots:

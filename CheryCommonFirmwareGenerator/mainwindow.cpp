@@ -320,20 +320,17 @@ void MainWindow::switchPlatformPressed()
 //处理按下generate按钮事件
 void MainWindow::generateButtonPressed()
 {
-    b = new BitmapProcess(this);
-    b->setWindowModality(Qt::WindowModal);
-    b->show();
-//    switch(m_cmbFunctionSwitch->currentIndex())
-//    {
-//    case BOOTLOADER:
-//        generateFirmwareWithBootloader();
-//        break;
-//    case DIAGNOSIS:
-//        generateFirmwareForDiagnosis();
-//        break;
-//    default:
-//        break;
-//    }
+    switch(m_cmbFunctionSwitch->currentIndex())
+    {
+    case BOOTLOADER:
+        generateFirmwareWithBootloader();
+        break;
+    case DIAGNOSIS:
+        generateFirmwareForDiagnosis();
+        break;
+    default:
+        break;
+    }
 
     qDebug()<<"wd height:"<<this->size().height();
     qDebug()<<"wd width:"<<this->size().width();

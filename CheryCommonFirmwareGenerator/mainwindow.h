@@ -179,7 +179,7 @@ private:
     QFile* downloadFile;
     QTimer* versionDetectTimer;
     QTimer* appDetectTimer;
-BitmapProcess* b;
+
 private slots:
     void selectFilePressed();
     void useDefaultBootloaderPressed();
