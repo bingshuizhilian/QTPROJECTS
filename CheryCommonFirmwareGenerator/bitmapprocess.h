@@ -40,6 +40,7 @@ private:
     BitmapHandler bmp;
 
 private:
+    QString toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL bpp); //生成C语言形式数组
     void compressCArrayOfBitmap(QString filepathname);
     QStringList getDirFilesName(QString pathsDir);
 

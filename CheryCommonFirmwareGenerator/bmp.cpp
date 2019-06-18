@@ -349,29 +349,6 @@ bool BitmapHandler::flipcolor(void)
     return true;
 }
 
-QString BitmapHandler::toctypearray(BMPBITPERPIXEL bpp)
-{
-    if(!this->isvalid() || bpp > BMP_2BITSPERPIXEL)
-    {
-        QMessageBox::warning(nullptr, "Warnning", "bmp file error", QMessageBox::Yes);
-        return QString();
-    }
-
-    QString saveFilePathName = QFileDialog::getSaveFileName(nullptr, "Save C Type Array",
-                                                            "",
-                                                            "Images (*.txt *.c *.h)");
-
-    if(saveFilePathName.isEmpty())
-    {
-        QMessageBox::warning(nullptr, "Warnning", "save failed, please selecte a file", QMessageBox::Yes);
-        return QString();
-    }
-
-    qDebug() << saveFilePathName;
-
-    return saveFilePathName;
-}
-
 void BitmapHandler::clear(void)
 {
     memset(&bitmapFileHeader, 0, sizeof(BITMAPFILEHEADER));

@@ -121,7 +121,6 @@ public:
     bool load(QString filename); //加载位图
     bool save(void); //保存位图
     bool flipcolor(void); //翻转颜色
-    QString toctypearray(BMPBITPERPIXEL bpp); //生成C语言形式数组
     void clear(void); //清空加载的位图信息
     bool isvalid(void); //当前加载的位图是否有效
     quint32 filesize(void); //文件的大小

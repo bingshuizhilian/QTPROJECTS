@@ -7,8 +7,6 @@
 #include <QMessageBox>
 #include <QClipboard>
 #include <QPixmap>
-#include <QBitmap>
-#include <QPainter>
 #include <QDebug>
 
 BitmapProcess::BitmapProcess(QWidget *parent) :
@@ -102,7 +100,7 @@ void BitmapProcess::on_btn_generateCArray_clicked()
 
 //    bmp.save();
 
-    QString saveFilePathName = bmp.toctypearray(ui->rbtn_grayLv1bit->isChecked() ? BMP_1BITPERPIXEL : BMP_2BITSPERPIXEL);
+    QString saveFilePathName = toCTypeArray(bmp, ui->rbtn_grayLv1bit->isChecked() ? BMP_1BITPERPIXEL : BMP_2BITSPERPIXEL);
 
     if(ui->cb_isCompress->isChecked())
         compressCArrayOfBitmap(saveFilePathName);
@@ -148,6 +146,88 @@ void BitmapProcess::on_btn_nextPic_clicked()
     ui->label_showPicSize->setText(QString("%1x%2").arg(image->width()).arg(image->height()));
 
     qDebug() << QString("[0 - %2]:%1 -> ").arg(newIndex).arg(allImageNamesList.size() - 1) + QFileInfo(selectedFilePathName).fileName();
+}
+
+//参数bpp为1时，C数组里一个字节代表8个像素；为2时一个字节代表4个像素
+QString BitmapProcess::toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL bpp)
+{
+    if(!bmp.isvalid())
+    {
+        QMessageBox::warning(nullptr, "Warnning", "bmp file error", QMessageBox::Yes);
+        return QString();
+    }
+
+    //仅支持1bpp(单色位图)和2bpp(4灰度位图)
+    if(bpp > BMP_2BITSPERPIXEL)
+    {
+        qDebug() << QString("dest bpp > 2 not supported");
+        return QString();
+    }
+
+    QByteArray pixels;
+    BMPCALCPARAM bcp = bmp.calcparam();
+
+    if(BMP_1BITPERPIXEL == bmp.bitsperpixel())
+    {
+
+    }
+    else if(BMP_24BITSPERPIXEL == bmp.bitsperpixel())
+    {
+        if(BMPSCANDIRECTION_DOWNTOUP == bmp.bmpscandirection())
+        {
+            for(int i = 0; i < this->height(); ++i)
+            {
+                for(int j = 0; j < bcp.totalBytesPerLine - bcp.paddingBytesPerLine; ++j)
+                {
+//                    pixels.append(bmp.bmpdata().at(i * bcp.totalBytesPerLine + j));
+                }
+            }
+        }
+        else
+        {
+            for(int i = 0; i < this->height(); ++i)
+            {
+                for(int j = 0; j < bcp.totalBytesPerLine - bcp.paddingBytesPerLine; ++j)
+                {
+                    pixels.append(bmp.bmpdata().at(i * bcp.totalBytesPerLine + j));
+                }
+            }
+        }
+    }
+    else if(BMP_32BITSPERPIXEL == bmp.bitsperpixel())
+    {
+
+    }
+    else
+    {
+        QMessageBox::warning(nullptr, "Warnning", "only support 1 or 24 or 32 bit/pixel format bitmap", QMessageBox::Yes);
+        return QString();
+    }
+
+    if(BMP_1BITPERPIXEL == bpp)
+    {
+
+    }
+    else
+    {
+
+    }
+
+    QString saveFilePathName = QFileDialog::getSaveFileName(nullptr, "Save C Type Array",
+                                                            "",
+                                                            "Images (*.c)");
+
+    qDebug() << saveFilePathName;
+
+    if(saveFilePathName.isEmpty())
+    {
+        QMessageBox::warning(nullptr, "Warnning", "save failed, please selecte a file", QMessageBox::Yes);
+        return QString();
+    }
+
+
+
+    return saveFilePathName;
 }
 
 void BitmapProcess::compressCArrayOfBitmap(QString filepathname)
