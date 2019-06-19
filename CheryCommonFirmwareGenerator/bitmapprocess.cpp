@@ -196,7 +196,7 @@ QString BitmapProcess::toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL destbpp)
     //1bpp和24bpp直接读取像素信息；32bpp只读取rgb信息，略过alpha信息
     if(BMP_1BITPERPIXEL == bmp.bitsperpixel() || BMP_24BITSPERPIXEL == bmp.bitsperpixel())
     {
-        for(int i = 0; i < bmp.height(); ++i)
+        for(unsigned int i = 0; i < bmp.height(); ++i)
         {
             QByteArray scanLinePixels;
             for(int j = 0, s = bcp.totalBytesPerLine - bcp.paddingBytesPerLine; j < s; ++j)
@@ -210,7 +210,7 @@ QString BitmapProcess::toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL destbpp)
     }
     else if(BMP_32BITSPERPIXEL == bmp.bitsperpixel())
     {
-        for(int i = 0; i < bmp.height(); ++i)
+        for(unsigned int i = 0; i < bmp.height(); ++i)
         {
             QByteArray scanLinePixels;
             for(int j = 0, s = bcp.totalBytesPerLine - bcp.paddingBytesPerLine; j + 3 < s; j += 4)
@@ -276,12 +276,13 @@ QString BitmapProcess::toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL destbpp)
         }
     }
 
-    //在字节扫描方向上，若最后一个字节不满8bit，需要补0
-    if(bmp.height() % 8 != 0)
+    //在字节扫描方向上，destbpp为1时若最后一个字节不满8bit，需要补0；destbpp为2时若最后一个字节不满4bit，需要补0
+    int factor = (BMP_1BITPERPIXEL == destbpp ? 8 : 4);
+    if(bmp.height() % factor != 0)
     {
         QByteArray paddingLinePixels(bcp.totalBytesPerLine - bcp.paddingBytesPerLine, 0);
 
-        for(int i = 0, s = 8 - bmp.height() % 8; i < s; ++i)
+        for(int i = 0, s = factor - bmp.height() % factor; i < s; ++i)
             rawPixels.append(paddingLinePixels);
     }
 
