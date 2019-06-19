@@ -9,18 +9,6 @@ namespace Ui {
 class BitmapProcess;
 }
 
-enum BMPGRAYCOLOR
-{
-    //1bit->2 level gray
-    BMP1BITCOLOR_WHITE = 0x00,
-    BMP1BITCOLOR_BLACK = 0x01,
-    //2bits->4 level gray
-    BMP2BITSCOLOR_WHITE = 0x00,
-    BMP2BITSCOLOR_LIGHTGRAY = 0x01,
-    BMP2BITSCOLOR_DARKGRAY = 0x10,
-    BMP2BITSCOLOR_BLACK = 0x11
-};
-
 class BitmapProcess : public QMainWindow
 {
     Q_OBJECT
@@ -40,7 +28,7 @@ private:
     BitmapHandler bmp;
 
 private:
-    QString toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL bpp); //生成C语言形式数组
+    QString toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL destbpp); //生成C语言形式数组
     void compressCArrayOfBitmap(QString filepathname);
     QStringList getDirFilesName(QString pathsDir);
 

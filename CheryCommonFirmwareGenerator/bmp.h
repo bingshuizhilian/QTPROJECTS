@@ -127,7 +127,7 @@ public:
     quint16 bitsperpixel(void); //图像的颜色位数
     quint32 datasize(void); //位图数据的大小
     qint32 width(void); //位图的宽度
-    qint32 height(void); //位图的高度
+    quint32 height(void); //位图的高度
     BMPSCANDIRECTION bmpscandirection(void); //位图扫描的方向
     BMPCALCPARAM calcparam(void); //位图运算相关的重要参数
 };

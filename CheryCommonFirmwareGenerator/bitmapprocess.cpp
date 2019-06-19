@@ -76,7 +76,10 @@ void BitmapProcess::on_btn_openBmp_clicked()
     }
 
     image->load(selectedFilePathName);
-    ui->lable_bmpView->setPixmap(QPixmap::fromImage(*image));
+    if(image->width() > 240 || image->height() > 320)
+        ui->lable_bmpView->setPixmap(QPixmap::fromImage(image->scaled(240, 320, Qt::KeepAspectRatio)));
+    else
+        ui->lable_bmpView->setPixmap(QPixmap::fromImage(*image));
     ui->label_showPicSize->setText(QString("%1x%2").arg(image->width()).arg(image->height()));
     ui->btn_generateCArray->setEnabled(true);
 
@@ -121,7 +124,10 @@ void BitmapProcess::on_btn_prevPic_clicked()
     selectedFilePathName = selectedFilePath + '/' + allImageNamesList.at(newIndex);
 
     image->load(selectedFilePathName);
-    ui->lable_bmpView->setPixmap(QPixmap::fromImage(*image));
+    if(image->width() > 240 || image->height() > 320)
+        ui->lable_bmpView->setPixmap(QPixmap::fromImage(image->scaled(240, 320, Qt::KeepAspectRatio)));
+    else
+        ui->lable_bmpView->setPixmap(QPixmap::fromImage(*image));
     ui->label_showPicSize->setText(QString("%1x%2").arg(image->width()).arg(image->height()));
 
     qDebug() << QString("[0 - %2]:%1 -> ").arg(newIndex).arg(allImageNamesList.size() - 1) + QFileInfo(selectedFilePathName).fileName();
@@ -142,14 +148,31 @@ void BitmapProcess::on_btn_nextPic_clicked()
     selectedFilePathName = selectedFilePath + '/' + allImageNamesList.at(newIndex);
 
     image->load(selectedFilePathName);
-    ui->lable_bmpView->setPixmap(QPixmap::fromImage(*image));
+    if(image->width() > 240 || image->height() > 320)
+        ui->lable_bmpView->setPixmap(QPixmap::fromImage(image->scaled(240, 320, Qt::KeepAspectRatio)));
+    else
+        ui->lable_bmpView->setPixmap(QPixmap::fromImage(*image));
     ui->label_showPicSize->setText(QString("%1x%2").arg(image->width()).arg(image->height()));
 
     qDebug() << QString("[0 - %2]:%1 -> ").arg(newIndex).arg(allImageNamesList.size() - 1) + QFileInfo(selectedFilePathName).fileName();
 }
 
-//参数bpp为1时，C数组里一个字节代表8个像素；为2时一个字节代表4个像素
-QString BitmapProcess::toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL bpp)
+/*
+ * 1.前言
+ * (0)RGB颜色表示
+ *  (0,0,0)代表黑色，(255,255,255)代表白色
+ * (1)“单色”的图像数据：
+ * 单色图像数据一个象素使用一个位(1 Bit)表示，0表示白色，1表示黑色。由于数据的最小存储单位是字节，每个字节有8个位，
+ * 当图像的宽或高不是8的倍数时，图像数据的宽或高将补0扩充到8的倍数以吻合字节宽度(具体是宽度还是高度取决于扫描模式)。
+ * (2)“4灰”的图像数据：
+ * 4灰图像数据一个象素使用两个位(2 Bit)表示，00表示白色，01表示浅灰色，10表示深灰色，11表示黑色。由于数据的最小存储单位是字节，
+ * 每个字节有8个位，当图像的宽或高不是4的倍数时，图像数据的宽或高将补0扩充到4的倍数以吻合字节宽度(具体是宽度还是高度取决于扫描模式)。
+ *
+ * 2.函数说明
+ * (1)参数destbpp为1时，C数组里一个字节代表8个像素；为2时一个字节代表4个像素
+ * (2)后续若实现“扫描模式”、“字节内像素数据反序”、“高位在前(MSB First)(此参数在文件中存储WORD即16位数据时生效，主要是图片尺寸数据)”，可在此处理
+ */
+QString BitmapProcess::toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL destbpp)
 {
     if(!bmp.isvalid())
     {
@@ -157,46 +180,50 @@ QString BitmapProcess::toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL bpp)
         return QString();
     }
 
-    //仅支持1bpp(单色位图)和2bpp(4灰度位图)
-    if(bpp > BMP_2BITSPERPIXEL)
+//    if(bmp.width() > 240 || bmp.height() > 320)
+//        QMessageBox::warning(nullptr, "Warnning", "be careful with bmp width > 240 or height > 320, which is not fit 240x320 resolution", QMessageBox::Yes);
+
+    //数组仅支持1bpp(单色位图)和2bpp(4灰度位图)
+    if(destbpp > BMP_2BITSPERPIXEL)
     {
         qDebug() << QString("dest bpp > 2 not supported");
         return QString();
     }
 
-    QByteArray pixels;
+    QList<QByteArray> rawPixels;
     BMPCALCPARAM bcp = bmp.calcparam();
 
-    if(BMP_1BITPERPIXEL == bmp.bitsperpixel())
+    //1bpp和24bpp直接读取像素信息；32bpp只读取rgb信息，略过alpha信息
+    if(BMP_1BITPERPIXEL == bmp.bitsperpixel() || BMP_24BITSPERPIXEL == bmp.bitsperpixel())
     {
+        for(int i = 0; i < bmp.height(); ++i)
+        {
+            QByteArray scanLinePixels;
+            for(int j = 0, s = bcp.totalBytesPerLine - bcp.paddingBytesPerLine; j < s; ++j)
+                scanLinePixels.append(static_cast<unsigned char>(bmp.bmpdata().at(i * bcp.totalBytesPerLine + j)));
 
-    }
-    else if(BMP_24BITSPERPIXEL == bmp.bitsperpixel())
-    {
+            rawPixels.append(scanLinePixels);
+        }
+
         if(BMPSCANDIRECTION_DOWNTOUP == bmp.bmpscandirection())
-        {
-            for(int i = 0; i < this->height(); ++i)
-            {
-                for(int j = 0; j < bcp.totalBytesPerLine - bcp.paddingBytesPerLine; ++j)
-                {
-//                    pixels.append(bmp.bmpdata().at(i * bcp.totalBytesPerLine + j));
-                }
-            }
-        }
-        else
-        {
-            for(int i = 0; i < this->height(); ++i)
-            {
-                for(int j = 0; j < bcp.totalBytesPerLine - bcp.paddingBytesPerLine; ++j)
-                {
-                    pixels.append(bmp.bmpdata().at(i * bcp.totalBytesPerLine + j));
-                }
-            }
-        }
+            std::reverse(rawPixels.begin(), rawPixels.end());
     }
     else if(BMP_32BITSPERPIXEL == bmp.bitsperpixel())
     {
+        for(int i = 0; i < bmp.height(); ++i)
+        {
+            QByteArray scanLinePixels;
+            for(int j = 0, s = bcp.totalBytesPerLine - bcp.paddingBytesPerLine; j + 3 < s; j += 4)
+            {
+                for(int k = 0; k < 3; ++k)
+                    scanLinePixels.append(static_cast<unsigned char>(bmp.bmpdata().at(i * bcp.totalBytesPerLine + j + k)));
+            }
 
+            rawPixels.append(scanLinePixels);
+        }
+
+        if(BMPSCANDIRECTION_DOWNTOUP == bmp.bmpscandirection())
+            std::reverse(rawPixels.begin(), rawPixels.end());
     }
     else
     {
@@ -204,7 +231,62 @@ QString BitmapProcess::toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL bpp)
         return QString();
     }
 
-    if(BMP_1BITPERPIXEL == bpp)
+    //对于1bpp需要将1个字节拆分为8个字节；对于24bpp和32bpp现在只含有rgb信息，需要将3个字节rgb转换为对应的一个字节的2等级或4等级灰度值
+    if(BMP_1BITPERPIXEL == bmp.bitsperpixel())
+    {
+        for(int i = 0; i < rawPixels.size(); ++i)
+        {
+            QByteArray linePixels;
+            for(int j = 0, s = rawPixels.at(i).size(); j < s; ++j)
+            {
+                unsigned char gray = static_cast<unsigned char>(rawPixels.at(i).at(j));
+                for(int k = 7; k >= 0; --k)
+                    linePixels.append((gray >> k) & 0x01);
+            }
+
+            rawPixels.replace(i, linePixels);
+        }
+    }
+    else
+    {
+        for(int i = 0; i < rawPixels.size(); ++i)
+        {
+            QByteArray linePixels;
+            for(int j = 0, s = rawPixels.at(i).size(); j + 2 < s; j += 3)
+            {
+                unsigned short gray = (static_cast<unsigned char>(rawPixels.at(i).at(j))
+                                       + static_cast<unsigned char>(rawPixels.at(i).at(j + 1))
+                                       + static_cast<unsigned char>(rawPixels.at(i).at(j + 2))) / 3;
+
+                gray &= 0xff;
+
+                if(BMP_1BITPERPIXEL == destbpp)
+                {
+                    gray >>= 7; // gray /= 128;
+                }
+                else
+                {
+                    gray >>= 6; // gray /= 64;
+                }
+
+                linePixels.append(gray);
+            }
+
+            rawPixels.replace(i, linePixels);
+        }
+    }
+
+    //在字节扫描方向上，若最后一个字节不满8bit，需要补0
+    if(bmp.height() % 8 != 0)
+    {
+        QByteArray paddingLinePixels(bcp.totalBytesPerLine - bcp.paddingBytesPerLine, 0);
+
+        for(int i = 0, s = 8 - bmp.height() % 8; i < s; ++i)
+            rawPixels.append(paddingLinePixels);
+    }
+
+    //将像素点按指定规则重组为C数组中的数据
+    if(BMP_1BITPERPIXEL == destbpp)
     {
 
     }
@@ -213,19 +295,18 @@ QString BitmapProcess::toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL bpp)
 
     }
 
-    QString saveFilePathName = QFileDialog::getSaveFileName(nullptr, "Save C Type Array",
-                                                            "",
-                                                            "Images (*.c)");
+    QString saveFilePathName;
+//    QString saveFilePathName = QFileDialog::getSaveFileName(nullptr, "Save C Type Array",
+//                                                            "",
+//                                                            "Images (*.c)");
 
-    qDebug() << saveFilePathName;
+//    qDebug() << "saveFilePathName: " << saveFilePathName;
 
-    if(saveFilePathName.isEmpty())
-    {
-        QMessageBox::warning(nullptr, "Warnning", "save failed, please selecte a file", QMessageBox::Yes);
-        return QString();
-    }
-
-
+//    if(saveFilePathName.isEmpty())
+//    {
+//        QMessageBox::warning(nullptr, "Warnning", "save failed, please selecte a file", QMessageBox::Yes);
+//        return QString();
+//    }
 
     return saveFilePathName;
 }
@@ -239,7 +320,7 @@ void BitmapProcess::compressCArrayOfBitmap(QString filepathname)
     QString filePathName = filepathname;
     QString filePath = QFileInfo(filePathName).absolutePath();
 
-    qDebug()<<filePathName<<endl<<filePath<<endl;
+    qDebug() << filePathName << endl << filePath << endl;
 
     if(filePathName.isEmpty())
     {
@@ -309,7 +390,7 @@ void BitmapProcess::compressCArrayOfBitmap(QString filepathname)
 //        ptOutputWnd->appendPlainText(elem);
 
     QStringList targetStringList;
-    for(int index = 0; index < tmpStringList.size(); ++index)
+    for(int index = 0, s = tmpStringList.size(); index < s; ++index)
     {
         if(0 == tmpStringList.at(index).compare("0X00", Qt::CaseInsensitive) || 0 == tmpStringList.at(index).compare("0XFF", Qt::CaseInsensitive))
         {
@@ -364,7 +445,7 @@ void BitmapProcess::compressCArrayOfBitmap(QString filepathname)
     //移除设置的"END_FLAG"
     targetStringList.removeLast();
 
-    for(int index = 0; index < targetStringList.size(); ++index)
+    for(int index = 0, s = targetStringList.size(); index < s; ++index)
     {
         int numOfCharInElem = targetStringList.at(index).size();
         for(int cnt = 0; numOfCharInElem < 4 && cnt < 4 - numOfCharInElem; ++cnt)
@@ -381,7 +462,7 @@ void BitmapProcess::compressCArrayOfBitmap(QString filepathname)
     targetStringList.last().remove(",");
 
     QString tmpStr2;
-    for(int index = 0; index < targetStringList.size(); ++index)
+    for(int index = 0, s = targetStringList.size(); index < s; ++index)
     {
         if(index % 16 == 0)
         {

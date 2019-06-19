@@ -393,7 +393,7 @@ qint32 BitmapHandler::width(void)
     return LONGtoQint32(bitmapInfoHeader.biWidth);
 }
 
-qint32 BitmapHandler::height(void)
+quint32 BitmapHandler::height(void)
 {
     return abs(LONGtoQint32(bitmapInfoHeader.biHeight));
 }
@@ -405,7 +405,7 @@ BMPSCANDIRECTION BitmapHandler::bmpscandirection(void)
     if(LONGtoQint32(bitmapInfoHeader.biHeight) < 0)
         bsd = BMPSCANDIRECTION_UPTODOWN;
 
-    qDebug() << bsd;
+    qDebug() << "bmpscandirection: " << (bsd ? "BMPSCANDIRECTION_UPTODOWN" : "BMPSCANDIRECTION_DOWNTOUP");
 
     return bsd;
 }
