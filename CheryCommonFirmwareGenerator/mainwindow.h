@@ -13,7 +13,6 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QTimer>
-#include "bitmapprocess.h"
 
 namespace Ui {
 class MainWindow;

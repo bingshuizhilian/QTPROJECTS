@@ -213,8 +213,8 @@ QString BitmapProcess::toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL destbpp)
         return QString();
     }
 
-//    if(bmp.width() > 240 || bmp.height() > 320)
-//        QMessageBox::warning(nullptr, "Warnning", "be careful with bmp width > 240 or height > 320, which is not fit 240x320 resolution", QMessageBox::Yes);
+    if(bmp.width() > 240 || bmp.height() > 320)
+        QMessageBox::warning(nullptr, "Warnning", "be careful with bmp width > 240 or height > 320, which is not fit 240x320 resolution", QMessageBox::Yes);
 
     //数组仅支持1bpp(单色位图)和2bpp(4灰度位图)
     if(destbpp > BMP_2BITSPERPIXEL)
@@ -362,7 +362,7 @@ QString BitmapProcess::toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL destbpp)
     }
     else
     {
-
+        return QString();
     }
 
     qDebug() << unsortedCTypeArrayText;
@@ -407,17 +407,22 @@ QString BitmapProcess::toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL destbpp)
 
     QTextStream out(&saveFile);
     QString toClipboard;
+    out << "//the last array has already been copied to the os clipboard\n\n";
     foreach(auto elem, cTypeArrayText)
     {
         out << elem << endl;
-        toClipboard.append(elem);
+        toClipboard.append(elem).append("\n");
     }
 
     saveFile.close();
 
-    QClipboard *clipboard = QApplication::clipboard();
-    clipboard->clear();
-    clipboard->setText(toClipboard);
+
+    if(!ui->cb_isCompress->isChecked())
+    {
+        QClipboard *clipboard = QApplication::clipboard();
+        clipboard->clear();
+        clipboard->setText(toClipboard);
+    }
 
     return saveFilePathName;
 }
@@ -455,10 +460,13 @@ void BitmapProcess::compressCArrayOfBitmap(QString filepathname)
         if(!readStr.isEmpty())
             originalCodeStringList.push_back(readStr);
 
-//        ptOutputWnd->appendPlainText(readStr); //debug
+        qDebug() << readStr;
     }
 
     targetFile.close();
+
+    if(originalCodeStringList.first().startsWith("//"))
+        originalCodeStringList.removeFirst();
 
     QString tmpStr = originalCodeStringList.first();
 
@@ -476,8 +484,14 @@ void BitmapProcess::compressCArrayOfBitmap(QString filepathname)
         widthAndHeight += " [!!! Be careful, realWidth: " + QString::number(realWidth) + ", realHeight: " + QString::number(realHeight) + " !!!]";
     }
 
+    QString bmpFileName = originalCodeStringList.first();
+    bmpFileName = bmpFileName.mid(bmpFileName.indexOf("bmp") + 3, bmpFileName.indexOf('[') - bmpFileName.indexOf("bmp") - 3);
+
+//    qDebug() << bmpFileName;
+//    qDebug() << QString("static const unsigned char cbmp%1[] =\n{").arg(bmpFileName);
+
     QStringList targetFormattedStringList;
-    targetFormattedStringList << "static const unsigned char bmp[] =\n{" << widthAndHeight;
+    targetFormattedStringList << QString("static const unsigned char cbmp%1[] =\n{").arg(bmpFileName) << widthAndHeight;
     originalCodeStringList.removeFirst();
     originalCodeStringList.last().remove("};");
 
@@ -489,9 +503,8 @@ void BitmapProcess::compressCArrayOfBitmap(QString filepathname)
     //在结尾添加一个结束标记，否则当数据全为0x00或0xff且数据量较大时，下面的正则表达式查找第一个不为0x00或0xff的数据非常耗时
     tmpStringList.append("END_FLAG");
 
-    //debug
 //    for(auto elem: tmpStringList)
-//        ptOutputWnd->appendPlainText(elem);
+//        qDebug() << elem;
 
     QStringList targetStringList;
     for(int index = 0, s = tmpStringList.size(); index < s; ++index)
@@ -561,7 +574,7 @@ void BitmapProcess::compressCArrayOfBitmap(QString filepathname)
             targetStringList[index] += ", ";
     }
 
-    //移除最后一个", "或","，(肯定为二者之一，两个都remove即可保证)
+    //移除最后一个", "或","，(必然为二者之一，两个都remove即可保证)
     targetStringList.last().remove(", ");
     targetStringList.last().remove(",");
 
@@ -594,13 +607,26 @@ void BitmapProcess::compressCArrayOfBitmap(QString filepathname)
     if(!targetFormattedStringList.isEmpty())
         targetFormattedStringList[1] = targetFormattedStringList[1].left(14) + targetFormattedStringList[1].right(targetFormattedStringList[1].size() - 14).toLower();
 
-//    for(auto& elem: targetFormattedStringList)
-//        ptOutputWnd->appendPlainText(elem);
+    QFile saveFile(filepathname);
+    if(!saveFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append))
+    {
+        QMessageBox::warning(this, "Warnning", "Cannot open " + filepathname, QMessageBox::Yes);
+        return;
+    }
+
+    QTextStream out(&saveFile);
+    QString toClipboard;
+    out << endl;
+    foreach(auto elem, targetFormattedStringList)
+    {
+        out << elem << endl;
+        toClipboard.append(elem).append("\n");
+    }
+
+    saveFile.close();
 
     QClipboard *clipboard = QApplication::clipboard();
     clipboard->clear();
-//    clipboard->setText(ptOutputWnd->document()->toPlainText());
-
-//    ptOutputWnd->appendPlainText("\n\n***上述结果已经拷贝至系统剪贴板中***");
+    clipboard->setText(toClipboard);
 }
 

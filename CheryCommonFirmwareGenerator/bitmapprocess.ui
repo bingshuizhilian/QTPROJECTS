@@ -86,7 +86,7 @@
       </rect>
      </property>
      <property name="title">
-      <string>杂项</string>
+      <string>其它</string>
      </property>
      <widget class="QCheckBox" name="cb_flipColor">
       <property name="geometry">
@@ -101,7 +101,7 @@
        <string>颜色反转</string>
       </property>
       <property name="checked">
-       <bool>true</bool>
+       <bool>false</bool>
       </property>
      </widget>
      <widget class="QCheckBox" name="cb_isCompress">
@@ -117,7 +117,7 @@
        <string>是否压缩生成的C数组</string>
       </property>
       <property name="checked">
-       <bool>true</bool>
+       <bool>false</bool>
       </property>
      </widget>
      <widget class="QCheckBox" name="cb_isUsingPictureName">
@@ -227,7 +227,7 @@
        <string>单色图(1bit/pixel)</string>
       </property>
       <property name="checked">
-       <bool>false</bool>
+       <bool>true</bool>
       </property>
      </widget>
      <widget class="QRadioButton" name="rbtn_grayLv2bits">
@@ -243,7 +243,7 @@
        <string>4灰度图(2bits/pixel)</string>
       </property>
       <property name="checked">
-       <bool>true</bool>
+       <bool>false</bool>
       </property>
      </widget>
     </widget>

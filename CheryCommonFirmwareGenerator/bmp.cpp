@@ -1,5 +1,4 @@
 #include "bmp.h"
-#include <cmath>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QDebug>
