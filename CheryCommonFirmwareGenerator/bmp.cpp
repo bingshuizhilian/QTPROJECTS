@@ -320,7 +320,7 @@ bool BitmapHandler::flipcolor(void)
     {
         BMPCALCPARAM bcp = this->calcparam();
 
-        for(int i = 0; i < this->height(); ++i)
+        for(unsigned int i = 0; i < this->height(); ++i)
         {
             for(int j = 0; j < bcp.totalBytesPerLine - bcp.paddingBytesPerLine; ++j)
             {
@@ -332,7 +332,7 @@ bool BitmapHandler::flipcolor(void)
     {
         BMPCALCPARAM bcp = this->calcparam();
 
-        for(int i = 0; i < this->height(); ++i)
+        for(unsigned int i = 0; i < this->height(); ++i)
         {
             for(int j = 0; j + 3 < bcp.totalBytesPerLine - bcp.paddingBytesPerLine; j += 4)
             {

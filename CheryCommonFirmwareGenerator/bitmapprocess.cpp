@@ -160,7 +160,7 @@ void BitmapProcess::on_btn_nextPic_clicked()
 /*
  * 1.前言
  * (0)RGB颜色表示
- *  (0,0,0)代表黑色，(255,255,255)代表白色
+ *  (0,0,0)代表黑色，(255,255,255)代表白色；1bpp时，0代表白色，1代表黑色。
  * (1)“单色”的图像数据：
  * 单色图像数据一个象素使用一个位(1 Bit)表示，0表示白色，1表示黑色。由于数据的最小存储单位是字节，每个字节有8个位，
  * 当图像的宽或高不是8的倍数时，图像数据的宽或高将补0扩充到8的倍数以吻合字节宽度(具体是宽度还是高度取决于扫描模式)。
@@ -168,7 +168,34 @@ void BitmapProcess::on_btn_nextPic_clicked()
  * 4灰图像数据一个象素使用两个位(2 Bit)表示，00表示白色，01表示浅灰色，10表示深灰色，11表示黑色。由于数据的最小存储单位是字节，
  * 每个字节有8个位，当图像的宽或高不是4的倍数时，图像数据的宽或高将补0扩充到4的倍数以吻合字节宽度(具体是宽度还是高度取决于扫描模式)。
  *
- * 2.函数说明
+ * 2.图像头数据结构
+ * 仿照Image2Lcd保存的图像数据组织方式：图像头数据-调色板数据-图像数据。
+ * “单色/4灰/16灰/256色”的图像数据头如下：
+ *
+ * typedef struct _HEADGRAY
+ * {
+ *   unsigned char scan;
+ *   unsigned char gray;
+ *   unsigned short w;
+ *   unsigned short h;
+ * } HEADGRAY;
+ *
+ * scan: 扫描模式
+ * Bit7: 0:自左至右扫描，1:自右至左扫描。
+ * Bit6: 0:自顶至底扫描，1:自底至顶扫描。
+ * Bit5: 0:字节内象素数据从高位到低位排列，1:字节内象素数据从低位到高位排列。
+ * Bit4: 0:WORD类型高低位字节顺序与PC相同，1:WORD类型高低位字节顺序与PC相反。
+ * Bit3~2: 保留。
+ * Bit1~0: [00]水平扫描，[01]垂直扫描，[10]数据水平,字节垂直，[11]数据垂直,字节水平。
+ *
+ * gray: 灰度值
+ *    灰度值，1:单色，2:四灰，4:十六灰，8:256色，12:4096色，16:16位彩色，24:24位彩色，32:32位彩色。
+ *
+ * w: 图像的宽度。
+ *
+ * h: 图像的高度。
+ *
+ * 3.函数说明
  * (1)参数destbpp为1时，C数组里一个字节代表8个像素；为2时一个字节代表4个像素
  * (2)后续若实现“扫描模式”、“字节内像素数据反序”、“高位在前(MSB First)(此参数在文件中存储WORD即16位数据时生效，主要是图片尺寸数据)”，可在此处理
  */
@@ -177,6 +204,12 @@ QString BitmapProcess::toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL destbpp)
     if(!bmp.isvalid())
     {
         QMessageBox::warning(nullptr, "Warnning", "bmp file error", QMessageBox::Yes);
+        return QString();
+    }
+
+    if(bmp.width() > 0xffff || bmp.height() > 0xffff)
+    {
+        QMessageBox::warning(nullptr, "Warnning", "c type array can only deal with bmp in scale [0xffff * 0xffff]", QMessageBox::Yes);
         return QString();
     }
 
@@ -234,10 +267,10 @@ QString BitmapProcess::toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL destbpp)
     //对于1bpp需要将1个字节拆分为8个字节；对于24bpp和32bpp现在只含有rgb信息，需要将3个字节rgb转换为对应的一个字节的2等级或4等级灰度值
     if(BMP_1BITPERPIXEL == bmp.bitsperpixel())
     {
-        for(int i = 0; i < rawPixels.size(); ++i)
+        for(int i = 0, s1 = rawPixels.size(); i < s1; ++i)
         {
             QByteArray linePixels;
-            for(int j = 0, s = rawPixels.at(i).size(); j < s; ++j)
+            for(int j = 0, s2 = rawPixels.at(i).size(); j < s2; ++j)
             {
                 unsigned char gray = static_cast<unsigned char>(rawPixels.at(i).at(j));
                 for(int k = 7; k >= 0; --k)
@@ -260,13 +293,16 @@ QString BitmapProcess::toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL destbpp)
 
                 gray &= 0xff;
 
+                //原bmp非1bpp时，在接下来的数组中转意之后0/00代表白，1/11代表黑
                 if(BMP_1BITPERPIXEL == destbpp)
                 {
                     gray >>= 7; // gray /= 128;
+                    gray = qBound(0, 1 - gray, 1);
                 }
                 else
                 {
                     gray >>= 6; // gray /= 64;
+                    gray = qBound(0, 3 - gray, 3);
                 }
 
                 linePixels.append(gray);
@@ -280,34 +316,108 @@ QString BitmapProcess::toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL destbpp)
     int factor = (BMP_1BITPERPIXEL == destbpp ? 8 : 4);
     if(bmp.height() % factor != 0)
     {
-        QByteArray paddingLinePixels(bcp.totalBytesPerLine - bcp.paddingBytesPerLine, 0);
-
+        QByteArray paddingLinePixels(bmp.width(), 0);
         for(int i = 0, s = factor - bmp.height() % factor; i < s; ++i)
             rawPixels.append(paddingLinePixels);
     }
 
+    QStringList cTypeArrayText;
+    QStringList unsortedCTypeArrayText;
+    QString firstLineData = "static const unsigned char bmp[] = { /* 0x32,";
+
+    if(ui->cb_isUsingPictureName->isChecked())
+        firstLineData.insert(firstLineData.indexOf('['), QFileInfo(selectedFilePathName).baseName().remove(QRegExp("((?![0-9]|[a-z]|[A-Z]|_).)*")));
+
+    firstLineData.insert(firstLineData.indexOf(']'), QString::number(rawPixels.size() * rawPixels.at(0).size() / factor));
+    firstLineData.append(QString("0x0%1,").arg(destbpp));
+
+    QByteArray ba;
+    ba.append((bmp.width() >> 8) & 0xff);
+    ba.append(bmp.width() & 0xff);
+    ba.append((bmp.height() >> 8) & 0xff);
+    ba.append(bmp.height() & 0xff);
+
+    foreach(auto elem, ba)
+        firstLineData.append((static_cast<unsigned char>(elem) <= 0x0f ? "0x0" : "0x") + QString::number(static_cast<unsigned char>(elem), 16) + ",");
+
+    firstLineData.append(" */");
+    cTypeArrayText << firstLineData;
+
+    qDebug() << firstLineData;
+
     //将像素点按指定规则重组为C数组中的数据
     if(BMP_1BITPERPIXEL == destbpp)
     {
+        for(int i = 0, s1 = rawPixels.size(); i + 7 < s1; i += 8)
+        {
+            for(int j = 0, s2 = rawPixels.at(i).size(); j < s2; ++j)
+            {
+                unsigned char gray = 0;
+                for(int k = 7; k >= 0; --k)
+                    gray |= ((static_cast<unsigned char>(rawPixels.at(i + k).at(j))) & 0x01) << k;
 
+                unsortedCTypeArrayText.append((gray <= 0x0f ? "0x0" : "0x") + QString::number(gray, 16) + ",");
+            }
+        }
     }
     else
     {
 
     }
 
-    QString saveFilePathName;
-//    QString saveFilePathName = QFileDialog::getSaveFileName(nullptr, "Save C Type Array",
-//                                                            "",
-//                                                            "Images (*.c)");
+    qDebug() << unsortedCTypeArrayText;
 
-//    qDebug() << "saveFilePathName: " << saveFilePathName;
+    int times = (0 == unsortedCTypeArrayText.size() % 16 ? unsortedCTypeArrayText.size() / 16 : unsortedCTypeArrayText.size() / 16 + 1);
+    for(int i = 0; i < times; ++i)
+    {
+        QString tmpStr;
+        QStringList subList = unsortedCTypeArrayText.mid(i * 16, 16);
+        foreach(auto elem, subList)
+            tmpStr.append(elem);
 
-//    if(saveFilePathName.isEmpty())
-//    {
-//        QMessageBox::warning(nullptr, "Warnning", "save failed, please selecte a file", QMessageBox::Yes);
-//        return QString();
-//    }
+        cTypeArrayText << tmpStr;
+    }
+
+    if(cTypeArrayText.last().size() == 5 * 16)
+        cTypeArrayText << "};";
+    else
+        cTypeArrayText.last().append("};");
+
+    foreach(auto elem, cTypeArrayText)
+        qDebug() << elem;
+
+    QString saveFilePathName = QFileDialog::getSaveFileName(nullptr, "Save C Type Array",
+                                                            "",
+                                                            "Images (*.c)");
+
+    qDebug() << "saveFilePathName: " << saveFilePathName;
+
+    if(saveFilePathName.isEmpty())
+    {
+        QMessageBox::warning(nullptr, "Warnning", "save failed, please selecte a file", QMessageBox::Yes);
+        return QString();
+    }
+
+    QFile saveFile(saveFilePathName);
+    if(!saveFile.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        QMessageBox::warning(this, "Warnning", "Cannot open " + saveFilePathName, QMessageBox::Yes);
+        return QString();
+    }
+
+    QTextStream out(&saveFile);
+    QString toClipboard;
+    foreach(auto elem, cTypeArrayText)
+    {
+        out << elem << endl;
+        toClipboard.append(elem);
+    }
+
+    saveFile.close();
+
+    QClipboard *clipboard = QApplication::clipboard();
+    clipboard->clear();
+    clipboard->setText(toClipboard);
 
     return saveFilePathName;
 }
@@ -352,13 +462,6 @@ void BitmapProcess::compressCArrayOfBitmap(QString filepathname)
 
     QString tmpStr = originalCodeStringList.first();
 
-    if(!tmpStr.startsWith("const unsigned char gImage_", Qt::CaseInsensitive) || !tmpStr.endsWith("*/", Qt::CaseInsensitive))
-    {
-        QMessageBox::warning(this, "Warnning", "make sure the C source file was generated by Image2Lcd", QMessageBox::Yes);
-        return;
-    }
-
-    //暂未考虑bmp宽或高大于256的情况，因为3.5" TFT实际使用到的图片尺寸在任意方向上不会且不能超过248
     QString widthAndHeight = tmpStr.mid(tmpStr.lastIndexOf(',') - 14, 4);
     widthAndHeight += ", ";
     widthAndHeight += tmpStr.mid(tmpStr.lastIndexOf(',') - 4, 4);

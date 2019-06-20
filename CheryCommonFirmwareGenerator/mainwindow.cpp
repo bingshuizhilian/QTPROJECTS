@@ -1850,7 +1850,7 @@ void MainWindow::compressCArrayOfBitmap()
         return;
     }
 
-    //暂未考虑bmp宽或高大于256的情况，因为3.5" TFT实际使用到的图片尺寸在任意方向上不会且不能超过248
+    //注意3.5" TFT实际使用到的图片尺寸在任意方向上不会且不能超过248(这个限制是由于下位机软件驱动能力决定的)
     QString widthAndHeight = tmpStr.mid(tmpStr.lastIndexOf(',') - 14, 4);
     widthAndHeight += ", ";
     widthAndHeight += tmpStr.mid(tmpStr.lastIndexOf(',') - 4, 4);
