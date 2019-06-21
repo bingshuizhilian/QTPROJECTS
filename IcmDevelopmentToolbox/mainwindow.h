@@ -93,15 +93,15 @@ private:
         WINDOW_WIDTH  = 334
     };
 
-    const QString SOFTWARE_VERSION = "v7.0";
+    const QString SOFTWARE_VERSION = "v1.0";
     const QString CONFIG_FILE_NAME = "config.json";
     QString versionFilePathName = "/version.txt";
-    const QString appNameFirst = "CheryCommonFirmwareGenerator_";
+    const QString appNameFirst = "IcmDevelopmentToolbox_";
     const QString appNameLast = "_boxed.exe";
     QString appFilePathName;
 
-    const QString VERSION_DOWNLOAD_URL = "https://raw.githubusercontent.com/bingshuizhilian/QTPROJECTS-FIRMWARE_GENERATOR/master/autoupdate/version.txt";
-    const QString APP_DOWNLOAD_URL = "https://raw.githubusercontent.com/bingshuizhilian/QTPROJECTS-FIRMWARE_GENERATOR/master/autoupdate/";
+    const QString VERSION_DOWNLOAD_URL = "https://raw.githubusercontent.com/bingshuizhilian/QTPROJECTS-ICM-DEVELOPMENT-TOOLBOX/master/autoupdate/version.txt";
+    const QString APP_DOWNLOAD_URL = "https://raw.githubusercontent.com/bingshuizhilian/QTPROJECTS-ICM-DEVELOPMENT-TOOLBOX/master/autoupdate/";
 
     const QStringList FUNCTION_STRING_LIST =
     {

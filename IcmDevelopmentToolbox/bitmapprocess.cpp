@@ -7,6 +7,7 @@
 #include <QMessageBox>
 #include <QClipboard>
 #include <QPixmap>
+#include <QProcess>
 #include <QDebug>
 
 BitmapProcess::BitmapProcess(QWidget *parent) :
@@ -17,6 +18,7 @@ BitmapProcess::BitmapProcess(QWidget *parent) :
     ui->setupUi(this);
 
     this->setFixedSize(this->size());
+
     ui->btn_generateCArray->setEnabled(false);
     ui->btn_prevPic->setEnabled(false);
     ui->btn_nextPic->setEnabled(false);
@@ -54,7 +56,7 @@ QStringList BitmapProcess::getDirFilesName(QString pathsDir)
 
 void BitmapProcess::on_btn_openBmp_clicked()
 {
-    selectedFilePathName = QFileDialog::getOpenFileName(this, tr("Open Picture"),
+    selectedFilePathName = QFileDialog::getOpenFileName(this, QString::fromLocal8Bit("打开图片"),
                                                         "",
                                                         tr("Images (*.bmp *.png *.jpg *.jpeg)"));
 
@@ -71,7 +73,7 @@ void BitmapProcess::on_btn_openBmp_clicked()
         ui->btn_prevPic->setEnabled(false);
         ui->btn_nextPic->setEnabled(false);
         ui->label_showPicSize->clear();
-        QMessageBox::warning(this, "Warnning", "load failed, please select a picture", QMessageBox::Yes);
+        QMessageBox::warning(this, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("加载失败，请选择一张图片"), QMessageBox::Yes);
         return;
     }
 
@@ -203,18 +205,18 @@ QString BitmapProcess::toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL destbpp)
 {
     if(!bmp.isvalid())
     {
-        QMessageBox::warning(nullptr, "Warnning", "bmp file error", QMessageBox::Yes);
+        QMessageBox::warning(nullptr, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("不是有效的bmp文件格式"), QMessageBox::Yes);
         return QString();
     }
 
     if(bmp.width() > 0xffff || bmp.height() > 0xffff)
     {
-        QMessageBox::warning(nullptr, "Warnning", "c type array can only deal with bmp in scale [0xffff * 0xffff]", QMessageBox::Yes);
+        QMessageBox::warning(nullptr, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("只能处理长度和宽度均不超过0xffff大小的bmp图片"), QMessageBox::Yes);
         return QString();
     }
 
     if(bmp.width() > 240 || bmp.height() > 320)
-        QMessageBox::warning(nullptr, "Warnning", "be careful with bmp width > 240 or height > 320, which is not fit 240x320 resolution", QMessageBox::Yes);
+        QMessageBox::information(nullptr, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("图片尺寸不在240x320范围内"), QMessageBox::Yes);
 
     //数组仅支持1bpp(单色位图)和2bpp(4灰度位图)
     if(destbpp > BMP_2BITSPERPIXEL)
@@ -260,7 +262,7 @@ QString BitmapProcess::toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL destbpp)
     }
     else
     {
-        QMessageBox::warning(nullptr, "Warnning", "only support 1 or 24 or 32 bit/pixel format bitmap", QMessageBox::Yes);
+        QMessageBox::warning(nullptr, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("生成C数组仅支持处理1、24、32位/像素的bmp位图"), QMessageBox::Yes);
         return QString();
     }
 
@@ -274,7 +276,12 @@ QString BitmapProcess::toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL destbpp)
             {
                 unsigned char gray = static_cast<unsigned char>(rawPixels.at(i).at(j));
                 for(int k = 7; k >= 0; --k)
-                    linePixels.append((gray >> k) & 0x01);
+                {
+                    if(BMP_1BITPERPIXEL == destbpp)
+                        linePixels.append((gray >> k) & 0x01);
+                    else
+                        linePixels.append(((gray >> k) & 0x01) ? 3 : 0);
+                }
             }
 
             rawPixels.replace(i, linePixels);
@@ -323,13 +330,13 @@ QString BitmapProcess::toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL destbpp)
 
     QStringList cTypeArrayText;
     QStringList unsortedCTypeArrayText;
-    QString firstLineData = "static const unsigned char bmp[] = { /* 0x32,";
+    QString firstLineData = "static const unsigned char bmp[] = { /* 0X32,";
 
     if(ui->cb_isUsingPictureName->isChecked())
         firstLineData.insert(firstLineData.indexOf('['), QFileInfo(selectedFilePathName).baseName().remove(QRegExp("((?![0-9]|[a-z]|[A-Z]|_).)*")));
 
     firstLineData.insert(firstLineData.indexOf(']'), QString::number(rawPixels.size() * rawPixels.at(0).size() / factor));
-    firstLineData.append(QString("0x0%1,").arg(destbpp));
+    firstLineData.append(QString("0X0%1,").arg(destbpp));
 
     QByteArray ba;
     ba.append((bmp.width() >> 8) & 0xff);
@@ -338,7 +345,7 @@ QString BitmapProcess::toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL destbpp)
     ba.append(bmp.height() & 0xff);
 
     foreach(auto elem, ba)
-        firstLineData.append((static_cast<unsigned char>(elem) <= 0x0f ? "0x0" : "0x") + QString::number(static_cast<unsigned char>(elem), 16) + ",");
+        firstLineData.append((static_cast<unsigned char>(elem) <= 0x0f ? "0X0" : "0X") + QString::number(static_cast<unsigned char>(elem), 16).toUpper() + ",");
 
     firstLineData.append(" */");
     cTypeArrayText << firstLineData;
@@ -346,23 +353,16 @@ QString BitmapProcess::toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL destbpp)
     qDebug() << firstLineData;
 
     //将像素点按指定规则重组为C数组中的数据
-    if(BMP_1BITPERPIXEL == destbpp)
+    for(int i = 0, s1 = rawPixels.size(); i + factor - 1 < s1; i += factor)
     {
-        for(int i = 0, s1 = rawPixels.size(); i + 7 < s1; i += 8)
+        for(int j = 0, s2 = rawPixels.at(i).size(); j < s2; ++j)
         {
-            for(int j = 0, s2 = rawPixels.at(i).size(); j < s2; ++j)
-            {
-                unsigned char gray = 0;
-                for(int k = 7; k >= 0; --k)
-                    gray |= ((static_cast<unsigned char>(rawPixels.at(i + k).at(j))) & 0x01) << k;
+            unsigned char gray = 0;
+            for(int k = factor - 1; k >= 0; --k)
+                gray |= ((static_cast<unsigned char>(rawPixels.at(i + k).at(j))) & (BMP_1BITPERPIXEL == destbpp ? 0x01 : 0x03)) << (k * (BMP_1BITPERPIXEL == destbpp ? 1 : 2));
 
-                unsortedCTypeArrayText.append((gray <= 0x0f ? "0x0" : "0x") + QString::number(gray, 16) + ",");
-            }
+            unsortedCTypeArrayText.append((gray <= 0x0f ? "0X0" : "0X") + QString::number(gray, 16).toUpper() + ",");
         }
-    }
-    else
-    {
-        return QString();
     }
 
     qDebug() << unsortedCTypeArrayText;
@@ -394,14 +394,14 @@ QString BitmapProcess::toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL destbpp)
 
     if(saveFilePathName.isEmpty())
     {
-        QMessageBox::warning(nullptr, "Warnning", "save failed, please selecte a file", QMessageBox::Yes);
+        QMessageBox::warning(nullptr, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("保存失败，请选择一个文件"), QMessageBox::Yes);
         return QString();
     }
 
     QFile saveFile(saveFilePathName);
     if(!saveFile.open(QIODevice::WriteOnly | QIODevice::Text))
     {
-        QMessageBox::warning(this, "Warnning", "Cannot open " + saveFilePathName, QMessageBox::Yes);
+        QMessageBox::warning(this, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("不能打开文件") + saveFilePathName, QMessageBox::Yes);
         return QString();
     }
 
@@ -416,12 +416,20 @@ QString BitmapProcess::toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL destbpp)
 
     saveFile.close();
 
-
     if(!ui->cb_isCompress->isChecked())
     {
         QClipboard *clipboard = QApplication::clipboard();
         clipboard->clear();
         clipboard->setText(toClipboard);
+
+        //WINDOWS环境下，选中该文件
+#ifdef WIN32
+        QProcess process;
+        QString openFileName = saveFilePathName;
+
+        openFileName.replace("/", "\\");    //***这句windows下必要***
+        process.startDetached("explorer /select," + openFileName);
+#endif
     }
 
     return saveFilePathName;
@@ -439,15 +447,12 @@ void BitmapProcess::compressCArrayOfBitmap(QString filepathname)
     qDebug() << filePathName << endl << filePath << endl;
 
     if(filePathName.isEmpty())
-    {
-        QMessageBox::warning(this, "Warnning", "compress failed, please select a file", QMessageBox::Yes);
         return;
-    }
 
     QFile targetFile(filePathName);
     if(!targetFile.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        QMessageBox::warning(this, "Warnning", "Cannot open " + filePathName, QMessageBox::Yes);
+        QMessageBox::warning(this, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("不能打开文件") + filePathName, QMessageBox::Yes);
         return;
     }
 
@@ -486,9 +491,6 @@ void BitmapProcess::compressCArrayOfBitmap(QString filepathname)
 
     QString bmpFileName = originalCodeStringList.first();
     bmpFileName = bmpFileName.mid(bmpFileName.indexOf("bmp") + 3, bmpFileName.indexOf('[') - bmpFileName.indexOf("bmp") - 3);
-
-//    qDebug() << bmpFileName;
-//    qDebug() << QString("static const unsigned char cbmp%1[] =\n{").arg(bmpFileName);
 
     QStringList targetFormattedStringList;
     targetFormattedStringList << QString("static const unsigned char cbmp%1[] =\n{").arg(bmpFileName) << widthAndHeight;
@@ -610,7 +612,7 @@ void BitmapProcess::compressCArrayOfBitmap(QString filepathname)
     QFile saveFile(filepathname);
     if(!saveFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append))
     {
-        QMessageBox::warning(this, "Warnning", "Cannot open " + filepathname, QMessageBox::Yes);
+        QMessageBox::warning(this, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("不能打开文件") + filepathname, QMessageBox::Yes);
         return;
     }
 
@@ -623,10 +625,22 @@ void BitmapProcess::compressCArrayOfBitmap(QString filepathname)
         toClipboard.append(elem).append("\n");
     }
 
+    foreach(auto elem, targetFormattedStringList)
+        qDebug() << elem;
+
     saveFile.close();
 
     QClipboard *clipboard = QApplication::clipboard();
     clipboard->clear();
     clipboard->setText(toClipboard);
+
+    //WINDOWS环境下，选中该文件
+#ifdef WIN32
+    QProcess process;
+    QString openFileName = filepathname;
+
+    openFileName.replace("/", "\\");    //***这句windows下必要***
+    process.startDetached("explorer /select," + openFileName);
+#endif
 }
 

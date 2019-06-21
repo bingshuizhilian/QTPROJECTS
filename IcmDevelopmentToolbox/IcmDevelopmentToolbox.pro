@@ -9,7 +9,7 @@ QT       += network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = CheryCommonFirmwareGenerator
+TARGET = IcmDevelopmentToolbox
 TEMPLATE = app
 RC_ICONS = ../resources/appicon.ico
 
@@ -28,7 +28,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += main.cpp \
         mainwindow.cpp \
     bitmapprocess.cpp \
-    bmp.cpp
+    bmp.cpp \
+    applauncher.cpp
 
 HEADERS  += mainwindow.h \
     defaultFlashDriverCode.h \
@@ -39,7 +40,8 @@ HEADERS  += mainwindow.h \
     defaultS51evflBootCode.h \
     defaultA13tevflBootCode.h \
     bitmapprocess.h \
-    bmp.h
+    bmp.h \
+    applauncher.h
 
 FORMS    += mainwindow.ui \
     bitmapprocess.ui

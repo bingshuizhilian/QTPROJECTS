@@ -1,13 +1,12 @@
-#include "mainwindow.h"
-#include "bitmapprocess.h"
+#include "applauncher.h"
 #include <QApplication>
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-//    MainWindow w;
-    BitmapProcess w;
-    w.show();
+
+    AppLancher l;
+    l.show();
 
     return a.exec();
 }

@@ -33,7 +33,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-ui->menuBar->show();
+
     //初始化控件
     componentsInitialization();
     //设置布局

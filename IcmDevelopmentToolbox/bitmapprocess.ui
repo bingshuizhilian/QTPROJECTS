@@ -158,6 +158,9 @@
         <height>16</height>
        </rect>
       </property>
+      <property name="whatsThis">
+       <string/>
+      </property>
       <property name="text">
        <string>1.数据水平、字节垂直扫描</string>
       </property>
