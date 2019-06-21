@@ -1,4 +1,4 @@
-﻿# QTPROJECTS-FIRMWARE_GENERATOR
+# QTPROJECTS-FIRMWARE_GENERATOR
 Chery common firmware generate tool
 
 bootloader合成页截图\
