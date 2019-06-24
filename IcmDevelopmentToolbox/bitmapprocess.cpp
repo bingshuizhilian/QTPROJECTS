@@ -85,10 +85,6 @@ void BitmapProcess::on_btn_openBmp_clicked()
     ui->label_showPicSize->setText(QString("%1x%2").arg(image->width()).arg(image->height()));
     ui->btn_generateCArray->setEnabled(true);
 
-    qDebug() << image->bytesPerLine();
-
-    qDebug() << image->byteCount() << image->bits();
-
     int index = allImageNamesList.indexOf(QFileInfo(selectedFilePathName).fileName());
     ui->btn_prevPic->setEnabled(0 != index ? true : false);
     ui->btn_nextPic->setEnabled(allImageNamesList.size() - 1 != index ? true : false);
@@ -103,12 +99,32 @@ void BitmapProcess::on_btn_generateCArray_clicked()
     if(ui->cb_flipColor->isChecked())
         bmp.flipcolor();
 
-//    bmp.save();
+    /******************test start**********************/
+//    qDebug() << image->loadFromData();
+//    ui->lable_bmpView->setPixmap(QPixmap::fromImage(*image));
+
+
+//    return;
+    /******************test end**********************/
+
 
     QString saveFilePathName = toCTypeArray(bmp, ui->rbtn_grayLv1bit->isChecked() ? BMP_1BITPERPIXEL : BMP_2BITSPERPIXEL);
 
     if(ui->cb_isCompress->isChecked())
         compressCArrayOfBitmap(saveFilePathName);
+
+    //WINDOWS环境下，选中该文件
+#ifdef WIN32
+    if(ui->cb_isOpenCArrayFile->isChecked())
+    {
+        QProcess process;
+        QString openFileName = saveFilePathName;
+
+        openFileName.replace("/", "\\");    //***这句windows下必要***
+        //    process.startDetached("explorer /select," + openFileName); //打开文件所在文件夹并选中文件
+        process.execute("explorer " + openFileName); //打开文件
+    }
+#endif
 }
 
 void BitmapProcess::on_btn_prevPic_clicked()
@@ -421,15 +437,6 @@ QString BitmapProcess::toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL destbpp)
         QClipboard *clipboard = QApplication::clipboard();
         clipboard->clear();
         clipboard->setText(toClipboard);
-
-        //WINDOWS环境下，选中该文件
-#ifdef WIN32
-        QProcess process;
-        QString openFileName = saveFilePathName;
-
-        openFileName.replace("/", "\\");    //***这句windows下必要***
-        process.startDetached("explorer /select," + openFileName);
-#endif
     }
 
     return saveFilePathName;
@@ -633,14 +640,5 @@ void BitmapProcess::compressCArrayOfBitmap(QString filepathname)
     QClipboard *clipboard = QApplication::clipboard();
     clipboard->clear();
     clipboard->setText(toClipboard);
-
-    //WINDOWS环境下，选中该文件
-#ifdef WIN32
-    QProcess process;
-    QString openFileName = filepathname;
-
-    openFileName.replace("/", "\\");    //***这句windows下必要***
-    process.startDetached("explorer /select," + openFileName);
-#endif
 }
 

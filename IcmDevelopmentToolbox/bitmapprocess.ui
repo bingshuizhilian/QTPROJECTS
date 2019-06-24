@@ -97,6 +97,9 @@
         <height>16</height>
        </rect>
       </property>
+      <property name="toolTip">
+       <string>将图片进行反色处理</string>
+      </property>
       <property name="text">
        <string>颜色反转</string>
       </property>
@@ -107,14 +110,18 @@
      <widget class="QCheckBox" name="cb_isCompress">
       <property name="geometry">
        <rect>
-        <x>10</x>
-        <y>40</y>
-        <width>141</width>
+        <x>80</x>
+        <y>20</y>
+        <width>71</width>
         <height>16</height>
        </rect>
       </property>
+      <property name="toolTip">
+       <string>将生成的C数组数据进行压缩处理，此处仅压缩数组中出现的所有的0X00和0XFF数据，在出现该数值时，先记录该数值，
+且该数值后面必然跟随一个该数值连续出现的次数的数值，若此数值大于255，则再次按上述方法处理</string>
+      </property>
       <property name="text">
-       <string>是否压缩生成的C数组</string>
+       <string>压缩数组</string>
       </property>
       <property name="checked">
        <bool>false</bool>
@@ -124,16 +131,35 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>60</y>
+        <y>40</y>
         <width>151</width>
         <height>16</height>
        </rect>
+      </property>
+      <property name="toolTip">
+       <string>选择生成的C数组的命名中是否需要包含原图片的名称信息，注意此处仅保留原图片名称中的数字、英文字母及下划线</string>
       </property>
       <property name="text">
        <string>数组名称引用图片名称</string>
       </property>
       <property name="checked">
        <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="cb_isOpenCArrayFile">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>60</y>
+        <width>141</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="toolTip">
+       <string>选择生成数组后是否直接打开包含该数组的文件，注意生成的数组的文本信息已经默认复制到了系统剪贴板中</string>
+      </property>
+      <property name="text">
+       <string>打开生成数组所在文件</string>
       </property>
      </widget>
     </widget>
@@ -146,8 +172,11 @@
        <height>101</height>
       </rect>
      </property>
+     <property name="toolTip">
+      <string/>
+     </property>
      <property name="title">
-      <string>默认</string>
+      <string>默认参数</string>
      </property>
      <widget class="QLabel" name="label_tip1">
       <property name="geometry">
@@ -157,6 +186,10 @@
         <width>151</width>
         <height>16</height>
        </rect>
+      </property>
+      <property name="toolTip">
+       <string>代表生成的C数组中的字节构成方法，选取垂直方向上的8个(1bpp)/4个(2bpp)像素值
+组成一个字节，然后在水平方向上移动扫描并生成下一个字节，以此类推</string>
       </property>
       <property name="whatsThis">
        <string/>
@@ -174,6 +207,9 @@
         <height>16</height>
        </rect>
       </property>
+      <property name="toolTip">
+       <string>由垂直方向上的8个像素生成字节时，像素由下到上方向上的值作为生成字节由高位到低位的对应值</string>
+      </property>
       <property name="text">
        <string>2.字节内像素数据反序</string>
       </property>
@@ -187,6 +223,9 @@
         <height>16</height>
        </rect>
       </property>
+      <property name="toolTip">
+       <string>16bit类型的值存储时，把高8位存储在前面，例如图像尺寸数据</string>
+      </property>
       <property name="text">
        <string>3.高位在前(MSB first)</string>
       </property>
@@ -199,6 +238,9 @@
         <width>151</width>
         <height>16</height>
        </rect>
+      </property>
+      <property name="toolTip">
+       <string>选取垂直方向上的8个(1bpp)/4个(2bpp)像素值组成一个字节时，可能像素不够的情况，这时需要补0</string>
       </property>
       <property name="text">
        <string>4.字节内不足8位时自动补0</string>
@@ -214,8 +256,11 @@
        <height>61</height>
       </rect>
      </property>
+     <property name="toolTip">
+      <string/>
+     </property>
      <property name="title">
-      <string>灰度</string>
+      <string>目标灰度</string>
      </property>
      <widget class="QRadioButton" name="rbtn_grayLv1bit">
       <property name="geometry">
@@ -225,6 +270,9 @@
         <width>141</width>
         <height>16</height>
        </rect>
+      </property>
+      <property name="toolTip">
+       <string>目标平台解析时，采用每个像素使用1bit的方式(1bpp)</string>
       </property>
       <property name="text">
        <string>单色图(1bit/pixel)</string>
@@ -241,6 +289,9 @@
         <width>141</width>
         <height>16</height>
        </rect>
+      </property>
+      <property name="toolTip">
+       <string>目标平台解析时，采用每个像素使用2bits的方式(2bpp)</string>
       </property>
       <property name="text">
        <string>4灰度图(2bits/pixel)</string>

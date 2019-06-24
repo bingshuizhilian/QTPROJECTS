@@ -182,6 +182,11 @@ QByteArray& BitmapHandler::bmpdata(void)
     return bmpData;
 }
 
+QByteArray& BitmapHandler::bmpfile(void)
+{
+    return bmpFile;
+}
+
 bool BitmapHandler::load(QString filename)
 {
     bool ret = false;
@@ -354,6 +359,7 @@ void BitmapHandler::clear(void)
     memset(&bitmapInfoHeader, 0, sizeof(BITMAPINFOHEADER));
     colorTable.clear();
     bmpData.clear();
+    bmpFile.clear();
 }
 
 bool BitmapHandler::isvalid(void)

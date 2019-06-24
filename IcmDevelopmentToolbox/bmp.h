@@ -99,10 +99,11 @@ public:
     ~BitmapHandler();
 
 private:
-    BITMAPFILEHEADER bitmapFileHeader; //文件头
-    BITMAPINFOHEADER bitmapInfoHeader; //数据信息头
-    QList<RGBQUAD> colorTable; //颜色表
-    QByteArray bmpData; //位图数据
+    BITMAPFILEHEADER bitmapFileHeader; //解析出来的文件头
+    BITMAPINFOHEADER bitmapInfoHeader; //解析出来的数据信息头
+    QList<RGBQUAD> colorTable; //解析出来的颜色表
+    QByteArray bmpData; //解析出来的位图数据
+    QByteArray bmpFile; //整个bmp文件信息，包含文件头、信息头、颜色表、数据区
 
 private:
     //内部接口，读取文件、字节序转换
@@ -117,6 +118,7 @@ public:
     BITMAPINFOHEADER& infoheader(void); //数据信息头
     QList<RGBQUAD>& colortable(void); //颜色表
     QByteArray& bmpdata(void); //位图数据
+    QByteArray& bmpfile(void); //整个bmp文件信息
     //提供位图相关实用接口
     bool load(QString filename); //加载位图
     bool save(void); //保存位图
