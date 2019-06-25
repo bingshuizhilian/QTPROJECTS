@@ -71,7 +71,7 @@ typedef struct tagRGBQUAD
 typedef struct tagBITMAPCALCULATEPARAMETER
 {
     qint32 totalBytesPerLine; //扫描一行的总字节数（包含padding）
-    qint32 paddingBytesPerLine; //扫描一行的补位的字节数，非图像有效数据区，为了windows的数据对齐而补充（扫描一行的总字节数为4的倍数）
+    qint32 paddingBytesPerLine; //(此值在原图bpp为1时，计算值不准确)扫描一行的补位的字节数，非图像有效数据区，为了windows的数据对齐而补充（扫描一行的总字节数为4的倍数）
     qint32 imageDataRealSize; //位图数据区实际大小（待确定：此值比infoheader的biSizeImage大2，观察得知可能是bmp文件尾多了2个0x00）
 } BMPCALCPARAM;
 
@@ -106,8 +106,9 @@ private:
     QByteArray bmpFile; //整个bmp文件信息，包含文件头、信息头、颜色表、数据区
 
 private:
-    //内部接口，读取文件、字节序转换
-    bool readBitmapFile(QString filepathname);
+    //内部接口，读取文件、保存图片信息、字节序转换
+    bool readBitmapFile(QString filepathname); //读取位图文件
+    bool toBitmapFile(void); //保存位图到QByteArray
     quint32 DWORDtoQuint32(DWORD n);
     quint16 WORDtoQuint16(WORD n);
     qint32 LONGtoQint32(LONG n);
@@ -121,7 +122,7 @@ public:
     QByteArray& bmpfile(void); //整个bmp文件信息
     //提供位图相关实用接口
     bool load(QString filename); //加载位图
-    bool save(void); //保存位图
+    bool save(void); //保存位图到文件
     bool flipcolor(void); //翻转颜色
     void clear(void); //清空加载的位图信息
     bool isvalid(void); //当前加载的位图是否有效

@@ -22,6 +22,7 @@ BitmapProcess::BitmapProcess(QWidget *parent) :
     ui->btn_generateCArray->setEnabled(false);
     ui->btn_prevPic->setEnabled(false);
     ui->btn_nextPic->setEnabled(false);
+    ui->lable_bmpView->setWordWrap(true);
 }
 
 BitmapProcess::~BitmapProcess()
@@ -41,7 +42,7 @@ QStringList BitmapProcess::getDirFilesName(QString pathsDir)
     dir.setFilter(QDir::Files | QDir::NoSymLinks);
 
     QStringList filters;
-    filters << "*.bmp" << "*.png" << "*.jpg" << "*.jpeg";
+    filters << "*.bmp";
     dir.setNameFilters(filters);
     dir.setSorting(QDir::Name);
 
@@ -54,11 +55,46 @@ QStringList BitmapProcess::getDirFilesName(QString pathsDir)
     return imageNamesList;
 }
 
+inline void BitmapProcess::showPicture(void)
+{
+    if(!selectedFilePathName.isEmpty())
+        ui->lable_bmpView->setToolTip(QFileInfo(selectedFilePathName).fileName());
+    else
+        ui->lable_bmpView->setToolTip("");
+
+    if(!bmp.isvalid())
+    {
+        if(!selectedFilePathName.isEmpty())
+        {
+            ui->lable_bmpView->setText(QString::fromLocal8Bit("“")
+                                       + QFileInfo(selectedFilePathName).fileName()
+                                       + QString::fromLocal8Bit("”不是有效的bmp格式图片文件"));
+        }
+        else
+        {
+            ui->lable_bmpView->clear();
+        }
+
+        ui->label_showPicSize->clear();
+
+        return;
+    }
+
+    image->loadFromData(bmp.bmpfile());
+
+    if(image->width() > 240 || image->height() > 320)
+        ui->lable_bmpView->setPixmap(QPixmap::fromImage(image->scaled(240, 320, Qt::KeepAspectRatio)));
+    else
+        ui->lable_bmpView->setPixmap(QPixmap::fromImage(*image));
+
+    ui->label_showPicSize->setText(QString("%1x%2").arg(image->width()).arg(image->height()));
+}
+
 void BitmapProcess::on_btn_openBmp_clicked()
 {
     selectedFilePathName = QFileDialog::getOpenFileName(this, QString::fromLocal8Bit("打开图片"),
                                                         "",
-                                                        tr("Images (*.bmp *.png *.jpg *.jpeg)"));
+                                                        tr("Bmp Image (*.bmp)"));
 
     selectedFilePath = QFileInfo(selectedFilePathName).absolutePath();
 
@@ -70,6 +106,7 @@ void BitmapProcess::on_btn_openBmp_clicked()
     {
         ui->btn_generateCArray->setEnabled(false);
         ui->lable_bmpView->clear();
+        ui->lable_bmpView->setToolTip("");
         ui->btn_prevPic->setEnabled(false);
         ui->btn_nextPic->setEnabled(false);
         ui->label_showPicSize->clear();
@@ -77,12 +114,12 @@ void BitmapProcess::on_btn_openBmp_clicked()
         return;
     }
 
-    image->load(selectedFilePathName);
-    if(image->width() > 240 || image->height() > 320)
-        ui->lable_bmpView->setPixmap(QPixmap::fromImage(image->scaled(240, 320, Qt::KeepAspectRatio)));
-    else
-        ui->lable_bmpView->setPixmap(QPixmap::fromImage(*image));
-    ui->label_showPicSize->setText(QString("%1x%2").arg(image->width()).arg(image->height()));
+    bmp.load(selectedFilePathName);
+    if(ui->cb_flipColor->isChecked())
+        bmp.flipcolor();
+
+    this->showPicture();
+
     ui->btn_generateCArray->setEnabled(true);
 
     int index = allImageNamesList.indexOf(QFileInfo(selectedFilePathName).fileName());
@@ -92,23 +129,18 @@ void BitmapProcess::on_btn_openBmp_clicked()
     qDebug() << QString("[0 - %2]:%1 -> ").arg(index).arg(allImageNamesList.size() - 1) + QFileInfo(selectedFilePathName).fileName();
 }
 
+void BitmapProcess::on_cb_flipColor_clicked()
+{
+    bmp.flipcolor();
+    this->showPicture();
+}
+
 void BitmapProcess::on_btn_generateCArray_clicked()
 {
-    bmp.load(selectedFilePathName);
-
-    if(ui->cb_flipColor->isChecked())
-        bmp.flipcolor();
-
-    /******************test start**********************/
-//    qDebug() << image->loadFromData();
-//    ui->lable_bmpView->setPixmap(QPixmap::fromImage(*image));
-
-
-//    return;
-    /******************test end**********************/
-
-
     QString saveFilePathName = toCTypeArray(bmp, ui->rbtn_grayLv1bit->isChecked() ? BMP_1BITPERPIXEL : BMP_2BITSPERPIXEL);
+
+    if(saveFilePathName.isEmpty())
+        return;
 
     if(ui->cb_isCompress->isChecked())
         compressCArrayOfBitmap(saveFilePathName);
@@ -122,7 +154,7 @@ void BitmapProcess::on_btn_generateCArray_clicked()
 
         openFileName.replace("/", "\\");    //***这句windows下必要***
         //    process.startDetached("explorer /select," + openFileName); //打开文件所在文件夹并选中文件
-        process.execute("explorer " + openFileName); //打开文件
+        process.startDetached("notepad " + openFileName); //打开文件
     }
 #endif
 }
@@ -141,12 +173,11 @@ void BitmapProcess::on_btn_prevPic_clicked()
 
     selectedFilePathName = selectedFilePath + '/' + allImageNamesList.at(newIndex);
 
-    image->load(selectedFilePathName);
-    if(image->width() > 240 || image->height() > 320)
-        ui->lable_bmpView->setPixmap(QPixmap::fromImage(image->scaled(240, 320, Qt::KeepAspectRatio)));
-    else
-        ui->lable_bmpView->setPixmap(QPixmap::fromImage(*image));
-    ui->label_showPicSize->setText(QString("%1x%2").arg(image->width()).arg(image->height()));
+    bmp.load(selectedFilePathName);
+    if(ui->cb_flipColor->isChecked())
+        bmp.flipcolor();
+
+    this->showPicture();
 
     qDebug() << QString("[0 - %2]:%1 -> ").arg(newIndex).arg(allImageNamesList.size() - 1) + QFileInfo(selectedFilePathName).fileName();
 }
@@ -165,12 +196,11 @@ void BitmapProcess::on_btn_nextPic_clicked()
 
     selectedFilePathName = selectedFilePath + '/' + allImageNamesList.at(newIndex);
 
-    image->load(selectedFilePathName);
-    if(image->width() > 240 || image->height() > 320)
-        ui->lable_bmpView->setPixmap(QPixmap::fromImage(image->scaled(240, 320, Qt::KeepAspectRatio)));
-    else
-        ui->lable_bmpView->setPixmap(QPixmap::fromImage(*image));
-    ui->label_showPicSize->setText(QString("%1x%2").arg(image->width()).arg(image->height()));
+    bmp.load(selectedFilePathName);
+    if(ui->cb_flipColor->isChecked())
+        bmp.flipcolor();
+
+    this->showPicture();
 
     qDebug() << QString("[0 - %2]:%1 -> ").arg(newIndex).arg(allImageNamesList.size() - 1) + QFileInfo(selectedFilePathName).fileName();
 }
@@ -221,7 +251,7 @@ QString BitmapProcess::toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL destbpp)
 {
     if(!bmp.isvalid())
     {
-        QMessageBox::warning(nullptr, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("不是有效的bmp文件格式"), QMessageBox::Yes);
+        QMessageBox::warning(nullptr, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("不是有效的bmp格式图片文件"), QMessageBox::Yes);
         return QString();
     }
 
@@ -250,7 +280,8 @@ QString BitmapProcess::toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL destbpp)
         for(unsigned int i = 0; i < bmp.height(); ++i)
         {
             QByteArray scanLinePixels;
-            for(int j = 0, s = bcp.totalBytesPerLine - bcp.paddingBytesPerLine; j < s; ++j)
+            int s = (BMP_1BITPERPIXEL == bmp.bitsperpixel() ? (bmp.width() + 7) / 8 : bcp.totalBytesPerLine - bcp.paddingBytesPerLine);
+            for(int j = 0; j < s; ++j)
                 scanLinePixels.append(static_cast<unsigned char>(bmp.bmpdata().at(i * bcp.totalBytesPerLine + j)));
 
             rawPixels.append(scanLinePixels);
@@ -291,12 +322,16 @@ QString BitmapProcess::toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL destbpp)
             for(int j = 0, s2 = rawPixels.at(i).size(); j < s2; ++j)
             {
                 unsigned char gray = static_cast<unsigned char>(rawPixels.at(i).at(j));
-                for(int k = 7; k >= 0; --k)
+                for(int k = 0, s3 = bmp.width() % 8; k < 8; ++k)
                 {
+                    //最后一个字节不满8像素时，只取s3个bit
+                    if(j == s2 - 1 && 0 != s3 && k == s3)
+                        break;
+
                     if(BMP_1BITPERPIXEL == destbpp)
-                        linePixels.append((gray >> k) & 0x01);
+                        linePixels.append((gray >> (7 - k)) & 0x01);
                     else
-                        linePixels.append(((gray >> k) & 0x01) ? 3 : 0);
+                        linePixels.append(((gray >> (7 - k)) & 0x01) ? 3 : 0);
                 }
             }
 
@@ -641,4 +676,3 @@ void BitmapProcess::compressCArrayOfBitmap(QString filepathname)
     clipboard->clear();
     clipboard->setText(toClipboard);
 }
-

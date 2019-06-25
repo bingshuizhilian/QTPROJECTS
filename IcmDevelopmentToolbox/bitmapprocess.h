@@ -31,12 +31,14 @@ private:
     QString toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL destbpp); //生成C语言形式数组
     void compressCArrayOfBitmap(QString filepathname);
     QStringList getDirFilesName(QString pathsDir);
+    void showPicture(void);
 
 private slots:
     void on_btn_generateCArray_clicked();
     void on_btn_openBmp_clicked();
     void on_btn_prevPic_clicked();
     void on_btn_nextPic_clicked();
+    void on_cb_flipColor_clicked();
 };
 
 #endif // BITMAPPROCESS_H

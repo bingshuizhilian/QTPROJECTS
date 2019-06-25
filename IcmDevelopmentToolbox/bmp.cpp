@@ -111,6 +111,88 @@ bool BitmapHandler::readBitmapFile(QString filepathname)
     return true;
 }
 
+bool BitmapHandler::toBitmapFile(void)
+{
+    if(!this->isvalid())
+    {
+        return false;
+    }
+
+    QDataStream out(&bmpFile, QIODevice::ReadWrite); //创建输出流
+    out.setVersion(QDataStream::Qt_5_8);
+
+    /*开始写入文件头信息*/
+    /*===================================*/
+    out << bitmapFileHeader.bfType; //写入文件类型
+    out << bitmapFileHeader.bfSize; //写入文件大小
+    out << bitmapFileHeader.bfReserved1; //写入两个保留字
+    out << bitmapFileHeader.bfReserved2;
+    out << bitmapFileHeader.bfOffBits; //写入偏移量
+    /*===================================*/
+    /**文件头信息写入结束*/
+
+    /*开始写入位图信息头*/
+    /*====================================*/
+    out << bitmapInfoHeader.biSize;
+    out << bitmapInfoHeader.biWidth;
+    out << bitmapInfoHeader.biHeight;
+    out << bitmapInfoHeader.biPlanes;
+    out << bitmapInfoHeader.biBitCount;
+    out << bitmapInfoHeader.biCompression;
+    out << bitmapInfoHeader.biSizeImage;
+    out << bitmapInfoHeader.biXPelsPerMeter;
+    out << bitmapInfoHeader.biYPelsPerMeter;
+    out << bitmapInfoHeader.biClrUsed;
+    out << bitmapInfoHeader.biClrImportant;
+    /*====================================*/
+    /*位图信息头写入结束*/
+
+    /*开始写入颜色表*/
+    /*====================================*/
+    if(!colorTable.isEmpty()) //对于黑白图
+    {
+        //写入颜色表
+        foreach(auto elem, colorTable)
+        {
+            out << elem.rgbBlue;
+            out << elem.rgbGreen;
+            out << elem.rgbRed;
+            out << elem.rgbReserved;
+        }
+    }
+
+    qDebug() << "write color table start";
+
+    qDebug() << colorTable.size();
+
+    foreach(auto elem, colorTable)
+        qDebug() << elem.rgbBlue << elem.rgbGreen << elem.rgbRed;
+
+    qDebug() << "write color table end";
+
+    /*====================================*/
+    /*颜色表写入结束*/
+
+    /*开始写入位图数据*/
+    /*====================================*/
+
+    out.writeRawData(bmpData, bmpData.size());
+
+    /*====================================*/
+    /*位图数据写入结束*/
+
+    qDebug() << "write bmp data start";
+
+    qDebug() << bmpData.size();
+    qDebug() << bmpData.toHex();
+
+    qDebug() << "write bmp data end";
+
+    qDebug() << "bmpFile: " << bmpFile.size() << bmpFile.toHex();
+
+    return true;
+}
+
 /* 由于读取的二进制数是倒序的，如读取的文件大小bfSize二进制表示为36 8C 0A 00
  * 对应的实际数值的二进制应该为000A8C36h=691254B
  * 所以在使用二进制数值之前要对其进行转换
@@ -184,6 +266,8 @@ QByteArray& BitmapHandler::bmpdata(void)
 
 QByteArray& BitmapHandler::bmpfile(void)
 {
+    this->toBitmapFile();
+
     return bmpFile;
 }
 
@@ -195,6 +279,10 @@ bool BitmapHandler::load(QString filename)
     ret = readBitmapFile(filename);
 
     qDebug() << "BitmapHandler load result: " << ret;
+
+    ret = this->isvalid();
+
+    qDebug() << "BitmapHandler load validator: " << ret;
 
     if(ret)
     {
@@ -229,7 +317,11 @@ bool BitmapHandler::save(void)
     if (!file.open(QIODevice::WriteOnly))
         return false;
 
-    QDataStream out(&file); //创建输出流
+//    QDataStream out(&file); //创建输出流
+//    out.setVersion(QDataStream::Qt_5_8);
+
+    QByteArray ba;
+    QDataStream out(&ba, QIODevice::ReadWrite); //创建输出流
     out.setVersion(QDataStream::Qt_5_8);
 
     /*开始写入文件头信息*/
@@ -300,6 +392,8 @@ bool BitmapHandler::save(void)
     qDebug() << "write bmp data end";
 
     file.close();
+
+    qDebug() << "ba: " << ba.size() << ba.toHex();
 
     return true;
 }
@@ -423,7 +517,7 @@ BMPCALCPARAM BitmapHandler::calcparam()
     bcp.paddingBytesPerLine = (4 - ((this->width() * this->bitsperpixel()) >> 3)) & 3;
     bcp.imageDataRealSize = bcp.totalBytesPerLine * this->height();
 
-    qDebug() << QString("totalBytesPerLine: %1, paddingBytesPerLine: %2, imageDataRealSize: %3")
+    qDebug() << QString("bcp->totalBytesPerLine: %1, paddingBytesPerLine: %2, imageDataRealSize: %3")
                 .arg(bcp.totalBytesPerLine)
                 .arg(bcp.paddingBytesPerLine)
                 .arg(bcp.imageDataRealSize);
