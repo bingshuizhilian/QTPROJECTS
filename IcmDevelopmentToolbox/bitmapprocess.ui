@@ -260,7 +260,7 @@
       <string/>
      </property>
      <property name="title">
-      <string>目标灰度</string>
+      <string>输出灰度</string>
      </property>
      <widget class="QRadioButton" name="rbtn_grayLv1bit">
       <property name="geometry">

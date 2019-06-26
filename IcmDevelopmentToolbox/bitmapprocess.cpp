@@ -280,8 +280,7 @@ QString BitmapProcess::toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL destbpp)
         for(unsigned int i = 0; i < bmp.height(); ++i)
         {
             QByteArray scanLinePixels;
-            int s = (BMP_1BITPERPIXEL == bmp.bitsperpixel() ? (bmp.width() + 7) / 8 : bcp.totalBytesPerLine - bcp.paddingBytesPerLine);
-            for(int j = 0; j < s; ++j)
+            for(int j = 0; j < bcp.totalBytesPerLine - bcp.paddingBytesPerLine; ++j)
                 scanLinePixels.append(static_cast<unsigned char>(bmp.bmpdata().at(i * bcp.totalBytesPerLine + j)));
 
             rawPixels.append(scanLinePixels);
@@ -322,6 +321,9 @@ QString BitmapProcess::toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL destbpp)
             for(int j = 0, s2 = rawPixels.at(i).size(); j < s2; ++j)
             {
                 unsigned char gray = static_cast<unsigned char>(rawPixels.at(i).at(j));
+                if(ui->cb_flipColor->isChecked())
+                    gray = ~gray;
+
                 for(int k = 0, s3 = bmp.width() % 8; k < 8; ++k)
                 {
                     //最后一个字节不满8像素时，只取s3个bit
@@ -340,10 +342,10 @@ QString BitmapProcess::toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL destbpp)
     }
     else
     {
-        for(int i = 0; i < rawPixels.size(); ++i)
+        for(int i = 0, s1 = rawPixels.size(); i < s1; ++i)
         {
             QByteArray linePixels;
-            for(int j = 0, s = rawPixels.at(i).size(); j + 2 < s; j += 3)
+            for(int j = 0, s2 = rawPixels.at(i).size(); j + 2 < s2; j += 3)
             {
                 unsigned short gray = (static_cast<unsigned char>(rawPixels.at(i).at(j))
                                        + static_cast<unsigned char>(rawPixels.at(i).at(j + 1))
@@ -351,7 +353,7 @@ QString BitmapProcess::toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL destbpp)
 
                 gray &= 0xff;
 
-                //原bmp非1bpp时，在接下来的数组中转意之后0/00代表白，1/11代表黑
+                //原bmp非1bpp时，在接下来的数组中转意之后0/00代表白，1/11代表黑(这与rgb颜色定义恰好相反)
                 if(BMP_1BITPERPIXEL == destbpp)
                 {
                     gray >>= 7; // gray /= 128;

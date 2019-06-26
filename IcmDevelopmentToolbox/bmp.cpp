@@ -514,7 +514,12 @@ BMPCALCPARAM BitmapHandler::calcparam()
     BMPCALCPARAM bcp;
 
     bcp.totalBytesPerLine = (((this->width() * this->bitsperpixel()) + 31) >> 5) << 2;
-    bcp.paddingBytesPerLine = (4 - ((this->width() * this->bitsperpixel()) >> 3)) & 3;
+
+    if(BMP_1BITPERPIXEL == this->bitsperpixel())
+        bcp.paddingBytesPerLine = qBound(0, bcp.totalBytesPerLine - (this->width() + 7) / 8, 3);
+    else
+        bcp.paddingBytesPerLine = qBound(0, (4 - ((this->width() * this->bitsperpixel()) >> 3)) & 3, 3);
+
     bcp.imageDataRealSize = bcp.totalBytesPerLine * this->height();
 
     qDebug() << QString("bcp->totalBytesPerLine: %1, paddingBytesPerLine: %2, imageDataRealSize: %3")
@@ -524,4 +529,3 @@ BMPCALCPARAM BitmapHandler::calcparam()
 
     return bcp;
 }
-
