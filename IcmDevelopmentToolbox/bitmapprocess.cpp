@@ -517,21 +517,23 @@ void BitmapProcess::compressCArrayOfBitmap(QString filepathname)
     if(originalCodeStringList.first().startsWith("//"))
         originalCodeStringList.removeFirst();
 
-    QString tmpStr = originalCodeStringList.first();
+    QString widthAndHeight("    ");
+    QByteArray ba;
+    if(bmp.width() > 0xff || bmp.height() > 0xff)
+        ba.append((bmp.width() >> 8) & 0xff);
 
-    QString widthAndHeight = tmpStr.mid(tmpStr.lastIndexOf(',') - 14, 4);
-    widthAndHeight += ", ";
-    widthAndHeight += tmpStr.mid(tmpStr.lastIndexOf(',') - 4, 4);
-    widthAndHeight += ", //width: " + QString::number(tmpStr.mid(tmpStr.lastIndexOf(',') - 12, 2).toInt(nullptr, 16));
-    widthAndHeight += ", height: " + QString::number(tmpStr.mid(tmpStr.lastIndexOf(',') - 2, 2).toInt(nullptr, 16));
+    ba.append(bmp.width() & 0xff);
 
-    if(tmpStr.mid(tmpStr.lastIndexOf(',') - 17, 2).toInt(nullptr, 16) != 0 || tmpStr.mid(tmpStr.lastIndexOf(',') - 7, 2).toInt(nullptr, 16) != 0)
-    {
-        int realWidth = 0, realHeight = 0;
-        realWidth = tmpStr.mid(tmpStr.lastIndexOf(',') - 17, 2).toInt(nullptr, 16) << 8 | tmpStr.mid(tmpStr.lastIndexOf(',') - 12, 2).toInt(nullptr, 16);
-        realHeight = tmpStr.mid(tmpStr.lastIndexOf(',') - 7, 2).toInt(nullptr, 16) << 8 | tmpStr.mid(tmpStr.lastIndexOf(',') - 2, 2).toInt(nullptr, 16);
-        widthAndHeight += " [!!! Be careful, realWidth: " + QString::number(realWidth) + ", realHeight: " + QString::number(realHeight) + " !!!]";
-    }
+    if(bmp.width() > 0xff || bmp.height() > 0xff)
+        ba.append((bmp.height() >> 8) & 0xff);
+
+    ba.append(bmp.height() & 0xff);
+
+    foreach(auto elem, ba)
+        widthAndHeight.append((static_cast<unsigned char>(elem) <= 0x0f ? "0X0" : "0X") + QString::number(static_cast<unsigned char>(elem), 16).toUpper() + ", ");
+
+    widthAndHeight += "//width: " + QString::number(bmp.width());
+    widthAndHeight += ", height: " + QString::number(bmp.height());
 
     QString bmpFileName = originalCodeStringList.first();
     bmpFileName = bmpFileName.mid(bmpFileName.indexOf("bmp") + 3, bmpFileName.indexOf('[') - bmpFileName.indexOf("bmp") - 3);
@@ -643,15 +645,11 @@ void BitmapProcess::compressCArrayOfBitmap(QString filepathname)
 
     targetFormattedStringList << "}; //total bytes: " + QString::number(targetStringList.size() + 2);
 
-    for(auto iter = targetFormattedStringList.begin() + 1; iter != targetFormattedStringList.end() - 1; ++iter)
+    for(auto iter = targetFormattedStringList.begin() + 2; iter != targetFormattedStringList.end() - 1; ++iter)
     {
         *iter = (*iter).prepend("    ");
         *iter = (*iter).toUpper();
     }
-
-    //宽度和高度用小写字母
-    if(!targetFormattedStringList.isEmpty())
-        targetFormattedStringList[1] = targetFormattedStringList[1].left(14) + targetFormattedStringList[1].right(targetFormattedStringList[1].size() - 14).toLower();
 
     QFile saveFile(filepathname);
     if(!saveFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append))
