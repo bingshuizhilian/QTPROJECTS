@@ -26,12 +26,13 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 
 SOURCES += main.cpp \
-        mainwindow.cpp \
     bitmapprocess.cpp \
     bmp.cpp \
-    applauncher.cpp
+    applauncher.cpp \
+    canlogseparator.cpp \
+    firmwaregenerator.cpp
 
-HEADERS  += mainwindow.h \
+HEADERS  += \
     defaultFlashDriverCode.h \
     crc16.h \
     defaultEraseEepromCode.h \
@@ -41,7 +42,11 @@ HEADERS  += mainwindow.h \
     defaultA13tevflBootCode.h \
     bitmapprocess.h \
     bmp.h \
-    applauncher.h
+    applauncher.h \
+    canlogseparator.h \
+    firmwaregenerator.h
 
-FORMS    += mainwindow.ui \
-    bitmapprocess.ui
+FORMS    += \
+    bitmapprocess.ui \
+    canlogseparator.ui \
+    firmwaregenerator.ui

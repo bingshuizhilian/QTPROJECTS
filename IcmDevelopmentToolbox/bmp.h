@@ -71,8 +71,8 @@ typedef struct tagRGBQUAD
 typedef struct tagBITMAPCALCULATEPARAMETER
 {
     qint32 totalBytesPerLine; //扫描一行的总字节数（包含padding）
-    qint32 paddingBytesPerLine; //(此值在原图bpp为1时，计算值不准确)扫描一行的补位的字节数，非图像有效数据区，为了windows的数据对齐而补充（扫描一行的总字节数为4的倍数）
-    qint32 imageDataRealSize; //位图数据区实际大小（待确定：此值比infoheader的biSizeImage大2，观察得知可能是bmp文件尾多了2个0x00）
+    qint32 paddingBytesPerLine; //扫描一行的补位的字节数，非图像有效数据区，为了windows的数据对齐而补充（即扫描一行的总字节数应为4的倍数）
+    qint32 imageDataRealSize; //位图数据区实际大小（此值比infoheader的biSizeImage大2，观察得知是bmp文件尾多了2个0x00，photoshop生成的bmp常有此特性）
 } BMPCALCPARAM;
 
 enum BMPSCANDIRECTION

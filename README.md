@@ -20,3 +20,8 @@ bootloader合成页截图\
 
 bmp位图转C语言数组页截图\
 ![bmp位图转C语言数组页截图](https://github.com/bingshuizhilian/QTPROJECTS-ICM-DEVELOPMENT-TOOLBOX/blob/master/resources/pic4.png)
+
+3.Can log separator
+
+can log分组查看工具页截图\
+![can log分组查看工具页截图](https://github.com/bingshuizhilian/QTPROJECTS-ICM-DEVELOPMENT-TOOLBOX/blob/master/resources/pic5.png)

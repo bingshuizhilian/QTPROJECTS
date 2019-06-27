@@ -363,6 +363,28 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
+   <widget class="QLabel" name="label_contactAuthor">
+    <property name="geometry">
+     <rect>
+      <x>420</x>
+      <y>340</y>
+      <width>21</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>click to view source code on github</string>
+    </property>
+    <property name="text">
+     <string>&lt;style&gt; a {text-decoration: none} &lt;/style&gt; &lt;a href = https://www.github.com/bingshuizhilian/QTPROJECTS-ICM-DEVELOPMENT-TOOLBOX&gt; @au &lt;/a&gt;</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignHCenter|Qt::AlignTop</set>
+    </property>
+    <property name="openExternalLinks">
+     <bool>true</bool>
+    </property>
+   </widget>
   </widget>
  </widget>
  <resources/>

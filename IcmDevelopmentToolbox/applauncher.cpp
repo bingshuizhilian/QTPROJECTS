@@ -3,33 +3,39 @@
 
 AppLancher::AppLancher(QWidget *parent) :
     QDialogButtonBox(parent),
-    appGenerate(new MainWindow),
-    appBmpToCArray(new BitmapProcess)
+    appFirmwareGenerator(new FirmwareGenerator),
+    appBmpToCArray(new BitmapProcess),
+    appCanLogSeparator(new CanLogSeparator)
 {
     setWindowTitle(QString::fromLocal8Bit("Launcher"));
-    btn_appGenerate = this->addButton(QString::fromLocal8Bit("固件生成"), QDialogButtonBox::AcceptRole);
-    btn_appBmpToCArray = this->addButton(QString::fromLocal8Bit("位图处理"), QDialogButtonBox::AcceptRole);
+//    setOrientation(Qt::Vertical);
+    btn_appFirmwareGenerator = addButton(QString::fromLocal8Bit("固件生成"), QDialogButtonBox::AcceptRole);
+    btn_appBmpToCArray = addButton(QString::fromLocal8Bit("位图处理"), QDialogButtonBox::AcceptRole);
+    btn_appCanLogSeparator = addButton(QString::fromLocal8Bit("can报文分析"), QDialogButtonBox::AcceptRole);
     setCenterButtons(true);
-    setFixedSize(200, 46);
+    setFixedSize(250, 45);
+//    setFixedWidth(180);
 
-    connect(btn_appGenerate, &QPushButton::clicked, this, &appGenerateClicked);
-    connect(btn_appBmpToCArray, &QPushButton::clicked, this, &appBmpToCArrayClicked);
+//    btn_appGenerate->setFixedWidth(120);
+//    btn_appBmpToCArray->setFixedWidth(120);
 
-    appGenerate->setWindowModality(Qt::ApplicationModal);
+    connect(this, &clicked, this, [=](QAbstractButton* b){
+        if(b == btn_appFirmwareGenerator)
+            appFirmwareGenerator->show();
+        else if(b == btn_appBmpToCArray)
+            appBmpToCArray->show();
+        else if(b == btn_appCanLogSeparator)
+            appCanLogSeparator->show();
+
+        qDebug() << width() << height();
+    });
+
+    appFirmwareGenerator->setWindowModality(Qt::ApplicationModal);
     appBmpToCArray->setWindowModality(Qt::ApplicationModal);
+    appCanLogSeparator->setWindowModality(Qt::ApplicationModal);
 }
 
 AppLancher::~AppLancher()
 {
 
-}
-
-void AppLancher::appGenerateClicked()
-{
-    appGenerate->show();
-}
-
-void AppLancher::appBmpToCArrayClicked()
-{
-    appBmpToCArray->show();
 }

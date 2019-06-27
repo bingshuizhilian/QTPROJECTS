@@ -1,8 +1,9 @@
 #ifndef APPLAUNCHER_H
 #define APPLAUNCHER_H
 
-#include "mainwindow.h"
+#include "firmwaregenerator.h"
 #include "bitmapprocess.h"
+#include "canlogseparator.h"
 #include <QDialogButtonBox>
 
 class AppLancher : public QDialogButtonBox
@@ -12,14 +13,12 @@ public:
     ~AppLancher();
 
 private:
-    QPushButton* btn_appGenerate;
+    QPushButton* btn_appFirmwareGenerator;
     QPushButton* btn_appBmpToCArray;
-    MainWindow* appGenerate;
+    QPushButton* btn_appCanLogSeparator;
+    FirmwareGenerator* appFirmwareGenerator;
     BitmapProcess* appBmpToCArray;
-
-private slots:
-    void appGenerateClicked();
-    void appBmpToCArrayClicked();
+    CanLogSeparator* appCanLogSeparator;
 };
 
 #endif // LAUNCHER_H
