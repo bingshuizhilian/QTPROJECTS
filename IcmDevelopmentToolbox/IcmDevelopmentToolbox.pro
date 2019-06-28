@@ -50,3 +50,6 @@ FORMS    += \
     bitmapprocess.ui \
     canlogseparator.ui \
     firmwaregenerator.ui
+
+RESOURCES += \
+    resources.qrc

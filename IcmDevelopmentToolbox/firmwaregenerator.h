@@ -93,7 +93,7 @@ private:
         WINDOW_WIDTH  = 334
     };
 
-    const QString SOFTWARE_VERSION = "v1.1";
+    const QString SOFTWARE_VERSION = "v1.2";
     const QString CONFIG_FILE_NAME = "config.json";
     QString versionFilePathName = "/version.txt";
     const QString appNameFirst = "IcmDevelopmentToolbox_";
@@ -151,6 +151,9 @@ private:
     QGroupBox* m_gbS19Selector;
     QGroupBox* m_gbDiagnosis;
     QGroupBox* m_gbSwitchFunction;
+
+public:
+    inline QString getVersion(void){return SOFTWARE_VERSION;}
 
 private:
     void componentsInitialization(void);
