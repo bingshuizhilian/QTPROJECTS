@@ -1,11 +1,11 @@
-# QTPROJECTS-ICM-DEVELOPMENT-TOOLBOX
+﻿# QTPROJECTS-ICM-DEVELOPMENT-TOOLBOX
 
 0.App launch page
 
 app登录页截图\
 ![app登录页截图](https://github.com/bingshuizhilian/QTPROJECTS-ICM-DEVELOPMENT-TOOLBOX/blob/master/resources/pic0.png)
 
-1.Chery common firmware generate tool
+1.Chery firmware generate tool
 
 bootloader合成页截图\
 ![bootloader合成页截图](https://github.com/bingshuizhilian/QTPROJECTS-ICM-DEVELOPMENT-TOOLBOX/blob/master/resources/pic1.png)
