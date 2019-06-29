@@ -4,5 +4,10 @@
         <file>../resources/icons/palm-tree.png</file>
         <file>../resources/icons/pamela.png</file>
         <file>../resources/icons/popsicle.png</file>
+        <file>../resources/soundeffects/btnclicked.wav</file>
+        <file>../resources/soundeffects/light.wav</file>
+        <file>../resources/soundeffects/shua.wav</file>
+        <file>../resources/icons/close.png</file>
+        <file>../resources/icons/paper-plane.png</file>
     </qresource>
 </RCC>

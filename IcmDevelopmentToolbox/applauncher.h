@@ -5,6 +5,8 @@
 #include "bitmapprocess.h"
 #include "canlogseparator.h"
 #include <QDialogButtonBox>
+#include <QSoundEffect>
+#include <QMenu>
 
 class AppLancher : public QDialogButtonBox
 {
@@ -20,12 +22,17 @@ private:
     BitmapProcess* appBmpToCArray;
     CanLogSeparator* appCanLogSeparator;
     QPoint mouseMovePos;
+    QSoundEffect* se_soundPlayer;
+    QMenu* menu_launcher;
 
 protected:
-    void paintEvent(QPaintEvent *e);
-    void mouseMoveEvent(QMouseEvent *e);
-    void mousePressEvent(QMouseEvent *e);
-    void mouseReleaseEvent(QMouseEvent *e);
+    void paintEvent(QPaintEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
+    void mousePressEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *event);
+    bool eventFilter(QObject *watched, QEvent *event);
+    void contextMenuEvent(QContextMenuEvent *event);
+    void keyPressEvent(QKeyEvent *event);
 };
 
 #endif // LAUNCHER_H
