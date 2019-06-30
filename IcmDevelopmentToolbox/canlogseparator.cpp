@@ -41,6 +41,7 @@ void CanLogSeparator::initialization()
     m_pteOutput = new QPlainTextEdit;
     m_leSeparator = new QLineEdit;
     m_leSeparator->setToolTip(tr("input format(case insensitive): 0xhhh;0xhhhh"));
+    m_leSeparator->setPlaceholderText("e.g. 0xhhh or 0xhhh;0xhhhh");
     QRegExp hexCodeRegex("^(0[xX][a-fA-F\\d]{3,4};)+$");
     auto validator = new QRegExpValidator(hexCodeRegex, m_leSeparator);
     m_leSeparator->setValidator(validator);

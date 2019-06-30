@@ -8,11 +8,11 @@
 #include <QSoundEffect>
 #include <QMenu>
 
-class AppLancher : public QDialogButtonBox
+class AppLauncher : public QDialogButtonBox
 {
 public:
-    explicit AppLancher(QWidget *parent = 0);
-    ~AppLancher();
+    explicit AppLauncher(QWidget *parent = 0);
+    ~AppLauncher();
 
 private:
     QPushButton* btn_appFirmwareGenerator;
@@ -24,6 +24,7 @@ private:
     QPoint mouseMovePos;
     QSoundEffect* se_soundPlayer;
     QMenu* menu_launcher;
+    QRect rect_close;
 
 protected:
     void paintEvent(QPaintEvent *event);

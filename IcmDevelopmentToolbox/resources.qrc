@@ -9,5 +9,6 @@
         <file>../resources/soundeffects/shua.wav</file>
         <file>../resources/icons/close.png</file>
         <file>../resources/icons/paper-plane.png</file>
+        <file>../resources/icons/shack.png</file>
     </qresource>
 </RCC>

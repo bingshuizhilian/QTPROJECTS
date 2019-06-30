@@ -1,5 +1,5 @@
 ﻿#include "firmwaregenerator.h"
-#include "ui_mainwindow.h"
+#include "ui_firmwaregenerator.h"
 #include "defaultM1SeriesBootCode.h"
 #include "defaultT1SeriesBootCode.h"
 #include "defaultS51evflBootCode.h"
@@ -2047,14 +2047,17 @@ void FirmwareGenerator::componentsInitialization(void)
     m_leDiagnosisS021 = new QLineEdit;
     connect(m_leDiagnosisS021, &m_leDiagnosisS021->returnPressed, this, &s021ReturnPressed);
     m_leDiagnosisS021->setStatusTip("press enter to modify version");
+    m_leDiagnosisS021->setPlaceholderText("press enter for part number or sw version");
     m_leDiagnosisS20C = new QLineEdit;
     m_leDiagnosisS20C->setReadOnly(true);
     m_leDiagnosisS20C->setStatusTip("crc and checksum infos");
+    m_leDiagnosisS20C->setPlaceholderText("this line is automatically filled");
 
     //命令行输入输出窗口
     m_leRunCommand = new QLineEdit;
     connect(m_leRunCommand, &m_leRunCommand->returnPressed, this, &runCmdReturnPressed);
     m_leRunCommand->setStatusTip("press enter to run command");
+    m_leRunCommand->setPlaceholderText("input :? for help");
     ptOutputWnd = new QPlainTextEdit;
     ptOutputWnd->setReadOnly(true);
     ptOutputWnd->setStatusTip(tr("execute result echo window"));

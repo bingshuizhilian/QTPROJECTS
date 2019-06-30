@@ -4,7 +4,7 @@
 #include <QMessageBox>
 #include <QDebug>
 
-AppLancher::AppLancher(QWidget *parent) :
+AppLauncher::AppLauncher(QWidget *parent) :
     QDialogButtonBox(parent),
     btn_appFirmwareGenerator(new QPushButton),
     btn_appBmpToCArray(new QPushButton),
@@ -18,10 +18,11 @@ AppLancher::AppLancher(QWidget *parent) :
 {
     setWindowTitle(QString::fromLocal8Bit("Launcher"));
     setCenterButtons(true);
-    setFixedSize(250, 250);
+    setFixedSize(330, 330);
     setWindowOpacity(1);
     setWindowFlags(Qt::FramelessWindowHint | Qt::WindowSystemMenuHint);
     setAttribute(Qt::WA_TranslucentBackground, true);
+    installEventFilter(this);
 
     addButton(btn_appFirmwareGenerator, QDialogButtonBox::AcceptRole);
     btn_appFirmwareGenerator->installEventFilter(this);
@@ -57,11 +58,13 @@ AppLancher::AppLancher(QWidget *parent) :
         info.append(QString::fromLocal8Bit("版本：") + appFirmwareGenerator->getVersion() + "\n");
         info.append(QString::fromLocal8Bit("作者：ybs@HEU\n"));
         info.append(QString::fromLocal8Bit("邮箱：bingshuizhilian@yeah.net"));
-        QMessageBox::information(this, QString::fromLocal8Bit("关于"), info, QMessageBox::Yes);
+        QMessageBox::information(this, QString::fromLocal8Bit("关于"), info, QString::fromLocal8Bit("好"));
     },
     QKeySequence(Qt::ALT | Qt::Key_A)
     );
     menu_launcher->addAction(QIcon(":qrc:/../resources/icons/close.png"), QString::fromLocal8Bit("关闭(&C)"), this, SLOT(close()), QKeySequence(Qt::ALT | Qt::Key_C));
+
+    rect_close = QRect(240, 285, this->width() / 8, this->height() / 8);
 
     connect(this, &clicked, this, [=](QAbstractButton* b){
         se_soundPlayer->setVolume(0.2f);
@@ -83,24 +86,23 @@ AppLancher::AppLancher(QWidget *parent) :
     appCanLogSeparator->setWindowModality(Qt::ApplicationModal);
 }
 
-AppLancher::~AppLancher()
+AppLauncher::~AppLauncher()
 {
 
 }
 
-void AppLancher::paintEvent(QPaintEvent *event)
+void AppLauncher::paintEvent(QPaintEvent *event)
 {
     Q_UNUSED(event);
 
     QPainter painter(this);
-    painter.setPen(Qt::NoPen);
-    painter.setBrush(Qt::gray);
-    painter.drawPixmap(QRect(0, 0, this->width(), this->height()), QPixmap(":qrc:/../resources/icons/pamela.png"));
+    painter.drawPixmap(QRect(0, 0, this->width(), this->height()), QPixmap(":qrc:/../resources/icons/shack.png"));
+    painter.drawPixmap(rect_close, QPixmap(":qrc:/../resources/icons/pamela.png"));
 
     QWidget::paintEvent(event);
 }
 
-void AppLancher::mouseMoveEvent(QMouseEvent *event)
+void AppLauncher::mouseMoveEvent(QMouseEvent *event)
 {
     if(mouseMovePos != QPoint(0, 0))
     {
@@ -112,23 +114,26 @@ void AppLancher::mouseMoveEvent(QMouseEvent *event)
     QWidget::mouseMoveEvent(event);
 }
 
-void AppLancher::mousePressEvent(QMouseEvent *event)
+void AppLauncher::mousePressEvent(QMouseEvent *event)
 {
     mouseMovePos = event->globalPos();
 
     QWidget::mousePressEvent(event);
 }
 
-void AppLancher::mouseReleaseEvent(QMouseEvent *event)
+void AppLauncher::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_UNUSED(event);
+
+    if(event->button() == Qt::LeftButton && rect_close.contains(mapFromGlobal(event->globalPos())))
+        close();
 
     mouseMovePos = QPoint(0, 0);
 
     QWidget::mouseReleaseEvent(event);
 }
 
-bool AppLancher::eventFilter(QObject *watched, QEvent *event)
+bool AppLauncher::eventFilter(QObject *watched, QEvent *event)
 {
     if(btn_appFirmwareGenerator == watched || btn_appBmpToCArray == watched || btn_appCanLogSeparator == watched)
     {
@@ -138,16 +143,12 @@ bool AppLancher::eventFilter(QObject *watched, QEvent *event)
             se_soundPlayer->setSource(QUrl::fromLocalFile(":qrc:/../resources/soundeffects/shua.wav"));
             se_soundPlayer->play();
         }
-        else if(QEvent::Leave == event->type())
-        {
-//            se_soundPlayer->stop();
-        }
     }
 
     return QWidget::eventFilter(watched, event);
 }
 
-void AppLancher::contextMenuEvent(QContextMenuEvent *event)
+void AppLauncher::contextMenuEvent(QContextMenuEvent *event)
 {
     Q_UNUSED(event);
 
@@ -157,7 +158,7 @@ void AppLancher::contextMenuEvent(QContextMenuEvent *event)
     QWidget::contextMenuEvent(event);
 }
 
-void AppLancher::keyPressEvent(QKeyEvent *event)
+void AppLauncher::keyPressEvent(QKeyEvent *event)
 {
     if(event->key() == Qt::Key_Alt)
     {
