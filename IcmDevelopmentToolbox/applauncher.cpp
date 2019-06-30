@@ -14,7 +14,8 @@ AppLauncher::AppLauncher(QWidget *parent) :
     appCanLogSeparator(new CanLogSeparator),
     mouseMovePos(QPoint(0, 0)),
     se_soundPlayer(new QSoundEffect),
-    menu_launcher(new QMenu)
+    menu_launcher(new QMenu),
+    btn_appClose(new QPushButton)
 {
     setWindowTitle(QString::fromLocal8Bit("Launcher"));
     setCenterButtons(true);
@@ -64,7 +65,14 @@ AppLauncher::AppLauncher(QWidget *parent) :
     );
     menu_launcher->addAction(QIcon(":qrc:/../resources/icons/close.png"), QString::fromLocal8Bit("¹Ø±Õ(&C)"), this, SLOT(close()), QKeySequence(Qt::ALT | Qt::Key_C));
 
-    rect_close = QRect(240, 285, this->width() / 8, this->height() / 8);
+    btn_appClose->setParent(this);
+    btn_appClose->setGeometry(240, 285, this->width() / 8, this->height() / 8);
+    btn_appClose->setToolTip(QString::fromLocal8Bit("¹Ø±Õ"));
+    btn_appClose->installEventFilter(this);
+    btn_appClose->setStyleSheet("QPushButton{border-image: url(:qrc:/../resources/icons/pamela.png);border-radius: 5px;}"
+                                "QPushButton:hover{border:2px;}"
+                                "QPushButton:pressed{border:4px;}");
+    connect(btn_appClose, &btn_appClose->clicked, this, close);
 
     connect(this, &clicked, this, [=](QAbstractButton* b){
         se_soundPlayer->setVolume(0.2f);
@@ -97,7 +105,6 @@ void AppLauncher::paintEvent(QPaintEvent *event)
 
     QPainter painter(this);
     painter.drawPixmap(QRect(0, 0, this->width(), this->height()), QPixmap(":qrc:/../resources/icons/shack.png"));
-    painter.drawPixmap(rect_close, QPixmap(":qrc:/../resources/icons/pamela.png"));
 
     QWidget::paintEvent(event);
 }
@@ -125,9 +132,6 @@ void AppLauncher::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_UNUSED(event);
 
-    if(event->button() == Qt::LeftButton && rect_close.contains(mapFromGlobal(event->globalPos())))
-        close();
-
     mouseMovePos = QPoint(0, 0);
 
     QWidget::mouseReleaseEvent(event);
@@ -135,7 +139,10 @@ void AppLauncher::mouseReleaseEvent(QMouseEvent *event)
 
 bool AppLauncher::eventFilter(QObject *watched, QEvent *event)
 {
-    if(btn_appFirmwareGenerator == watched || btn_appBmpToCArray == watched || btn_appCanLogSeparator == watched)
+    if(btn_appFirmwareGenerator == watched
+            || btn_appBmpToCArray == watched
+            || btn_appCanLogSeparator == watched
+            || btn_appClose == watched)
     {
         if(QEvent::Enter == event->type())
         {

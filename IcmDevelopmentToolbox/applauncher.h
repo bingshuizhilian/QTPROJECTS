@@ -24,7 +24,7 @@ private:
     QPoint mouseMovePos;
     QSoundEffect* se_soundPlayer;
     QMenu* menu_launcher;
-    QRect rect_close;
+    QPushButton* btn_appClose;
 
 protected:
     void paintEvent(QPaintEvent *event);
