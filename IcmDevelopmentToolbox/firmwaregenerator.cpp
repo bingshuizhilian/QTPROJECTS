@@ -1222,7 +1222,7 @@ void FirmwareGenerator::dealWithCalculateKeyCommand(void)
 
         if(!resultOK)
         {
-            QMessageBox::warning(this, "Warnning", "fialed to calculate seed", QMessageBox::Yes);
+            QMessageBox::warning(this, "Warnning", "failed to calculate seed", QMessageBox::Yes);
         }
         else
         {
@@ -1265,7 +1265,15 @@ void FirmwareGenerator::dealWithCalculateKeyCommand(void)
 
 void FirmwareGenerator::switchFunctionPage(FirmwareGenerator::FunctionType functype)
 {
-    m_cmbFunctionSwitch->setCurrentIndex(functype);
+    if(functype <= CMD_HANDLER)
+    {
+        m_cmbFunctionSwitch->setCurrentIndex(functype);
+    }
+    else if(CMD_HANDLER_CALCULATE_KEY == functype)
+    {
+        m_cmbFunctionSwitch->setCurrentIndex(CMD_HANDLER);
+        m_leRunCommand->setText(":ck");
+    }
 }
 
 //帮助信息

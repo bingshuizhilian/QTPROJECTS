@@ -34,7 +34,8 @@ public:
     {
         BOOTLOADER,
         DIAGNOSIS,
-        CMD_HANDLER
+        CMD_HANDLER,
+        CMD_HANDLER_CALCULATE_KEY
     };
 
 private:

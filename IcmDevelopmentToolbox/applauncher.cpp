@@ -98,7 +98,7 @@ AppLauncher::AppLauncher(QWidget *parent) :
         se_soundPlayer->setSource(QUrl::fromLocalFile(":qrc:/../resources/soundeffects/btnclicked2.wav"));
         se_soundPlayer->play();
 
-        appFirmwareGenerator->switchFunctionPage(FirmwareGenerator::CMD_HANDLER);
+        appFirmwareGenerator->switchFunctionPage(FirmwareGenerator::CMD_HANDLER_CALCULATE_KEY);
         appFirmwareGenerator->show();
         appFirmwareGenerator->dealWithCalculateKeyCommand();
     });
