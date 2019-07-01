@@ -14,5 +14,6 @@
         <file>../resources/soundeffects/huaguo.wav</file>
         <file>../resources/soundeffects/btnclicked2.wav</file>
         <file>../resources/soundeffects/skype.wav</file>
+        <file>../resources/icons/watermelon.png</file>
     </qresource>
 </RCC>

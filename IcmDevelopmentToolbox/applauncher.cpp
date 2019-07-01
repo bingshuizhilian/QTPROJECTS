@@ -16,7 +16,8 @@ AppLauncher::AppLauncher(QWidget *parent) :
     se_soundPlayer(new QSoundEffect),
     menu_launcher(new QMenu),
     btn_appClose(new QPushButton),
-    btn_subAppCaculateKey(new QPushButton)
+    btn_subAppCaculateKey(new QPushButton),
+    btn_appMinimize(new QPushButton)
 {
     //launcher设置
     setWindowTitle(QString::fromLocal8Bit("Launcher"));
@@ -103,6 +104,22 @@ AppLauncher::AppLauncher(QWidget *parent) :
         appFirmwareGenerator->dealWithCalculateKeyCommand();
     });
 
+    //launcher按钮6设置
+    btn_appMinimize->setParent(this);
+    btn_appMinimize->setGeometry(245, 240, this->width() / 9, this->height() / 9);
+    btn_appMinimize->setToolTip(QString::fromLocal8Bit("最小化"));
+    btn_appMinimize->installEventFilter(this);
+    btn_appMinimize->setStyleSheet("QPushButton{border-image: url(:qrc:/../resources/icons/watermelon.png);border-radius: 5px;}"
+                                   "QPushButton:hover{border:2px;}"
+                                   "QPushButton:pressed{border:4px;}");
+    connect(btn_appMinimize, &btn_appMinimize->clicked, this, [this](){
+        se_soundPlayer->setVolume(0.8f);
+        se_soundPlayer->setSource(QUrl::fromLocalFile(":qrc:/../resources/soundeffects/btnclicked2.wav"));
+        se_soundPlayer->play();
+
+        this->showMinimized();
+    });
+
     //程序启动音效
     se_soundPlayer->setLoopCount(1);
     se_soundPlayer->setVolume(0.8f);
@@ -183,7 +200,8 @@ bool AppLauncher::eventFilter(QObject *watched, QEvent *event)
             se_soundPlayer->setSource(QUrl::fromLocalFile(":qrc:/../resources/soundeffects/huaguo.wav"));
             se_soundPlayer->play();
         }
-        else if(btn_appClose == watched)
+        else if(btn_appClose == watched
+                || btn_appMinimize == watched)
         {
             se_soundPlayer->setVolume(1.0f);
             se_soundPlayer->setSource(QUrl::fromLocalFile(":qrc:/../resources/soundeffects/skype.wav"));

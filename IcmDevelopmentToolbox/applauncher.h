@@ -26,6 +26,7 @@ private:
     QMenu* menu_launcher;
     QPushButton* btn_appClose;
     QPushButton* btn_subAppCaculateKey;
+    QPushButton* btn_appMinimize;
 
 protected:
     void paintEvent(QPaintEvent *event);
