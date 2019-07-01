@@ -62,7 +62,7 @@ AppLauncher::AppLauncher(QWidget *parent) :
 
     //launcher按钮1、2、3的响应事件
     connect(this, &clicked, this, [=](QAbstractButton* b){
-        se_soundPlayer->setVolume(0.2f);
+        se_soundPlayer->setVolume(0.3f);
         se_soundPlayer->setSource(QUrl::fromLocalFile(":qrc:/../resources/soundeffects/btnclicked.wav"));
         se_soundPlayer->play();
 
@@ -95,7 +95,7 @@ AppLauncher::AppLauncher(QWidget *parent) :
                                          "QPushButton:hover{border:2px;}"
                                          "QPushButton:pressed{border:4px;}");
     connect(btn_subAppCaculateKey, &btn_subAppCaculateKey->clicked, this, [this](){
-        se_soundPlayer->setVolume(0.8f);
+        se_soundPlayer->setVolume(1.0f);
         se_soundPlayer->setSource(QUrl::fromLocalFile(":qrc:/../resources/soundeffects/btnclicked2.wav"));
         se_soundPlayer->play();
 
@@ -113,7 +113,7 @@ AppLauncher::AppLauncher(QWidget *parent) :
                                    "QPushButton:hover{border:2px;}"
                                    "QPushButton:pressed{border:4px;}");
     connect(btn_appMinimize, &btn_appMinimize->clicked, this, [this](){
-        se_soundPlayer->setVolume(0.8f);
+        se_soundPlayer->setVolume(1.0f);
         se_soundPlayer->setSource(QUrl::fromLocalFile(":qrc:/../resources/soundeffects/btnclicked2.wav"));
         se_soundPlayer->play();
 
@@ -190,14 +190,14 @@ bool AppLauncher::eventFilter(QObject *watched, QEvent *event)
                 || btn_appBmpToCArray == watched
                 || btn_appCanLogSeparator == watched)
         {
-            se_soundPlayer->setVolume(0.8f);
-            se_soundPlayer->setSource(QUrl::fromLocalFile(":qrc:/../resources/soundeffects/shua.wav"));
+            se_soundPlayer->setVolume(1.0f);
+            se_soundPlayer->setSource(QUrl::fromLocalFile(":qrc:/../resources/soundeffects/huaguo.wav"));
             se_soundPlayer->play();
         }
         else if(btn_subAppCaculateKey == watched)
         {
-            se_soundPlayer->setVolume(0.8f);
-            se_soundPlayer->setSource(QUrl::fromLocalFile(":qrc:/../resources/soundeffects/huaguo.wav"));
+            se_soundPlayer->setVolume(1.0f);
+            se_soundPlayer->setSource(QUrl::fromLocalFile(":qrc:/../resources/soundeffects/shua.wav"));
             se_soundPlayer->play();
         }
         else if(btn_appClose == watched
