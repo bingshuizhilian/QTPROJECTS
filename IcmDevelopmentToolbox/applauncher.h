@@ -25,6 +25,7 @@ private:
     QSoundEffect* se_soundPlayer;
     QMenu* menu_launcher;
     QPushButton* btn_appClose;
+    QPushButton* btn_subAppCaculateKey;
 
 protected:
     void paintEvent(QPaintEvent *event);

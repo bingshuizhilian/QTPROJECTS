@@ -1263,6 +1263,11 @@ void FirmwareGenerator::dealWithCalculateKeyCommand(void)
     }
 }
 
+void FirmwareGenerator::switchFunctionPage(FirmwareGenerator::FunctionType functype)
+{
+    m_cmbFunctionSwitch->setCurrentIndex(functype);
+}
+
 //帮助信息
 void FirmwareGenerator::showHelpInfo(CmdType cmd)
 {

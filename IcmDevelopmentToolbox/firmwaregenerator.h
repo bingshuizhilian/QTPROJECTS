@@ -29,19 +29,20 @@ public:
 private:
     Ui::MainWindow *ui;
 
+public:
+    enum FunctionType
+    {
+        BOOTLOADER,
+        DIAGNOSIS,
+        CMD_HANDLER
+    };
+
 private:
     enum FileInfoType
     {
         ABSOLUTE_FILE_PATH,
         ABSOLUTE_PATH,
         FILE_NAME
-    };
-
-    enum FunctionType
-    {
-        BOOTLOADER,
-        DIAGNOSIS,
-        CMD_HANDLER
     };
 
     enum PlatformType
@@ -93,7 +94,7 @@ private:
         WINDOW_WIDTH  = 334
     };
 
-    const QString SOFTWARE_VERSION = "v1.3";
+    const QString SOFTWARE_VERSION = "v1.4";
     const QString CONFIG_FILE_NAME = "config.json";
     QString versionFilePathName = "/version.txt";
     const QString appNameFirst = "IcmDevelopmentToolbox_";
@@ -154,6 +155,8 @@ private:
 
 public:
     inline QString getVersion(void){return SOFTWARE_VERSION;}
+    void dealWithCalculateKeyCommand(void);
+    void switchFunctionPage(FunctionType functype);
 
 private:
     void componentsInitialization(void);
@@ -169,7 +172,6 @@ private:
     unsigned short calcCRC16(QList<unsigned char> data_list);
     unsigned char calcChecksum(unsigned short crc);
     unsigned short calculateKey(unsigned short seed);
-    void dealWithCalculateKeyCommand(void);
     void showHelpInfo(CmdType cmd);
     void procConfigFile(CmdType cmd);
     void autoUpdate(QString local_version);
