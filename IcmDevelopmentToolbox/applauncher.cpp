@@ -3,6 +3,7 @@
 #include <QPixmap>
 #include <QMessageBox>
 #include <QApplication>
+#include <QTimer>
 #include <QDebug>
 
 AppLauncher::AppLauncher(QWidget *parent) :
@@ -132,7 +133,7 @@ AppLauncher::AppLauncher(QWidget *parent) :
     mp_bgmPlayer->setMedia(mpl_bgmList);
     mp_bgmPlayer->setVolume(80);
     mp_bgmPlayer->setPlaybackRate(1.0f);
-    mp_bgmPlayer->play();
+    QTimer::singleShot(500, mp_bgmPlayer, &mp_bgmPlayer->play);
     connect(mp_bgmPlayer, &mp_bgmPlayer->stateChanged, this, [this](QMediaPlayer::State state){
         qDebug() << state;
         if(QMediaPlayer::StoppedState == state)
