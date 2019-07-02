@@ -95,7 +95,7 @@ private:
         WINDOW_WIDTH  = 334
     };
 
-    const QString SOFTWARE_VERSION = "v1.4";
+    const QString SOFTWARE_VERSION = "v1.5";
     const QString CONFIG_FILE_NAME = "config.json";
     QString versionFilePathName = "/version.txt";
     const QString appNameFirst = "IcmDevelopmentToolbox_";

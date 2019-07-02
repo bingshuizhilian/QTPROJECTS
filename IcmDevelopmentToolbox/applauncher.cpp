@@ -2,6 +2,7 @@
 #include <QPainter>
 #include <QPixmap>
 #include <QMessageBox>
+#include <QApplication>
 #include <QDebug>
 
 AppLauncher::AppLauncher(QWidget *parent) :
@@ -13,11 +14,14 @@ AppLauncher::AppLauncher(QWidget *parent) :
     appBmpToCArray(new BitmapProcess),
     appCanLogSeparator(new CanLogSeparator),
     mouseMovePos(QPoint(0, 0)),
-    se_soundPlayer(new QSoundEffect),
+    mp_soundPlayer(new QMediaPlayer),
     menu_launcher(new QMenu),
     btn_appClose(new QPushButton),
     btn_subAppCaculateKey(new QPushButton),
-    btn_appMinimize(new QPushButton)
+    btn_appMinimize(new QPushButton),
+    mp_bgmPlayer(new QMediaPlayer),
+    mpl_bgmList(new QMediaPlaylist),
+    btn_bgmPlayer(new QPushButton)
 {
     //launcherÉèÖÃ
     setWindowTitle(QString::fromLocal8Bit("Launcher"));
@@ -62,9 +66,9 @@ AppLauncher::AppLauncher(QWidget *parent) :
 
     //launcher°´Å¥1¡¢2¡¢3µÄÏìÓ¦ÊÂ¼þ
     connect(this, &clicked, this, [=](QAbstractButton* b){
-        se_soundPlayer->setVolume(0.3f);
-        se_soundPlayer->setSource(QUrl::fromLocalFile(":qrc:/../resources/soundeffects/btnclicked.wav"));
-        se_soundPlayer->play();
+        mp_soundPlayer->setVolume(30);
+        mp_soundPlayer->setMedia(QUrl::fromLocalFile(QApplication::applicationDirPath() + "/soundeffects/btnclicked.wav"));
+        mp_soundPlayer->play();
 
         if(b == btn_appFirmwareGenerator)
             appFirmwareGenerator->show();
@@ -88,16 +92,16 @@ AppLauncher::AppLauncher(QWidget *parent) :
 
     //launcher°´Å¥5ÉèÖÃ
     btn_subAppCaculateKey->setParent(this);
-    btn_subAppCaculateKey->setGeometry(90, 237, this->width() / 8, this->height() / 8);
+    btn_subAppCaculateKey->setGeometry(130, 237, this->width() / 8, this->height() / 8);
     btn_subAppCaculateKey->setToolTip(QString::fromLocal8Bit("Õï¶ÏÃÜÔ¿¼ÆËã"));
     btn_subAppCaculateKey->installEventFilter(this);
     btn_subAppCaculateKey->setStyleSheet("QPushButton{border-image: url(:qrc:/../resources/icons/sunset.png);border-radius: 5px;}"
                                          "QPushButton:hover{border:2px;}"
                                          "QPushButton:pressed{border:4px;}");
     connect(btn_subAppCaculateKey, &btn_subAppCaculateKey->clicked, this, [this](){
-        se_soundPlayer->setVolume(1.0f);
-        se_soundPlayer->setSource(QUrl::fromLocalFile(":qrc:/../resources/soundeffects/btnclicked2.wav"));
-        se_soundPlayer->play();
+        mp_soundPlayer->setVolume(100);
+        mp_soundPlayer->setMedia(QUrl::fromLocalFile(QApplication::applicationDirPath() + "/soundeffects/btnclicked2.wav"));
+        mp_soundPlayer->play();
 
         appFirmwareGenerator->switchFunctionPage(FirmwareGenerator::CMD_HANDLER_CALCULATE_KEY);
         appFirmwareGenerator->show();
@@ -106,25 +110,65 @@ AppLauncher::AppLauncher(QWidget *parent) :
 
     //launcher°´Å¥6ÉèÖÃ
     btn_appMinimize->setParent(this);
-    btn_appMinimize->setGeometry(245, 240, this->width() / 9, this->height() / 9);
+    btn_appMinimize->setGeometry(205, 292, this->width() / 12, this->height() / 12);
     btn_appMinimize->setToolTip(QString::fromLocal8Bit("×îÐ¡»¯"));
     btn_appMinimize->installEventFilter(this);
     btn_appMinimize->setStyleSheet("QPushButton{border-image: url(:qrc:/../resources/icons/watermelon.png);border-radius: 5px;}"
                                    "QPushButton:hover{border:2px;}"
                                    "QPushButton:pressed{border:4px;}");
     connect(btn_appMinimize, &btn_appMinimize->clicked, this, [this](){
-        se_soundPlayer->setVolume(1.0f);
-        se_soundPlayer->setSource(QUrl::fromLocalFile(":qrc:/../resources/soundeffects/btnclicked2.wav"));
-        se_soundPlayer->play();
+        mp_soundPlayer->setVolume(100);
+        mp_soundPlayer->setMedia(QUrl::fromLocalFile(QApplication::applicationDirPath() + "/soundeffects/btnclicked2.wav"));
+        mp_soundPlayer->play();
 
         this->showMinimized();
     });
 
-    //³ÌÐòÆô¶¯ÒôÐ§
-    se_soundPlayer->setLoopCount(1);
-    se_soundPlayer->setVolume(0.8f);
-    se_soundPlayer->setSource(QUrl::fromLocalFile(":qrc:/../resources/soundeffects/light.wav"));
-    se_soundPlayer->play();
+    //±³¾°ÒôÀÖ
+    mpl_bgmList->addMedia(QUrl::fromLocalFile(QApplication::applicationDirPath() + "/bgm/work.mp3"));
+    mpl_bgmList->addMedia(QUrl::fromLocalFile(QApplication::applicationDirPath() + "/bgm/summer.mp3"));
+    mpl_bgmList->addMedia(QUrl::fromLocalFile(QApplication::applicationDirPath() + "/bgm/qianxun.mp3"));
+
+    mp_bgmPlayer->setMedia(mpl_bgmList);
+    mp_bgmPlayer->setVolume(80);
+    mp_bgmPlayer->setPlaybackRate(1.0f);
+    mp_bgmPlayer->play();
+    connect(mp_bgmPlayer, &mp_bgmPlayer->stateChanged, this, [this](QMediaPlayer::State state){
+        qDebug() << state;
+        if(QMediaPlayer::StoppedState == state)
+            mp_bgmPlayer->play();
+    });
+
+    //launcher°´Å¥7ÉèÖÃ
+    btn_bgmPlayer->setParent(this);
+    btn_bgmPlayer->setGeometry(60, 287, this->width() / 11, this->height() / 11);
+    btn_bgmPlayer->setToolTip(QString::fromLocal8Bit("ÔÝÍ£±³¾°ÒôÀÖ"));
+    btn_bgmPlayer->installEventFilter(this);
+    btn_bgmPlayer->setStyleSheet("QPushButton{border-image: url(:qrc:/../resources/icons/music2.png);border-radius: 5px;}"
+                                 "QPushButton:hover{border:2px;}"
+                                 "QPushButton:pressed{border:4px;}");
+    connect(btn_bgmPlayer, &btn_bgmPlayer->clicked, this, [this](){
+        mp_soundPlayer->setVolume(100);
+        mp_soundPlayer->setMedia(QUrl::fromLocalFile(QApplication::applicationDirPath() + "/soundeffects/btnclicked2.wav"));
+        mp_soundPlayer->play();
+
+        if(QMediaPlayer::PlayingState == mp_bgmPlayer->state())
+        {
+            mp_bgmPlayer->pause();
+            btn_bgmPlayer->setToolTip(QString::fromLocal8Bit("²¥·Å±³¾°ÒôÀÖ"));
+            btn_bgmPlayer->setStyleSheet("QPushButton{border-image: url(:qrc:/../resources/icons/play-button2.png);border-radius: 5px;}"
+                                         "QPushButton:hover{border:2px;}"
+                                         "QPushButton:pressed{border:4px;}");
+        }
+        else
+        {
+            mp_bgmPlayer->play();
+            btn_bgmPlayer->setToolTip(QString::fromLocal8Bit("ÔÝÍ£±³¾°ÒôÀÖ"));
+            btn_bgmPlayer->setStyleSheet("QPushButton{border-image: url(:qrc:/../resources/icons/music2.png);border-radius: 5px;}"
+                                         "QPushButton:hover{border:2px;}"
+                                         "QPushButton:pressed{border:4px;}");
+        }
+    });
 
     //ÓÒ¼ü²Ëµ¥
     menu_launcher->addAction(QIcon(":qrc:/../resources/icons/paper-plane.png"), QString::fromLocal8Bit("¹ØÓÚ(&A)"), this, [this](){
@@ -179,6 +223,13 @@ void AppLauncher::mouseReleaseEvent(QMouseEvent *event)
 
     mouseMovePos = QPoint(0, 0);
 
+    if(Qt::RightButton == event->button())
+    {
+        mp_soundPlayer->setVolume(100);
+        mp_soundPlayer->setMedia(QUrl::fromLocalFile(QApplication::applicationDirPath() + "/soundeffects/btnclicked2.wav"));
+        mp_soundPlayer->play();
+    }
+
     QWidget::mouseReleaseEvent(event);
 }
 
@@ -190,22 +241,23 @@ bool AppLauncher::eventFilter(QObject *watched, QEvent *event)
                 || btn_appBmpToCArray == watched
                 || btn_appCanLogSeparator == watched)
         {
-            se_soundPlayer->setVolume(1.0f);
-            se_soundPlayer->setSource(QUrl::fromLocalFile(":qrc:/../resources/soundeffects/huaguo.wav"));
-            se_soundPlayer->play();
+            mp_soundPlayer->setVolume(100);
+            mp_soundPlayer->setMedia(QUrl::fromLocalFile(QApplication::applicationDirPath() + "/soundeffects/shua.wav"));
+            mp_soundPlayer->play();
         }
         else if(btn_subAppCaculateKey == watched)
         {
-            se_soundPlayer->setVolume(1.0f);
-            se_soundPlayer->setSource(QUrl::fromLocalFile(":qrc:/../resources/soundeffects/shua.wav"));
-            se_soundPlayer->play();
+            mp_soundPlayer->setVolume(100);
+            mp_soundPlayer->setMedia(QUrl::fromLocalFile(QApplication::applicationDirPath() + "/soundeffects/huaguo.wav"));
+            mp_soundPlayer->play();
         }
         else if(btn_appClose == watched
-                || btn_appMinimize == watched)
+                || btn_appMinimize == watched
+                || btn_bgmPlayer == watched)
         {
-            se_soundPlayer->setVolume(1.0f);
-            se_soundPlayer->setSource(QUrl::fromLocalFile(":qrc:/../resources/soundeffects/skype.wav"));
-            se_soundPlayer->play();
+            mp_soundPlayer->setVolume(100);
+            mp_soundPlayer->setMedia(QUrl::fromLocalFile(QApplication::applicationDirPath() + "/soundeffects/skype.wav"));
+            mp_soundPlayer->play();
         }
     }
 
@@ -224,7 +276,7 @@ void AppLauncher::contextMenuEvent(QContextMenuEvent *event)
 
 void AppLauncher::keyPressEvent(QKeyEvent *event)
 {
-    if(event->key() == Qt::Key_Alt)
+    if(Qt::Key_Alt == event->key())
     {
         menu_launcher->move(geometry().x() + width() / 2, geometry().y() + height() / 2);
         menu_launcher->show();

@@ -4,16 +4,12 @@
         <file>../resources/icons/palm-tree.png</file>
         <file>../resources/icons/pamela.png</file>
         <file>../resources/icons/popsicle.png</file>
-        <file>../resources/soundeffects/btnclicked.wav</file>
-        <file>../resources/soundeffects/light.wav</file>
-        <file>../resources/soundeffects/shua.wav</file>
         <file>../resources/icons/close.png</file>
         <file>../resources/icons/paper-plane.png</file>
         <file>../resources/icons/shack.png</file>
         <file>../resources/icons/sunset.png</file>
-        <file>../resources/soundeffects/huaguo.wav</file>
-        <file>../resources/soundeffects/btnclicked2.wav</file>
-        <file>../resources/soundeffects/skype.wav</file>
         <file>../resources/icons/watermelon.png</file>
+        <file>../resources/icons/play-button2.png</file>
+        <file>../resources/icons/music2.png</file>
     </qresource>
 </RCC>
