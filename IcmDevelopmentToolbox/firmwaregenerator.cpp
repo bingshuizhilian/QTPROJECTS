@@ -1,11 +1,6 @@
 ﻿#include "firmwaregenerator.h"
 #include "ui_firmwaregenerator.h"
-#include "defaultM1SeriesBootCode.h"
-#include "defaultT1SeriesBootCode.h"
-#include "defaultS51evflBootCode.h"
-#include "defaultA13tevflBootCode.h"
-#include "defaultFlashDriverCode.h"
-#include "defaultEraseEepromCode.h"
+#include "modeldata.h"
 #include "crc16.h"
 #include <QFile>
 #include <QFileDialog>
@@ -295,25 +290,27 @@ void FirmwareGenerator::switchPlatformPressed()
 {
     m_leBootloaderInfo->setText("default " + m_cmbPlatformSwitch->currentText() + " boot code loaded");
 
+    ModelData md;
+
     if(PLATFORM_STRING_LIST.at(M1AFL2) == m_cmbPlatformSwitch->currentText())
     {
-        m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(DEFAULT_M1_SERIES_BOOT_CODE_HARDWARE_VERSION));
+        m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(md.HW_VER_M1AFL2));
     }
     else if(PLATFORM_STRING_LIST.at(T18) == m_cmbPlatformSwitch->currentText())
     {
-        m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(DEFAULT_T1_SERIES_BOOT_CODE_HARDWARE_VERSION));
+        m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(md.HW_VER_T19));
     }
     else if(PLATFORM_STRING_LIST.at(T19) == m_cmbPlatformSwitch->currentText())
     {
-        m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(DEFAULT_T1_SERIES_BOOT_CODE_HARDWARE_VERSION));
+        m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(md.HW_VER_T19));
     }
     else if(PLATFORM_STRING_LIST.at(S51EVFL) == m_cmbPlatformSwitch->currentText())
     {
-        m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(DEFAULT_S51EVFL_BOOT_CODE_HARDWARE_VERSION));
+        m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(md.HW_VER_S51EVFL));
     }
     else if(PLATFORM_STRING_LIST.at(A13TEV) == m_cmbPlatformSwitch->currentText())
     {
-        m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(DEFAULT_A13TEV_BOOT_CODE_HARDWARE_VERSION));
+        m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(md.HW_VER_A13TEV));
     }
 }
 
@@ -347,25 +344,27 @@ void FirmwareGenerator::useDefaultBootloaderPressed()
         m_btnLoadBootloader->setStatusTip(tr("use default boot code now"));
         m_cmbPlatformSwitch->setEnabled(true);
 
+        ModelData md;
+
         if(PLATFORM_STRING_LIST.at(M1AFL2) == m_cmbPlatformSwitch->currentText())
         {
-            m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(DEFAULT_M1_SERIES_BOOT_CODE_HARDWARE_VERSION));
+            m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(md.HW_VER_M1AFL2));
         }
         else if(PLATFORM_STRING_LIST.at(T18) == m_cmbPlatformSwitch->currentText())
         {
-            m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(DEFAULT_T1_SERIES_BOOT_CODE_HARDWARE_VERSION));
+            m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(md.HW_VER_T19));
         }
         else if(PLATFORM_STRING_LIST.at(T19) == m_cmbPlatformSwitch->currentText())
         {
-            m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(DEFAULT_T1_SERIES_BOOT_CODE_HARDWARE_VERSION));
+            m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(md.HW_VER_T19));
         }
         else if(PLATFORM_STRING_LIST.at(S51EVFL) == m_cmbPlatformSwitch->currentText())
         {
-            m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(DEFAULT_S51EVFL_BOOT_CODE_HARDWARE_VERSION));
+            m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(md.HW_VER_S51EVFL));
         }
         else if(PLATFORM_STRING_LIST.at(A13TEV) == m_cmbPlatformSwitch->currentText())
         {
-            m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(DEFAULT_A13TEV_BOOT_CODE_HARDWARE_VERSION));
+            m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(md.HW_VER_A13TEV));
         }
     }
     else
@@ -579,25 +578,27 @@ void FirmwareGenerator::generateFirmwareWithBootloader()
     }
     else
     {
+        ModelData md;
+
         if(PLATFORM_STRING_LIST.at(M1AFL2) == m_cmbPlatformSwitch->currentText())
         {
-            bootloaderCodeString = DEFAULT_M1_SERIES_BOOT_CODE;
+            bootloaderCodeString = md.BOOT_CODE_M1AFL2;
         }
         else if(PLATFORM_STRING_LIST.at(T18) == m_cmbPlatformSwitch->currentText())
         {
-            bootloaderCodeString = DEFAULT_T1_SERIES_BOOT_CODE;
+            bootloaderCodeString = md.BOOT_CODE_T19;
         }
         else if(PLATFORM_STRING_LIST.at(T19) == m_cmbPlatformSwitch->currentText())
         {
-            bootloaderCodeString = DEFAULT_T1_SERIES_BOOT_CODE;
+            bootloaderCodeString = md.BOOT_CODE_T19;
         }
         else if(PLATFORM_STRING_LIST.at(S51EVFL) == m_cmbPlatformSwitch->currentText())
         {
-            bootloaderCodeString = DEFAULT_S51EVFL_BOOT_CODE;
+            bootloaderCodeString = md.BOOT_CODE_S51EVFL;
         }
         else if(PLATFORM_STRING_LIST.at(A13TEV) == m_cmbPlatformSwitch->currentText())
         {
-            bootloaderCodeString = DEFAULT_A13TEV_BOOT_CODE;
+            bootloaderCodeString = md.BOOT_CODE_A13TEV;
         }
         else
         {
@@ -694,48 +695,49 @@ void FirmwareGenerator::generateFiles(CmdType cmd, QString dir_path, bool is_ope
 {
     QString filePathName = dir_path;
     const char *fileContent = nullptr;
+    ModelData md;
 
     switch(cmd)
     {
     case CMD_GEN_M1AFL2_FLASH_DRIVER:
         filePathName += "CheryM1afl2FlashDriver.S19";
-        fileContent = DEFAULT_M1AFL2_FLASHDRIVER_CODE;
+        fileContent = md.FLASH_DRIVER_M1AFL2;
         break;
     case CMD_GEN_T19_FLASH_DRIVER:
         filePathName += "CheryT19FlashDriver.S19";
-        fileContent = DEFAULT_T19_FLASHDRIVER_CODE;
+        fileContent = md.FLASH_DRIVER_T19;
         break;
     case CMD_GEN_S51EVFL_FLASH_DRIVER:
         filePathName += "CheryS51evflFlashDriver.S19";
-        fileContent = DEFAULT_S51EVFL_FLASHDRIVER_CODE;
+        fileContent = md.FLASH_DRIVER_S51EVFL;
         break;
     case CMD_GEN_A13TEV_FLASH_DRIVER:
         filePathName += "CheryA13tevFlashDriver.S19";
-        fileContent = DEFAULT_A13TEV_FLASHDRIVER_CODE;
+        fileContent = md.FLASH_DRIVER_A13TEV;
         break;
     case CMD_GEN_COMMON_FLASH_DRIVER:
         filePathName += "CheryCustomizedFlashDriver.S19";
-        fileContent = DEFAULT_CHERY_COMMON_FLASHDRIVER_CODE;
+        fileContent = md.FLASH_DRIVER_NO_PART_NUMBER;
         break;
     case CMD_GEN_ERASE_EEPROM:
         filePathName += "CheryM1SeriesEraseEepromFirmware.S19";
-        fileContent = DEFAULT_ERASE_EEPROM_CODE;
+        fileContent = md.ERASE_EEPROM_FIRMWARE;
         break;
     case CMD_GEN_M1_BOOT_CODE:
-        filePathName += QString("CheryM1SeriesBootCode_hw") + DEFAULT_M1_SERIES_BOOT_CODE_HARDWARE_VERSION + QString(".S19");
-        fileContent = DEFAULT_M1_SERIES_BOOT_CODE;
+        filePathName += QString("CheryM1SeriesBootCode_hw") + md.HW_VER_M1AFL2 + QString(".S19");
+        fileContent = md.BOOT_CODE_M1AFL2;
         break;
     case CMD_GEN_T1_BOOT_CODE:
-        filePathName += QString("CheryT1SeriesBootCode_hw") + DEFAULT_T1_SERIES_BOOT_CODE_HARDWARE_VERSION + QString(".S19");
-        fileContent = DEFAULT_T1_SERIES_BOOT_CODE;
+        filePathName += QString("CheryT1SeriesBootCode_hw") + md.HW_VER_T19 + QString(".S19");
+        fileContent = md.BOOT_CODE_T19;
         break;
     case CMD_GEN_S51EVFL_BOOT_CODE:
-        filePathName += QString("CheryS51evflBootCode_hw") + DEFAULT_S51EVFL_BOOT_CODE_HARDWARE_VERSION + QString(".S19");
-        fileContent = DEFAULT_S51EVFL_BOOT_CODE;
+        filePathName += QString("CheryS51evflBootCode_hw") + md.HW_VER_S51EVFL + QString(".S19");
+        fileContent = md.BOOT_CODE_S51EVFL;
         break;
     case CMD_GEN_A13TEV_BOOT_CODE:
-        filePathName += QString("CheryA13tevBootCode_hw") + DEFAULT_A13TEV_BOOT_CODE_HARDWARE_VERSION + QString(".S19");
-        fileContent = DEFAULT_A13TEV_BOOT_CODE;
+        filePathName += QString("CheryA13tevBootCode_hw") + md.HW_VER_A13TEV + QString(".S19");
+        fileContent = md.BOOT_CODE_A13TEV;
         break;
     default:
         break;

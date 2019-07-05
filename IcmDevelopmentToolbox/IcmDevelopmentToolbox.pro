@@ -34,13 +34,7 @@ SOURCES += main.cpp \
     firmwaregenerator.cpp
 
 HEADERS  += \
-    defaultFlashDriverCode.h \
     crc16.h \
-    defaultEraseEepromCode.h \
-    defaultM1SeriesBootCode.h \
-    defaultT1SeriesBootCode.h \
-    defaultS51evflBootCode.h \
-    defaultA13tevflBootCode.h \
     bitmapprocess.h \
     bmp.h \
     applauncher.h \
@@ -54,3 +48,5 @@ FORMS    += \
 
 RESOURCES += \
     resources.qrc
+
+LIBS += ModelData.dll
