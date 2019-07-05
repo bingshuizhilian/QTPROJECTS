@@ -165,7 +165,7 @@ private:
     void commandsInitialization(void);
     void generateFirmwareWithBootloader();
     void generateFirmwareForDiagnosis();
-    void generateFiles(CmdType cmd, QString dir_path, bool is_open_folder);
+    void generateFiles(CmdType cmd, QString dir_path, bool is_open_folder, QString user_part_number = "");
     void generateCharArray(void);
     void compressCArrayOfBitmap(void);
     bool sortS19Code(QStringList &originalStringList);

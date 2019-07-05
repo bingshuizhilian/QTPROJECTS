@@ -690,7 +690,7 @@ void FirmwareGenerator::generateFirmwareWithBootloader()
 }
 
 //生成诊断仪用flash driver
-void FirmwareGenerator::generateFiles(CmdType cmd, QString dir_path, bool is_open_folder)
+void FirmwareGenerator::generateFiles(CmdType cmd, QString dir_path, bool is_open_folder, QString user_part_number)
 {
     QString filePathName = dir_path;
     const char *fileContent = nullptr;
@@ -714,7 +714,7 @@ void FirmwareGenerator::generateFiles(CmdType cmd, QString dir_path, bool is_ope
         fileContent = DEFAULT_A13TEV_FLASHDRIVER_CODE;
         break;
     case CMD_GEN_COMMON_FLASH_DRIVER:
-        filePathName += "CheryCommonFlashDriver.S19";
+        filePathName += "CheryCustomizedFlashDriver.S19";
         fileContent = DEFAULT_CHERY_COMMON_FLASHDRIVER_CODE;
         break;
     case CMD_GEN_ERASE_EEPROM:
@@ -760,7 +760,18 @@ void FirmwareGenerator::generateFiles(CmdType cmd, QString dir_path, bool is_ope
     }
 
     QTextStream out(&newFile);
-    out << fileContent;
+
+    if(CMD_GEN_COMMON_FLASH_DRIVER == cmd && !user_part_number.isEmpty())
+    {
+        QString newFileContent(fileContent);
+        newFileContent.replace(18, user_part_number.size(), user_part_number);
+
+        out << newFileContent;
+    }
+    else
+    {
+        out << fileContent;
+    }
 
 
     newFile.close();
@@ -1025,7 +1036,7 @@ void FirmwareGenerator::generateFirmwareForDiagnosis()
     }
     else
     {
-        generateFiles(CMD_GEN_COMMON_FLASH_DRIVER, dirPath, false);
+        generateFiles(CMD_GEN_COMMON_FLASH_DRIVER, dirPath, false, m_leDiagnosisS021->text().right(m_leDiagnosisS021->text().size() - 18).left(32));
     }
 
     //windows系统下直接打开该文件夹并选中诊断仪app文件
