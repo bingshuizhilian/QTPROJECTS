@@ -1,4 +1,4 @@
-ï»¿#include "firmwaregenerator.h"
+#include "firmwaregenerator.h"
 #include "ui_firmwaregenerator.h"
 #include "modeldata.h"
 #include "crc16.h"
@@ -29,14 +29,14 @@ FirmwareGenerator::FirmwareGenerator(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    //åˆå§‹åŒ–æ§ä»¶
+    //³õÊ¼»¯¿Ø¼ş
     componentsInitialization();
-    //è®¾ç½®å¸ƒå±€
+    //ÉèÖÃ²¼¾Ö
     layoutsInitialization();
-    //å‘½ä»¤è¡Œåˆå§‹åŒ–
+    //ÃüÁîĞĞ³õÊ¼»¯
     commandsInitialization();
 
-    //å‡çº§æ£€æµ‹
+    //Éı¼¶¼ì²â
     procConfigFile(CMD_LOAD_CONFIG_FILE);
 }
 
@@ -45,7 +45,7 @@ FirmwareGenerator::~FirmwareGenerator()
     delete ui;
 }
 
-//åˆ‡æ¢åŠŸèƒ½åï¼Œæ§ä»¶é—´å…³è”å…³ç³»çš„å¤„ç†
+//ÇĞ»»¹¦ÄÜºó£¬¿Ø¼ş¼ä¹ØÁª¹ØÏµµÄ´¦Àí
 void FirmwareGenerator::switchFunctionPressed()
 {
     switch(m_cmbFunctionSwitch->currentIndex())
@@ -96,7 +96,7 @@ void FirmwareGenerator::switchFunctionPressed()
     }
 }
 
-//å¤„ç†å‘½ä»¤è¾“å…¥è¡ŒæŒ‰å›è½¦æ‰§è¡Œå‘½ä»¤äº‹ä»¶
+//´¦ÀíÃüÁîÊäÈëĞĞ°´»Ø³µÖ´ĞĞÃüÁîÊÂ¼ş
 void FirmwareGenerator::runCmdReturnPressed()
 {
     QString inputString = m_leRunCommand->text();
@@ -314,7 +314,7 @@ void FirmwareGenerator::switchPlatformPressed()
     }
 }
 
-//å¤„ç†æŒ‰ä¸‹generateæŒ‰é’®äº‹ä»¶
+//´¦Àí°´ÏÂgenerate°´Å¥ÊÂ¼ş
 void FirmwareGenerator::generateButtonPressed()
 {
     switch(m_cmbFunctionSwitch->currentIndex())
@@ -333,7 +333,7 @@ void FirmwareGenerator::generateButtonPressed()
     qDebug()<<"wd width:"<<this->size().width();
 }
 
-//å¤„ç†ä½¿ç”¨é»˜è®¤bootloaderäº‹ä»¶
+//´¦ÀíÊ¹ÓÃÄ¬ÈÏbootloaderÊÂ¼ş
 void FirmwareGenerator::useDefaultBootloaderPressed()
 {
     if(m_ckbUseDefaultBootloader->isChecked())
@@ -378,7 +378,7 @@ void FirmwareGenerator::useDefaultBootloaderPressed()
     }
 }
 
-//å¤„ç†åŠ è½½bootloaderäº‹ä»¶
+//´¦Àí¼ÓÔØbootloaderÊÂ¼ş
 void FirmwareGenerator::loadBootloaderPressed()
 {
     QString fileName = QFileDialog::getOpenFileName();
@@ -389,7 +389,7 @@ void FirmwareGenerator::loadBootloaderPressed()
     qDebug()<<fileName<<endl;
 }
 
-//å¤„ç†åœ¨S021è¾“å…¥æ¡†ä¸­æŒ‰å›è½¦é”®ä¿®æ”¹ç‰ˆæœ¬å·æˆ–è¾“å…¥é›¶ä»¶å·äº‹ä»¶
+//´¦ÀíÔÚS021ÊäÈë¿òÖĞ°´»Ø³µ¼üĞŞ¸Ä°æ±¾ºÅ»òÊäÈëÁã¼şºÅÊÂ¼ş
 void FirmwareGenerator::s021ReturnPressed()
 {
     QString originalS021Data = m_leDiagnosisS021->text();
@@ -398,15 +398,15 @@ void FirmwareGenerator::s021ReturnPressed()
     {
         QString tmpStr = DIAG_COMMON_S0;
 
-        //è¯·æ±‚ç”¨æˆ·è¾“å…¥é›¶ä»¶å·
+        //ÇëÇóÓÃ»§ÊäÈëÁã¼şºÅ
         bool isOK;
-        QString partnumberQueryData = QInputDialog::getText(NULL,
-                                                         "part number query",
-                                                         "Please input part number, up to 16 characters\n",
-                                                         QLineEdit::Normal,
-                                                         "",
-                                                         &isOK);
-        //æ ¡éªŒè¾“å…¥ä¿¡æ¯
+        QString partnumberQueryData = QInputDialog::getText(this,
+                                                            QString::fromLocal8Bit("ÊäÈëÁã¼şºÅ"),
+                                                            QString::fromLocal8Bit("ÇëÊäÈëÁã¼şºÅ, ×î¶à¿ÉÒÔÊäÈë16¸ö×Ö·û"),
+                                                            QLineEdit::Normal,
+                                                            "",
+                                                            &isOK);
+        //Ğ£ÑéÊäÈëĞÅÏ¢
         QRegExp regExp("^[\\w\\-]{0,16}$");
 
         if(isOK && regExp.exactMatch(partnumberQueryData))
@@ -416,7 +416,7 @@ void FirmwareGenerator::s021ReturnPressed()
         }
         else
         {
-            QMessageBox::warning(this, "Warnning", "invalid part number", QMessageBox::Yes);
+            QMessageBox::warning(this, QString::fromLocal8Bit("¾¯¸æ"), QString::fromLocal8Bit("ÎŞĞ§Áã¼şºÅ"), QMessageBox::Yes);
             return;
         }
     }
@@ -454,19 +454,19 @@ void FirmwareGenerator::s021ReturnPressed()
     //S021***30302E30312E323040
     if(!originalS021Data.startsWith("S021", Qt::CaseInsensitive) || m_leDiagnosisS021->text().size() != 70)
     {
-        QMessageBox::warning(this, "Warnning", "invalid data, couldn't modify version", QMessageBox::Yes);
+        QMessageBox::warning(this, QString::fromLocal8Bit("¾¯¸æ"), QString::fromLocal8Bit("S0ĞĞÊı¾İÎŞĞ§"), QMessageBox::Yes);
         return;
     }
 
-    //è¯·æ±‚ç”¨æˆ·è¾“å…¥ç‰ˆæœ¬ä¿¡æ¯æ•°æ®
+    //ÇëÇóÓÃ»§ÊäÈë°æ±¾ĞÅÏ¢Êı¾İ
     bool isOK;
     QString versionQueryData = QInputDialog::getText(NULL,
-                                                     "version data query",
-                                                     "Please input version info, format: xx.xx.xx\n",
+                                                     QString::fromLocal8Bit("ÊäÈëÈí¼ş°æ±¾ºÅ"),
+                                                     QString::fromLocal8Bit("ÇëÊäÈëÈí¼ş°æ±¾ºÅ, ĞèÑÏ¸ñÆ¥Åä¸ñÊ½: xx.xx.xx\n"),
                                                      QLineEdit::Normal,
                                                      "",
                                                      &isOK);
-    //æ ¡éªŒè¾“å…¥ä¿¡æ¯, ä¸¥æ ¼åŒ¹é…xx.xx.xx
+    //Ğ£ÑéÊäÈëĞÅÏ¢, ÑÏ¸ñÆ¥Åäxx.xx.xx
     QRegExp regExp("^([a-fA-F\\d]{2}\\.){2}[a-fA-F\\d]{2}$");
 
     if(isOK && regExp.exactMatch(versionQueryData))
@@ -479,27 +479,27 @@ void FirmwareGenerator::s021ReturnPressed()
     }
     else
     {
-        QMessageBox::warning(this, "Warnning", "invalid version data, version update failed", QMessageBox::Yes);
+        QMessageBox::warning(this, QString::fromLocal8Bit("¾¯¸æ"), QString::fromLocal8Bit("°æ±¾ºÅÊı¾İÓĞÎó, Î´ÄÜ¸üĞÂ°æ±¾ºÅ"), QMessageBox::Yes);
         return;
     }
 }
 
-//å¤„ç†åŠ è½½.S19æ–‡ä»¶äº‹ä»¶
+//´¦Àí¼ÓÔØ.S19ÎÄ¼şÊÂ¼ş
 void FirmwareGenerator::selectFilePressed()
 {
-    //å®šä¹‰æ–‡ä»¶å¯¹è¯æ¡†ç±»
+    //¶¨ÒåÎÄ¼ş¶Ô»°¿òÀà
     QFileDialog* fileDialog = new QFileDialog(this);
-    //å®šä¹‰æ–‡ä»¶å¯¹è¯æ¡†æ ‡é¢˜
+    //¶¨ÒåÎÄ¼ş¶Ô»°¿ò±êÌâ
     fileDialog->setWindowTitle(tr("choose .S19 file"));
-    //è®¾ç½®é»˜è®¤æ–‡ä»¶è·¯å¾„
+    //ÉèÖÃÄ¬ÈÏÎÄ¼şÂ·¾¶
     fileDialog->setDirectory(".");
-    //è®¾ç½®æ–‡ä»¶è¿‡æ»¤å™¨
+    //ÉèÖÃÎÄ¼ş¹ıÂËÆ÷
     fileDialog->setNameFilter(tr("*.S19"));
-    //è®¾ç½®å¯ä»¥é€‰æ‹©å¤šä¸ªæ–‡ä»¶,é»˜è®¤ä¸ºåªèƒ½é€‰æ‹©ä¸€ä¸ªæ–‡ä»¶QFileDialog::ExistingFile
+    //ÉèÖÃ¿ÉÒÔÑ¡Ôñ¶à¸öÎÄ¼ş,Ä¬ÈÏÎªÖ»ÄÜÑ¡ÔñÒ»¸öÎÄ¼şQFileDialog::ExistingFile
     fileDialog->setFileMode(QFileDialog::ExistingFile);
-    //è®¾ç½®è§†å›¾æ¨¡å¼
+    //ÉèÖÃÊÓÍ¼Ä£Ê½
     fileDialog->setViewMode(QFileDialog::Detail);
-    //æ‰“å°æ‰€æœ‰é€‰æ‹©çš„æ–‡ä»¶çš„è·¯å¾„
+    //´òÓ¡ËùÓĞÑ¡ÔñµÄÎÄ¼şµÄÂ·¾¶
     QStringList fileNames;
 
     if(fileDialog->exec())
@@ -518,8 +518,8 @@ void FirmwareGenerator::selectFilePressed()
         qDebug()<<tmp<<endl;
 }
 
-//åˆæˆå«bootloaderçš„å›ºä»¶
-void FirmwareGenerator::generateFirmwareWithBootloader()
+//ºÏ³Éº¬bootloaderµÄ¹Ì¼ş
+void FirmwareGenerator::generateFirmwareWithBootloader(void)
 {
     if(m_leBootloaderInfo->text().isEmpty())
     {
@@ -533,7 +533,7 @@ void FirmwareGenerator::generateFirmwareWithBootloader()
         return;
     }
 
-    //è·å–bootloaderæ–‡ä»¶
+    //»ñÈ¡bootloaderÎÄ¼ş
     QString bootloaderCodeString;
     if(!m_ckbUseDefaultBootloader->isChecked())
     {
@@ -560,7 +560,7 @@ void FirmwareGenerator::generateFirmwareWithBootloader()
         {
             elem += '\n';
 
-            //åŸç”Ÿçš„bootloader.S19æ–‡ä»¶æœ‰æ–‡ä»¶å¤´å’Œæ–‡ä»¶å°¾ï¼Œåˆæˆçš„æ—¶å€™éœ€è¦å‰”é™¤
+            //Ô­ÉúµÄbootloader.S19ÎÄ¼şÓĞÎÄ¼şÍ·ºÍÎÄ¼şÎ²£¬ºÏ³ÉµÄÊ±ºòĞèÒªÌŞ³ı
             if(elem.startsWith("S0", Qt::CaseInsensitive))
                 QMessageBox::information(this, "Tips", "S0 line detected in the bootloader file, the tool will ignore it and will not merge it into the target file", QMessageBox::Yes);
             else if(elem.startsWith("S9", Qt::CaseInsensitive))
@@ -608,7 +608,7 @@ void FirmwareGenerator::generateFirmwareWithBootloader()
 
     qDebug()<<bootloaderCodeString<<endl;
 
-    //è·å–.S19åŸæ–‡ä»¶
+    //»ñÈ¡.S19Ô­ÎÄ¼ş
     QString fileName =fileInfo.at(ABSOLUTE_FILE_PATH);
     QFile s19File(fileName);
     if(!s19File.open(QIODevice::ReadOnly | QIODevice::Text))
@@ -630,7 +630,7 @@ void FirmwareGenerator::generateFirmwareWithBootloader()
     for(auto& elem:originalS19FileStringList)
         elem += '\n';
 
-    //å°†bootloaderåˆæˆè¿›åŸå§‹S19æ–‡ä»¶
+    //½«bootloaderºÏ³É½øÔ­Ê¼S19ÎÄ¼ş
     int targetIndex = originalS19FileStringList.indexOf(TARGET_STRING_AFTER_GENERATING_BOOTCODE);
     if(-1 != targetIndex)
     {
@@ -646,7 +646,7 @@ void FirmwareGenerator::generateFirmwareWithBootloader()
     }
     originalS19FileStringList.replace(replaceIndex, bootloaderCodeString);
 
-    //å­˜å‚¨ç”Ÿæˆçš„å«bootloaderçš„æ–‡ä»¶
+    //´æ´¢Éú³ÉµÄº¬bootloaderµÄÎÄ¼ş
     QString tmpFileName = fileInfo.at(FILE_NAME);
     QString timeInfo = QDateTime::currentDateTime().toString("yyyy-MM-dd_HH-mm-ss");
     tmpFileName = tmpFileName.left(tmpFileName.size() - 4);
@@ -680,17 +680,17 @@ void FirmwareGenerator::generateFirmwareWithBootloader()
 
     qDebug()<<newFilePathName<<endl;
 
-    //WINDOWSç¯å¢ƒä¸‹ï¼Œé€‰ä¸­è¯¥æ–‡ä»¶
+    //WINDOWS»·¾³ÏÂ£¬Ñ¡ÖĞ¸ÃÎÄ¼ş
 #ifdef WIN32
     QProcess process;
     QString openFileName = newFilePathName;
 
-    openFileName.replace("/", "\\");    //***è¿™å¥windowsä¸‹å¿…è¦***
+    openFileName.replace("/", "\\");    //***Õâ¾äwindowsÏÂ±ØÒª***
     process.startDetached("explorer /select," + openFileName);
 #endif
 }
 
-//ç”Ÿæˆè¯Šæ–­ä»ªç”¨flash driver
+//Éú³ÉÕï¶ÏÒÇÓÃflash driver
 void FirmwareGenerator::generateFiles(CmdType cmd, QString dir_path, bool is_open_folder, QString user_part_number)
 {
     QString filePathName = dir_path;
@@ -747,7 +747,7 @@ void FirmwareGenerator::generateFiles(CmdType cmd, QString dir_path, bool is_ope
     if(!dir.exists())
         dir.mkdir(dir_path);
 
-    //åˆ é™¤ä¸´æ—¶æ–‡ä»¶
+    //É¾³ıÁÙÊ±ÎÄ¼ş
     QFile tmpFile(filePathName);
     if (tmpFile.exists())
     {
@@ -784,14 +784,14 @@ void FirmwareGenerator::generateFiles(CmdType cmd, QString dir_path, bool is_ope
         QProcess process;
         QString openFileName = filePathName;
 
-        openFileName.replace("/", "\\");    //***è¿™å¥windowsä¸‹å¿…è¦***
+        openFileName.replace("/", "\\");    //***Õâ¾äwindowsÏÂ±ØÒª***
         process.startDetached("explorer /select," + openFileName);
 #endif
     }
 }
 
-//ç”Ÿæˆè¯Šæ–­ä»ªç”¨å›ºä»¶
-void FirmwareGenerator::generateFirmwareForDiagnosis()
+//Éú³ÉÕï¶ÏÒÇÓÃ¹Ì¼ş
+void FirmwareGenerator::generateFirmwareForDiagnosis(void)
 {
     if(m_leFileInfo->text().isEmpty())
     {
@@ -799,7 +799,7 @@ void FirmwareGenerator::generateFirmwareForDiagnosis()
         return;
     }
 
-    //è·å–.S19åŸæ–‡ä»¶
+    //»ñÈ¡.S19Ô­ÎÄ¼ş
     QString fileName =fileInfo.at(ABSOLUTE_FILE_PATH);
     QFile s19File(fileName);
     if(!s19File.open(QIODevice::ReadOnly | QIODevice::Text))
@@ -821,7 +821,7 @@ void FirmwareGenerator::generateFirmwareForDiagnosis()
     for(auto& elem:originalS19FileStringList)
         elem += '\n';
 
-    //æ ¡éªŒåŸæ–‡ä»¶æ˜¯å¦æ­£ç¡®
+    //Ğ£ÑéÔ­ÎÄ¼şÊÇ·ñÕıÈ·
     int bootValidateIndex = originalS19FileStringList.indexOf(TARGET_STRING_AFTER_GENERATING_BOOTCODE);
     if(-1 != bootValidateIndex)
     {
@@ -848,7 +848,7 @@ void FirmwareGenerator::generateFirmwareForDiagnosis()
         return;
     }
 
-    //æ ¡éªŒS021è¡Œæ•°æ®
+    //Ğ£ÑéS021ĞĞÊı¾İ
     if(m_leDiagnosisS021->text().isEmpty())
     {
         QMessageBox::warning(this, "Warnning", "Please input S021 data", QMessageBox::Yes);
@@ -863,24 +863,24 @@ void FirmwareGenerator::generateFirmwareForDiagnosis()
         }
     }
 
-    //æ›¿æ¢S0è¡Œï¼Œåˆ é™¤S10Bè¡Œ
+    //Ìæ»»S0ĞĞ£¬É¾³ıS10BĞĞ
     originalS19FileStringList.replace(0, m_leDiagnosisS021->text().toUpper() + '\n');
     originalS19FileStringList.removeOne(REPLACE_STRING);
 
     for(auto elem: originalS19FileStringList)
         qDebug() << elem << endl;
 
-    //.S19æ–‡ä»¶ä¸­S2æŒ‰Fxå‡åºæ’åº
+    //.S19ÎÄ¼şÖĞS2°´FxÉıĞòÅÅĞò
     if(!sortS19Code(originalS19FileStringList))
     {
         return;
     }
 
-    //ç”Ÿæˆå‚ä¸CRCè®¡ç®—çš„æ•°æ®çš„å­—ç¬¦ä¸²
+    //Éú³É²ÎÓëCRC¼ÆËãµÄÊı¾İµÄ×Ö·û´®
     QStringList crcCalcStringList = originalS19FileStringList;
     QString crcCalcString;
 
-    //S0å’ŒS9è¡Œä¸å‚ä¸CRCè®¡ç®—
+    //S0ºÍS9ĞĞ²»²ÎÓëCRC¼ÆËã
     if(crcCalcStringList.size() >= 2)
     {
         crcCalcStringList.pop_front();
@@ -892,14 +892,14 @@ void FirmwareGenerator::generateFirmwareForDiagnosis()
         if(elem.endsWith('\n'))
             elem = elem.left(elem.size() - 1);
 
-        //æœ€åä¸¤ä¸ªå­—èŠ‚ä¸è®¡ç®—
+        //×îºóÁ½¸ö×Ö½Ú²»¼ÆËã
         elem = elem.left(elem.size() - 2);
 
-        //S1å‰8ä¸ªå­—èŠ‚ä¸è®¡ç®—
+        //S1Ç°8¸ö×Ö½Ú²»¼ÆËã
         if(elem.startsWith("S1", Qt::CaseInsensitive))
             elem = elem.right(elem.size() - 8);
 
-        //S2å‰10ä¸ªå­—èŠ‚ä¸è®¡ç®—
+        //S2Ç°10¸ö×Ö½Ú²»¼ÆËã
         if(elem.startsWith("S2", Qt::CaseInsensitive))
             elem = elem.right(elem.size() - 10);
 
@@ -912,7 +912,7 @@ void FirmwareGenerator::generateFirmwareForDiagnosis()
         return;
     }
 
-    //å°†æ•°å­—å­—ç¬¦ä¸²é‡ç»„æˆæ•°å­—ï¼Œe.g. "91b0"->0x91 0xb0
+    //½«Êı×Ö×Ö·û´®ÖØ×é³ÉÊı×Ö£¬e.g. "91b0"->0x91 0xb0
     QList<unsigned char> dataList;
     for(int cnt = 0; cnt < crcCalcString.size(); cnt += 2)
         dataList.push_back(crcCalcString.mid(cnt, 2).toInt(nullptr, 16) & 0xff);
@@ -950,15 +950,15 @@ void FirmwareGenerator::generateFirmwareForDiagnosis()
     }
     else
     {
-        //è¯·æ±‚ç”¨æˆ·è¾“å…¥CRCåœ¨ä»ªè¡¨ä¸­çš„å­˜å‚¨ä½ç½®
+        //ÇëÇóÓÃ»§ÊäÈëCRCÔÚÒÇ±íÖĞµÄ´æ´¢Î»ÖÃ
         bool isOK;
         QString crcAddressQueryData = QInputDialog::getText(NULL,
-                                                         "crc address on chip query",
-                                                         "Please input crc address on chip, which must\ninclude 6 hexadecimal characters(e.g. FEBE00)\n",
+                                                         QString::fromLocal8Bit("ÊäÈëcrcĞ£ÑéÂëµØÖ·"),
+                                                         QString::fromLocal8Bit("ÇëÊäÈëcrcĞ£ÑéÂëÔÚĞ¾Æ¬ÖĞµÄ´æ´¢µØÖ·, ĞèÓÉ6Î»\n16½øÖÆ×Ö·û×é³É(Ò»°ãÎªFE8000»òFEBE00)"),
                                                          QLineEdit::Normal,
                                                          "",
                                                          &isOK);
-        //æ ¡éªŒè¾“å…¥ä¿¡æ¯
+        //Ğ£ÑéÊäÈëĞÅÏ¢
         QRegExp regExp("^[a-fA-F\\d]{6}$");
 
         if(isOK && regExp.exactMatch(crcAddressQueryData))
@@ -967,13 +967,14 @@ void FirmwareGenerator::generateFirmwareForDiagnosis()
         }
         else
         {
-            QMessageBox::warning(this, "Warnning", "invalid address on chip", QMessageBox::Yes);
+            QMessageBox::warning(this, QString::fromLocal8Bit("¾¯¸æ"), QString::fromLocal8Bit("ÊäÈëµÄµØÖ·ÎŞĞ§"), QMessageBox::Yes);
             return;
         }
     }
 
-    QMessageBox::information(this, "Tips",
-                             "part number: " + partNumber + ", sw ver: " + softwareVersion + ", crc address on chip: 0x" + s20cText.right(6),
+    QMessageBox::information(this, QString::fromLocal8Bit("¹Ì¼şĞÅÏ¢"),
+                             QString::fromLocal8Bit("Áã¼şºÅ: ") + partNumber + QString::fromLocal8Bit(", Èí¼ş°æ±¾ºÅ: ") \
+                             + softwareVersion + QString::fromLocal8Bit(", crcĞ£ÑéÂë´æ´¢µØÖ·: 0x") + s20cText.right(6),
                              QMessageBox::Yes);
     qDebug() << "crc address: " << s20cText;
 
@@ -987,11 +988,11 @@ void FirmwareGenerator::generateFirmwareForDiagnosis()
 
     s20cText = s20cText.toUpper();
     m_leDiagnosisS20C->setText(s20cText);
-    //å°†S20Cæ•°æ®æ·»åŠ æ¢è¡Œç¬¦å¹¶å†™å…¥æ’åºå®Œæˆçš„æ–‡ä»¶çš„å€’æ•°ç¬¬äºŒè¡Œ
+    //½«S20CÊı¾İÌí¼Ó»»ĞĞ·û²¢Ğ´ÈëÅÅĞòÍê³ÉµÄÎÄ¼şµÄµ¹ÊıµÚ¶şĞĞ
     s20cText.append('\n');
     originalS19FileStringList.insert(originalS19FileStringList.size() - 1, s20cText);
 
-    //ç”Ÿæˆå›ºä»¶å¹¶åœ¨æ–‡ä»¶å¤¹ä¸­å®šä½æ­¤æ–‡ä»¶
+    //Éú³É¹Ì¼ş²¢ÔÚÎÄ¼ş¼ĞÖĞ¶¨Î»´ËÎÄ¼ş
     QString diagnosisFileName = fileInfo.at(FILE_NAME);
     QString timeInfo = QDateTime::currentDateTime().toString("yyyy-MM-dd_HH-mm-ss");
     diagnosisFileName = diagnosisFileName.left(diagnosisFileName.size() - 4);
@@ -1019,7 +1020,7 @@ void FirmwareGenerator::generateFirmwareForDiagnosis()
     }
     newFile.close();
 
-    //åŒæ—¶ç”Ÿæˆä¸€ä¸ªflash driver
+    //Í¬Ê±Éú³ÉÒ»¸öflash driver
     if(m_leDiagnosisS021->text().contains(DIAG_M1AFL2_PARTNUMBER.toLatin1().toHex(), Qt::CaseInsensitive))
     {
         generateFiles(CMD_GEN_M1AFL2_FLASH_DRIVER, dirPath, false);
@@ -1041,30 +1042,30 @@ void FirmwareGenerator::generateFirmwareForDiagnosis()
         generateFiles(CMD_GEN_COMMON_FLASH_DRIVER, dirPath, false, m_leDiagnosisS021->text().right(m_leDiagnosisS021->text().size() - 18).left(32));
     }
 
-    //windowsç³»ç»Ÿä¸‹ç›´æ¥æ‰“å¼€è¯¥æ–‡ä»¶å¤¹å¹¶é€‰ä¸­è¯Šæ–­ä»ªappæ–‡ä»¶
+    //windowsÏµÍ³ÏÂÖ±½Ó´ò¿ª¸ÃÎÄ¼ş¼Ğ²¢Ñ¡ÖĞÕï¶ÏÒÇappÎÄ¼ş
 #ifdef WIN32
     QProcess process;
     QString openNewFileName = diagnosisFilePathName;
 
-    openNewFileName.replace("/", "\\");    //è¿™å¥windowsä¸‹å¿…è¦
+    openNewFileName.replace("/", "\\");    //Õâ¾äwindowsÏÂ±ØÒª
     process.startDetached("explorer /select," + openNewFileName);
 #endif
 }
 
-//å°†.S19åŸæ–‡ä»¶é‡Œé¢çš„S224ä»£ç æ®µï¼ŒæŒ‰å†…å­˜åˆ†é¡µå‡åºé¡ºåºé‡æ–°æ’åˆ—ï¼ˆF1ã€F2ã€Â·Â·Â·ã€FFï¼‰
+//½«.S19Ô­ÎÄ¼şÀïÃæµÄS224´úÂë¶Î£¬°´ÄÚ´æ·ÖÒ³ÉıĞòË³ĞòÖØĞÂÅÅÁĞ£¨F1¡¢F2¡¢¡¤¡¤¡¤¡¢FF£©
 bool FirmwareGenerator::sortS19Code(QStringList &originalStringList)
 {
     QStringList stringListS0AndS9;
     QStringList stringListS1;
-    QStringList stringListS2[16]; //F0-FFæœ€å¤š16ç»„
+    QStringList stringListS2[16]; //F0-FF×î¶à16×é
 
-    //S0ã€S9è¡Œ
+    //S0¡¢S9ĞĞ
     stringListS0AndS9.push_back(originalStringList.first());
     stringListS0AndS9.push_back(originalStringList.last());
 
     for(QString elem: originalStringList)
     {
-        //S1ä»£ç æ®µ
+        //S1´úÂë¶Î
         if(elem.startsWith("S1", Qt::CaseInsensitive))
         {
             stringListS1.push_back(elem);
@@ -1072,7 +1073,7 @@ bool FirmwareGenerator::sortS19Code(QStringList &originalStringList)
 
         if(elem.startsWith("S2", Qt::CaseInsensitive))
         {
-            //S2ä»£ç æ®µï¼Œå¼€å¤´ä¸ºï¼šS2**Fx, xåœ¨0-Fä¹‹é—´
+            //S2´úÂë¶Î£¬¿ªÍ·Îª£ºS2**Fx, xÔÚ0-FÖ®¼ä
             int index = hexCharToHex(elem.at(5).toLatin1());
 
             if(index >= 0 && index < 16)
@@ -1087,7 +1088,7 @@ bool FirmwareGenerator::sortS19Code(QStringList &originalStringList)
         }
     }
 
-    //é‡ç»„originalStringList,æŒ‰S0-S1-S2-S9çš„é¡ºåº
+    //ÖØ×éoriginalStringList,°´S0-S1-S2-S9µÄË³Ğò
     originalStringList.clear();
     originalStringList.push_front(stringListS0AndS9.first());
     originalStringList += stringListS1;
@@ -1101,7 +1102,7 @@ bool FirmwareGenerator::sortS19Code(QStringList &originalStringList)
     return true;
 }
 
-//å°†ä»¥å­—ç¬¦å­˜å‚¨çš„åå…­è¿›åˆ¶æ•°å­—è½¬æ¢ä¸ºå¯¹åº”æ•°å­—
+//½«ÒÔ×Ö·û´æ´¢µÄÊ®Áù½øÖÆÊı×Ö×ª»»Îª¶ÔÓ¦Êı×Ö
 int FirmwareGenerator::hexCharToHex(char src)
 {
     int ret = -1;
@@ -1122,7 +1123,7 @@ int FirmwareGenerator::hexCharToHex(char src)
     return ret;
 }
 
-//è®¡ç®—CRCï¼Œå‚è€ƒã€ŠECU bootloader and programming implementation specificationã€‹
+//¼ÆËãCRC£¬²Î¿¼¡¶ECU bootloader and programming implementation specification¡·
 unsigned short FirmwareGenerator::calcCRC16(QList<unsigned char> data_list)
 {
     unsigned short crc = 0xffff; /* initial value */
@@ -1138,7 +1139,7 @@ unsigned short FirmwareGenerator::calcCRC16(QList<unsigned char> data_list)
     return crc;
 }
 
-//è®¡ç®—S20Cè¡Œçš„checksum
+//¼ÆËãS20CĞĞµÄchecksum
 unsigned char FirmwareGenerator::calcChecksum(unsigned short crc)
 {
     unsigned char checkSum = 0;
@@ -1155,7 +1156,7 @@ unsigned char FirmwareGenerator::calcChecksum(unsigned short crc)
     return checkSum;
 }
 
-//æ ¹æ®seedè®¡ç®—å¾—å‡ºkeyå€¼
+//¸ù¾İseed¼ÆËãµÃ³ökeyÖµ
 unsigned short FirmwareGenerator::calculateKey(unsigned short seed)
 {
     enum
@@ -1204,25 +1205,25 @@ unsigned short FirmwareGenerator::calculateKey(unsigned short seed)
     return remainder;
 }
 
-//æ ¹æ®seedè®¡ç®—å¾—å‡ºkeyå€¼
+//¸ù¾İseed¼ÆËãµÃ³ökeyÖµ
 void FirmwareGenerator::dealWithCalculateKeyCommand(void)
 {
     showHelpInfo(CMD_HELP_DIAG_CALCULATE_KEY);
 
-    //è¯·æ±‚ç”¨æˆ·è¾“å…¥è§£é”ç§å­
+    //ÇëÇóÓÃ»§ÊäÈë½âËøÖÖ×Ó
     bool isOK;
     QString seedQueryData = QInputDialog::getText(NULL,
-                                                  "seed query",
-                                                  "Please input seed, up to 4 characters\nin addition to whitespace\n",
+                                                  QString::fromLocal8Bit("ÊäÈëÖÖ×Ó"),
+                                                  QString::fromLocal8Bit("ÇëÊäÈëÓÉ4Î»16½øÖÆ×Ö·û×é³ÉµÄÖÖ×Ó"),
                                                   QLineEdit::Normal,
                                                   "",
                                                   &isOK);
 
-    //åˆ é™¤è¾“å…¥çš„ç©ºæ ¼ç­‰ç©ºç™½ç¬¦
+    //É¾³ıÊäÈëµÄ¿Õ¸ñµÈ¿Õ°×·û
     seedQueryData.remove(QRegExp("\\s"));
     qDebug() << seedQueryData;
 
-    //æ ¡éªŒè¾“å…¥ä¿¡æ¯
+    //Ğ£ÑéÊäÈëĞÅÏ¢
     QRegExp regExp("^[0-9a-fA-F]{4}$");
 
     if(isOK && regExp.exactMatch(seedQueryData))
@@ -1235,7 +1236,7 @@ void FirmwareGenerator::dealWithCalculateKeyCommand(void)
 
         if(!resultOK)
         {
-            QMessageBox::warning(this, "Warnning", "failed to calculate seed", QMessageBox::Yes);
+            QMessageBox::warning(this, QString::fromLocal8Bit("¾¯¸æ"), QString::fromLocal8Bit("ÖÖ×Ó¼ÆËãÊ§°Ü"), QMessageBox::Yes);
         }
         else
         {
@@ -1244,11 +1245,11 @@ void FirmwareGenerator::dealWithCalculateKeyCommand(void)
 
             if(keyHexStr.size() > 4)
             {
-                QMessageBox::warning(this, "Warnning", "length of key should not be greater than 4", QMessageBox::Yes);
+                QMessageBox::warning(this, QString::fromLocal8Bit("¾¯¸æ"), QString::fromLocal8Bit("ÃÜÔ¿³¤¶È²»ÄÜ³¬¹ı4"), QMessageBox::Yes);
                 return;
             }
 
-            //è‹¥ç»“æœçš„åå…­è¿›åˆ¶å­—ç¬¦æ•°å°äº4ï¼Œåˆ™åœ¨å‰é¢è¡¥0ï¼Œæœ€ç»ˆè¦è¡¥é½è‡³4ä¸ªå­—ç¬¦
+            //Èô½á¹ûµÄÊ®Áù½øÖÆ×Ö·ûÊıĞ¡ÓÚ4£¬ÔòÔÚÇ°Ãæ²¹0£¬×îÖÕÒª²¹ÆëÖÁ4¸ö×Ö·û
             for(int cnt = 0; cnt < 4 - keyHexStr.size(); ++cnt)
                 keyHexStr.prepend('0');
 
@@ -1260,19 +1261,19 @@ void FirmwareGenerator::dealWithCalculateKeyCommand(void)
 
             ptOutputWnd->clear();
             ptOutputWnd->appendPlainText("*************************************");
-            ptOutputWnd->appendPlainText("   ç§å­: [" + seedQueryData.toUpper() + "]  ->  å¯†é’¥: [" + keyHexStr + "]");
+            ptOutputWnd->appendPlainText(QString::fromLocal8Bit("   ÖÖ×Ó: [") + seedQueryData.toUpper() + QString::fromLocal8Bit("]  ->  ÃÜÔ¿: [") + keyHexStr + "]");
             ptOutputWnd->appendPlainText("*************************************");
-            ptOutputWnd->appendPlainText("ç»“æœå·²ç»æ‹·è´è‡³ç³»ç»Ÿå‰ªè´´æ¿ä¸­:[2704" + keyHexStr + "]");
+            ptOutputWnd->appendPlainText(QString::fromLocal8Bit("½á¹ûÒÑ¾­¿½±´ÖÁÏµÍ³¼ôÌù°åÖĞ:[2704") + keyHexStr + "]");
             ptOutputWnd->appendPlainText("*************************************");
 
-            QMessageBox::information(this, "Tips",
-                                     "the key in hexadecimal is ã€" + keyHexStr + "ã€‘, and the result has already been copied to os clipboard",
+            QMessageBox::information(this, QString::fromLocal8Bit("ÃÜÔ¿¼ÆËã½á¹û"),
+                                     QString::fromLocal8Bit("Ê®Áù½øÖÆÃÜÔ¿¼ÆËã½á¹ûÎª¡¾") + keyHexStr + QString::fromLocal8Bit("¡¿, ½á¹ûÒÑ¾­¿½±´ÖÁÏµÍ³¼ôÌù°åÖĞ"),
                                      QMessageBox::Yes);
         }
     }
     else
     {
-        QMessageBox::warning(this, "Warnning", "invalid seed", QMessageBox::Yes);
+        QMessageBox::warning(this, QString::fromLocal8Bit("¾¯¸æ"), QString::fromLocal8Bit("ÎŞĞ§ÖÖ×Ó"), QMessageBox::Yes);
     }
 }
 
@@ -1287,144 +1288,149 @@ void FirmwareGenerator::switchFunctionPage(FirmwareGenerator::FunctionType funct
         m_cmbFunctionSwitch->setCurrentIndex(CMD_HANDLER);
         m_leRunCommand->setText(":ck");
     }
+    else if(CMD_HANDLER_COMPRESS_ARRAY_OF_BMP == functype)
+    {
+        m_cmbFunctionSwitch->setCurrentIndex(CMD_HANDLER);
+        m_leRunCommand->setText(":cb");
+    }
 }
 
-//å¸®åŠ©ä¿¡æ¯
+//°ïÖúĞÅÏ¢
 void FirmwareGenerator::showHelpInfo(CmdType cmd)
 {
     QStringList hlpInfo;
 
     if(CMD_HELP == cmd)
     {
-        hlpInfo << tr("ã€Šå‘½ä»¤åˆ—è¡¨ã€‹");
-        hlpInfo << tr("0 æ¬¢è¿ä½¿ç”¨æœ¬è½¯ä»¶ï¼Œæœ¬é¡µé¢ä»‹ç»è½¯ä»¶æ”¯æŒçš„æŒ‡ä»¤ï¼ŒåŠå…¶åŠŸèƒ½å®šä¹‰.");
-        hlpInfo << tr("0.1 å°†<u>switch function</u>ï¼ˆæˆ–<u>input command</u>ï¼‰åˆ‡æ¢è‡³<u>run command</u>ï¼Œ"
-                             "åœ¨å‘½ä»¤è¾“å…¥æ¡†é”®å…¥<u>:help</u>æˆ–<u>:hlp</u>æˆ–<u>:?</u>åæŒ‰å›è½¦é”®è¿›å…¥æœ¬é¡µé¢.");
-        hlpInfo << tr("0.2 å…¶å®ƒå‘½ä»¤çš„ä½¿ç”¨æ–¹æ³•åŒ0.1èŠ‚ï¼Œ<u>æŒ‡ä»¤è¾“å…¥ä¸åŒºåˆ†å¤§å°å†™</u>.");
+        hlpInfo << QString::fromLocal8Bit("¡¶ÃüÁîÁĞ±í¡·");
+        hlpInfo << QString::fromLocal8Bit("0 »¶Ó­Ê¹ÓÃ±¾Èí¼ş£¬±¾Ò³Ãæ½éÉÜÈí¼şÖ§³ÖµÄÖ¸Áî£¬¼°Æä¹¦ÄÜ¶¨Òå.");
+        hlpInfo << QString::fromLocal8Bit("0.1 ½«<u>switch function</u>£¨»ò<u>input command</u>£©ÇĞ»»ÖÁ<u>run command</u>£¬"
+                                          "ÔÚÃüÁîÊäÈë¿ò¼üÈë<u>:help</u>»ò<u>:hlp</u>»ò<u>:?</u>ºó°´»Ø³µ¼ü½øÈë±¾Ò³Ãæ.");
+        hlpInfo << QString::fromLocal8Bit("0.2 ÆäËüÃüÁîµÄÊ¹ÓÃ·½·¨Í¬0.1½Ú£¬<u>Ö¸ÁîÊäÈë²»Çø·Ö´óĞ¡Ğ´</u>.");
 
-        hlpInfo << tr("1 è½¯ä»¶è‡ªèº«åŠŸèƒ½.");
-        hlpInfo << tr("1.1 æ¸…å±.");
-        hlpInfo << tr("1.1.1 å®šä¹‰ï¼šæ¸…ç©ºæœ¬è½¯ä»¶å±å¹•å½“å‰æ­£åœ¨æ˜¾ç¤ºçš„å†…å®¹.");
-        hlpInfo << tr("1.1.2 æŒ‡ä»¤ï¼š<u>:clear screen</u>æˆ–<u>:cs</u>.");
-        hlpInfo << tr("1.2 å…¨å±æ˜¾ç¤º.");
-        hlpInfo << tr("1.2.1 å®šä¹‰ï¼šå°†è½¯ä»¶åˆ‡æ¢è‡³å…¨å±æ˜¾ç¤º.");
-        hlpInfo << tr("1.2.2 æŒ‡ä»¤ï¼š<u>:full screen</u>æˆ–<u>:fs</u>.");
-        hlpInfo << tr("1.3 æ­£å¸¸æ˜¾ç¤º.");
-        hlpInfo << tr("1.3.1 å®šä¹‰ï¼šå°†è½¯ä»¶åˆ‡æ¢è‡³æ­£å¸¸å¤§å°æ˜¾ç¤º.");
-        hlpInfo << tr("1.3.2 æŒ‡ä»¤ï¼š<u>:normal screen</u>æˆ–<u>:ns</u>.");
-        hlpInfo << tr("1.4 ä¿å­˜é…ç½®.");
-        hlpInfo << tr("1.4.1 å®šä¹‰ï¼šä¿å­˜æœ¬è½¯ä»¶çš„é…ç½®é¡¹ï¼Œå°†åœ¨è½¯ä»¶ç›®å½•ä¸‹ç”Ÿæˆconfig.jsonæ–‡ä»¶.");
-        hlpInfo << tr("1.4.2 æŒ‡ä»¤ï¼š<u>:save config file</u>æˆ–<u>:scf</u>.");
-        hlpInfo << tr("1.4.3 å¤‡æ³¨ï¼šå½“å‰ä»…å®ç°æ¥å£ï¼Œå°šæœªæœ‰å®é™…éœ€è¦å­˜å‚¨çš„é…ç½®é¡¹.");
-        hlpInfo << tr("1.5 åŠ è½½é…ç½®.");
-        hlpInfo << tr("1.5.1 å®šä¹‰ï¼šåŠ è½½æœ¬è½¯ä»¶çš„é…ç½®é¡¹ï¼Œå°†åŠ è½½è½¯ä»¶ç›®å½•ä¸‹çš„config.jsonæ–‡ä»¶.");
-        hlpInfo << tr("1.5.2 æŒ‡ä»¤ï¼š<u>:load config file</u>æˆ–<u>:lcf</u>.");
-        hlpInfo << tr("1.5.3 å¤‡æ³¨ï¼šå½“å‰ä»…å®ç°æ¥å£ï¼Œå°šæœªæœ‰å®é™…éœ€è¦åŠ è½½çš„é…ç½®é¡¹.");
-        hlpInfo << tr("1.6 é€€å‡ºç¨‹åº.");
-        hlpInfo << tr("1.6.1 å®šä¹‰ï¼šé€€å‡ºæœ¬è½¯ä»¶.");
-        hlpInfo << tr("1.6.2 æŒ‡ä»¤ï¼š<u>:quit</u>æˆ–<u>:q</u>.");
+        hlpInfo << QString::fromLocal8Bit("1 Èí¼ş×ÔÉí¹¦ÄÜ.");
+        hlpInfo << QString::fromLocal8Bit("1.1 ÇåÆÁ.");
+        hlpInfo << QString::fromLocal8Bit("1.1.1 ¶¨Òå£ºÇå¿Õ±¾Èí¼şÆÁÄ»µ±Ç°ÕıÔÚÏÔÊ¾µÄÄÚÈİ.");
+        hlpInfo << QString::fromLocal8Bit("1.1.2 Ö¸Áî£º<u>:clear screen</u>»ò<u>:cs</u>.");
+        hlpInfo << QString::fromLocal8Bit("1.2 È«ÆÁÏÔÊ¾.");
+        hlpInfo << QString::fromLocal8Bit("1.2.1 ¶¨Òå£º½«Èí¼şÇĞ»»ÖÁÈ«ÆÁÏÔÊ¾.");
+        hlpInfo << QString::fromLocal8Bit("1.2.2 Ö¸Áî£º<u>:full screen</u>»ò<u>:fs</u>.");
+        hlpInfo << QString::fromLocal8Bit("1.3 Õı³£ÏÔÊ¾.");
+        hlpInfo << QString::fromLocal8Bit("1.3.1 ¶¨Òå£º½«Èí¼şÇĞ»»ÖÁÕı³£´óĞ¡ÏÔÊ¾.");
+        hlpInfo << QString::fromLocal8Bit("1.3.2 Ö¸Áî£º<u>:normal screen</u>»ò<u>:ns</u>.");
+        hlpInfo << QString::fromLocal8Bit("1.4 ±£´æÅäÖÃ.");
+        hlpInfo << QString::fromLocal8Bit("1.4.1 ¶¨Òå£º±£´æ±¾Èí¼şµÄÅäÖÃÏî£¬½«ÔÚÈí¼şÄ¿Â¼ÏÂÉú³Éconfig.jsonÎÄ¼ş.");
+        hlpInfo << QString::fromLocal8Bit("1.4.2 Ö¸Áî£º<u>:save config file</u>»ò<u>:scf</u>.");
+        hlpInfo << QString::fromLocal8Bit("1.4.3 ±¸×¢£ºµ±Ç°½öÊµÏÖ½Ó¿Ú£¬ÉĞÎ´ÓĞÊµ¼ÊĞèÒª´æ´¢µÄÅäÖÃÏî.");
+        hlpInfo << QString::fromLocal8Bit("1.5 ¼ÓÔØÅäÖÃ.");
+        hlpInfo << QString::fromLocal8Bit("1.5.1 ¶¨Òå£º¼ÓÔØ±¾Èí¼şµÄÅäÖÃÏî£¬½«¼ÓÔØÈí¼şÄ¿Â¼ÏÂµÄconfig.jsonÎÄ¼ş.");
+        hlpInfo << QString::fromLocal8Bit("1.5.2 Ö¸Áî£º<u>:load config file</u>»ò<u>:lcf</u>.");
+        hlpInfo << QString::fromLocal8Bit("1.5.3 ±¸×¢£ºµ±Ç°½öÊµÏÖ½Ó¿Ú£¬ÉĞÎ´ÓĞÊµ¼ÊĞèÒª¼ÓÔØµÄÅäÖÃÏî.");
+        hlpInfo << QString::fromLocal8Bit("1.6 ÍË³ö³ÌĞò.");
+        hlpInfo << QString::fromLocal8Bit("1.6.1 ¶¨Òå£ºÍË³ö±¾Èí¼ş.");
+        hlpInfo << QString::fromLocal8Bit("1.6.2 Ö¸Áî£º<u>:quit</u>»ò<u>:q</u>.");
 
-        hlpInfo << tr("2 Windowsç³»ç»Ÿå·¥å…·å¿«æ·å¼€å¯åŠŸèƒ½.");
-        hlpInfo << tr("2.1 è¿è¡ŒWindowsç³»ç»ŸæŒ‡ä»¤é€šè¿æ–¹æ³•.");
-        hlpInfo << tr("2.1.1 å®šä¹‰ï¼šåƒWindowsç³»ç»Ÿè‡ªå¸¦çš„â€œè¿è¡Œâ€è½¯ä»¶ä¸€æ ·è¿è¡ŒWindowsç³»ç»ŸæŒ‡ä»¤.");
-        hlpInfo << tr("2.1.2 æŒ‡ä»¤ï¼š<u>::command</u>ï¼Œå…¶ä¸­<u>command</u>ä¸ºWindowsç³»ç»Ÿèƒ½è¯†åˆ«çš„æŒ‡ä»¤.");
-        hlpInfo << tr("2.1.3 å¤‡æ³¨ï¼šå—é™äºQTçš„è¿è¡Œæœºåˆ¶ï¼Œéƒ¨åˆ†Windowsç³»ç»ŸæŒ‡ä»¤å¯èƒ½ä¸ä¼šè¢«æ­£ç¡®æ‰§è¡Œ.");
-        hlpInfo << tr("2.2 è®¡ç®—å™¨.");
-        hlpInfo << tr("2.2.1 å®šä¹‰ï¼šå¿«é€Ÿå¼€å¯Windowsç³»ç»Ÿè‡ªå¸¦çš„â€œè®¡ç®—å™¨â€è½¯ä»¶.");
-        hlpInfo << tr("2.2.2 æŒ‡ä»¤ï¼š<u>:calculator</u>æˆ–<u>:calc</u>æˆ–<u>:c</u>.");
-        hlpInfo << tr("2.3 ä»»åŠ¡ç®¡ç†å™¨.");
-        hlpInfo << tr("2.3.1 å®šä¹‰ï¼šå¿«é€Ÿå¼€å¯Windowsç³»ç»Ÿè‡ªå¸¦çš„â€œä»»åŠ¡ç®¡ç†å™¨â€è½¯ä»¶.");
-        hlpInfo << tr("2.3.2 æŒ‡ä»¤ï¼š<u>:taskmgr</u>æˆ–<u>:tm</u>.");
-        hlpInfo << tr("2.4 ç”»å›¾.");
-        hlpInfo << tr("2.4.1 å®šä¹‰ï¼šå¿«é€Ÿå¼€å¯Windowsç³»ç»Ÿè‡ªå¸¦çš„â€œç”»å›¾â€è½¯ä»¶.");
-        hlpInfo << tr("2.4.2 æŒ‡ä»¤ï¼š<u>:mspaint</u>æˆ–<u>:mp</u>.");
+        hlpInfo << QString::fromLocal8Bit("2 WindowsÏµÍ³¹¤¾ß¿ì½İ¿ªÆô¹¦ÄÜ.");
+        hlpInfo << QString::fromLocal8Bit("2.1 ÔËĞĞWindowsÏµÍ³Ö¸ÁîÍ¨ÔË·½·¨.");
+        hlpInfo << QString::fromLocal8Bit("2.1.1 ¶¨Òå£ºÏñWindowsÏµÍ³×Ô´øµÄ¡°ÔËĞĞ¡±Èí¼şÒ»ÑùÔËĞĞWindowsÏµÍ³Ö¸Áî.");
+        hlpInfo << QString::fromLocal8Bit("2.1.2 Ö¸Áî£º<u>::command</u>£¬ÆäÖĞ<u>command</u>ÎªWindowsÏµÍ³ÄÜÊ¶±ğµÄÖ¸Áî.");
+        hlpInfo << QString::fromLocal8Bit("2.1.3 ±¸×¢£ºÊÜÏŞÓÚQTµÄÔËĞĞ»úÖÆ£¬²¿·ÖWindowsÏµÍ³Ö¸Áî¿ÉÄÜ²»»á±»ÕıÈ·Ö´ĞĞ.");
+        hlpInfo << QString::fromLocal8Bit("2.2 ¼ÆËãÆ÷.");
+        hlpInfo << QString::fromLocal8Bit("2.2.1 ¶¨Òå£º¿ìËÙ¿ªÆôWindowsÏµÍ³×Ô´øµÄ¡°¼ÆËãÆ÷¡±Èí¼ş.");
+        hlpInfo << QString::fromLocal8Bit("2.2.2 Ö¸Áî£º<u>:calculator</u>»ò<u>:calc</u>»ò<u>:c</u>.");
+        hlpInfo << QString::fromLocal8Bit("2.3 ÈÎÎñ¹ÜÀíÆ÷.");
+        hlpInfo << QString::fromLocal8Bit("2.3.1 ¶¨Òå£º¿ìËÙ¿ªÆôWindowsÏµÍ³×Ô´øµÄ¡°ÈÎÎñ¹ÜÀíÆ÷¡±Èí¼ş.");
+        hlpInfo << QString::fromLocal8Bit("2.3.2 Ö¸Áî£º<u>:taskmgr</u>»ò<u>:tm</u>.");
+        hlpInfo << QString::fromLocal8Bit("2.4 »­Í¼.");
+        hlpInfo << QString::fromLocal8Bit("2.4.1 ¶¨Òå£º¿ìËÙ¿ªÆôWindowsÏµÍ³×Ô´øµÄ¡°»­Í¼¡±Èí¼ş.");
+        hlpInfo << QString::fromLocal8Bit("2.4.2 Ö¸Áî£º<u>:mspaint</u>»ò<u>:mp</u>.");
 
-        hlpInfo << tr("3 å¤©æœ‰ä¸ºå¼€å‘å·¥å…·åŠŸèƒ½.");
-        hlpInfo << tr("3.1 bootloaderåˆæˆ.");
-        hlpInfo << tr("3.1.1 å®šä¹‰ï¼šå¥‡ç‘M1ç³»åˆ—bootloaderåˆæˆæ–¹æ³•ä»‹ç».");
-        hlpInfo << tr("3.1.2 æŒ‡ä»¤ï¼š<u>:bootloader?</u>æˆ–<u>:b?</u>.");
-        hlpInfo << tr("3.2 è¯Šæ–­ä»ªappåˆæˆ.");
-        hlpInfo << tr("3.2.1 å®šä¹‰ï¼šå¥‡ç‘M1ç³»åˆ—è¯Šæ–­ä»ªappåˆæˆæ–¹æ³•ä»‹ç».");
-        hlpInfo << tr("3.2.2 æŒ‡ä»¤ï¼š<u>:diagnosis?</u>æˆ–<u>:d?</u>.");
-        hlpInfo << tr("3.3 è¯Šæ–­ä»ªappåˆæˆè¾…åŠ©å·¥å…·.");
-        hlpInfo << tr("3.3.1 ç”Ÿæˆflash driveræ–‡ä»¶.");
-        hlpInfo << tr("3.3.1.1.1 å®šä¹‰ï¼šç‹¬ç«‹ç”Ÿæˆä¸€ä¸ªm1afl2è¯Šæ–­ä»ªç”¨flash driveræ–‡ä»¶.");
-        hlpInfo << tr("3.3.1.1.2 æŒ‡ä»¤ï¼š<u>:m1afl2 flash driver</u>æˆ–<u>:mfd</u>.");
-        hlpInfo << tr("3.3.1.2.1 å®šä¹‰ï¼šç‹¬ç«‹ç”Ÿæˆä¸€ä¸ªt19è¯Šæ–­ä»ªç”¨flash driveræ–‡ä»¶.");
-        hlpInfo << tr("3.3.1.2.2 æŒ‡ä»¤ï¼š<u>:t19 flash driver</u>æˆ–<u>:tfd</u>.");
-        hlpInfo << tr("3.3.1.3.1 å®šä¹‰ï¼šç‹¬ç«‹ç”Ÿæˆä¸€ä¸ªs51evflè¯Šæ–­ä»ªç”¨flash driveræ–‡ä»¶.");
-        hlpInfo << tr("3.3.1.3.2 æŒ‡ä»¤ï¼š<u>:s51evfl flash driver</u>æˆ–<u>:sfd</u>.");
-        hlpInfo << tr("3.3.1.4.1 å®šä¹‰ï¼šç‹¬ç«‹ç”Ÿæˆä¸€ä¸ªé€šç”¨å¥‡ç‘è¯Šæ–­ä»ªç”¨flash driveræ–‡ä»¶.");
-        hlpInfo << tr("3.3.1.4.2 æŒ‡ä»¤ï¼š<u>:common flash driver</u>æˆ–<u>:cfd</u>æˆ–<u>:fd</u>.");
-        hlpInfo << tr("3.3.1.4 å¤‡æ³¨ï¼šç”¨3.2èŠ‚æ–¹æ³•ä¹Ÿä¼šè‡ªåŠ¨ç”Ÿæˆflash driveræ–‡ä»¶.");
-        hlpInfo << tr("3.4 ç”Ÿæˆerase eeprom firmwareæ–‡ä»¶.");
-        hlpInfo << tr("3.4.1 å®šä¹‰ï¼šç”Ÿæˆç”¨äºæ¸…é™¤ä»ªè¡¨eepromçš„.S19å›ºä»¶.");
-        hlpInfo << tr("3.4.2 æŒ‡ä»¤ï¼š<u>:erase eeprom</u>æˆ–<u>:ee</u>.");
-        hlpInfo << tr("3.4.3 å¤‡æ³¨ï¼šçƒ§å½•æ­¤å›ºä»¶åä¼šæ“¦é™¤ä»ªè¡¨åŸæ¥çš„appå›ºä»¶ï¼Œéœ€è¦é‡æ–°çƒ§å½•appå›ºä»¶.");
-        hlpInfo << tr("3.5 ç”ŸæˆM1ç³»åˆ—boot codeæ–‡ä»¶.");
-        hlpInfo << tr("3.5.1 å®šä¹‰ï¼šç”ŸæˆM1ç³»åˆ—bootä»£ç æ®µçš„.S19å›ºä»¶.");
-        hlpInfo << tr("3.5.2 æŒ‡ä»¤ï¼š<u>:m boot code</u>æˆ–<u>:mbc</u>.");
-        hlpInfo << tr("3.5.3 å¤‡æ³¨ï¼šæ­¤å›ºä»¶ä¸å¯å•ç‹¬çƒ§å½•è‡³ä»ªè¡¨ï¼Œéœ€è¦åˆæˆåˆ°ä»ªè¡¨appå›ºä»¶ä¸­ï¼Œåˆæˆæ–¹æ³•å‚è€ƒ3.1èŠ‚.");
-        hlpInfo << tr("3.6 ç”ŸæˆT1ç³»åˆ—boot codeæ–‡ä»¶.");
-        hlpInfo << tr("3.6.1 å®šä¹‰ï¼šç”ŸæˆT1ç³»åˆ—bootä»£ç æ®µçš„.S19å›ºä»¶.");
-        hlpInfo << tr("3.6.2 æŒ‡ä»¤ï¼š<u>:t boot code</u>æˆ–<u>:tbc</u>.");
-        hlpInfo << tr("3.6.3 å¤‡æ³¨ï¼šæ­¤å›ºä»¶ä¸å¯å•ç‹¬çƒ§å½•è‡³ä»ªè¡¨ï¼Œéœ€è¦åˆæˆåˆ°ä»ªè¡¨appå›ºä»¶ä¸­ï¼Œåˆæˆæ–¹æ³•å‚è€ƒ3.1èŠ‚.");
-        hlpInfo << tr("3.7 ç”ŸæˆS51EVFLçš„boot codeæ–‡ä»¶.");
-        hlpInfo << tr("3.7.1 å®šä¹‰ï¼šç”ŸæˆS51EVFLçš„bootä»£ç æ®µçš„.S19å›ºä»¶.");
-        hlpInfo << tr("3.7.2 æŒ‡ä»¤ï¼š<u>:s boot code</u>æˆ–<u>:sbc</u>.");
-        hlpInfo << tr("3.7.3 å¤‡æ³¨ï¼šæ­¤å›ºä»¶ä¸å¯å•ç‹¬çƒ§å½•è‡³ä»ªè¡¨ï¼Œéœ€è¦åˆæˆåˆ°ä»ªè¡¨appå›ºä»¶ä¸­ï¼Œåˆæˆæ–¹æ³•å‚è€ƒ3.1èŠ‚.");
-        hlpInfo << tr("4 å¼€å‘è¾…åŠ©å·¥å…·.");
-        hlpInfo << tr("4.1 æ–‡ä»¶è½¬å­—ç¬¦ä¸²å·¥å…·.");
-        hlpInfo << tr("4.1.1 å®šä¹‰ï¼šå°†æŒ‡å®šæ–‡ä»¶çš„æ‰€æœ‰å­—èŠ‚ç”ŸæˆC/C++è¯­è¨€èƒ½è¯†åˆ«çš„æ•°ç»„ï¼Œå¹¶å­˜å‚¨ä¸º.hæ–‡ä»¶.");
-        hlpInfo << tr("4.1.2 æŒ‡ä»¤ï¼š<u>:convert code to string</u>æˆ–<u>:c2s</u>.");
-        hlpInfo << tr("4.2 æ ¹æ®ç§å­è®¡ç®—å¯†é’¥.");
-        hlpInfo << tr("4.2.1 å®šä¹‰ï¼šæŸäº›è¯Šæ–­æœåŠ¡éœ€è¦è§£é”ï¼Œæœ¬åŠŸèƒ½æ ¹æ®è¾“å…¥çš„ç§å­æ¥è®¡ç®—å¯¹åº”çš„å¯†é’¥.");
-        hlpInfo << tr("4.2.2 æŒ‡ä»¤ï¼š<u>:calculate key</u>æˆ–<u>:calc key</u>æˆ–<u>:ck</u>.");
-        hlpInfo << tr("4.2.3 å¤‡æ³¨ï¼šè¾“å…¥<u>:calculate key?</u>æˆ–<u>:calc key?</u>æˆ–<u>:ck?</u>ï¼Œæ˜¾ç¤ºå®‰å…¨è§£é”æ“ä½œæ­¥éª¤å¸®åŠ©ä¿¡æ¯.");
-        hlpInfo << tr("4.3 ç”±Img2Lcdç”Ÿæˆçš„ä½å›¾Cæ•°ç»„æ•°æ®å‹ç¼©å·¥å…·.");
-        hlpInfo << tr("4.3.1 å®šä¹‰ï¼šç”±Img2Lcdç”Ÿæˆçš„ä½å›¾Cæ•°ç»„æ•°æ®ï¼Œå°†å…¶ä¸­çš„å…¨éƒ¨0x00æˆ–0xffï¼ŒæŒ‰ç…§å‡ºç°çš„æ¬¡æ•°è¿›è¡Œå‹ç¼©.");
-        hlpInfo << tr("4.3.2 æŒ‡ä»¤ï¼š<u>:compress bmp</u>æˆ–<u>:cb</u>.");
+        hlpInfo << QString::fromLocal8Bit("3 ÌìÓĞÎª¿ª·¢¹¤¾ß¹¦ÄÜ.");
+        hlpInfo << QString::fromLocal8Bit("3.1 bootloaderºÏ³É.");
+        hlpInfo << QString::fromLocal8Bit("3.1.1 ¶¨Òå£ºÆæÈğM1ÏµÁĞbootloaderºÏ³É·½·¨½éÉÜ.");
+        hlpInfo << QString::fromLocal8Bit("3.1.2 Ö¸Áî£º<u>:bootloader?</u>»ò<u>:b?</u>.");
+        hlpInfo << QString::fromLocal8Bit("3.2 Õï¶ÏÒÇappºÏ³É.");
+        hlpInfo << QString::fromLocal8Bit("3.2.1 ¶¨Òå£ºÆæÈğM1ÏµÁĞÕï¶ÏÒÇappºÏ³É·½·¨½éÉÜ.");
+        hlpInfo << QString::fromLocal8Bit("3.2.2 Ö¸Áî£º<u>:diagnosis?</u>»ò<u>:d?</u>.");
+        hlpInfo << QString::fromLocal8Bit("3.3 Õï¶ÏÒÇappºÏ³É¸¨Öú¹¤¾ß.");
+        hlpInfo << QString::fromLocal8Bit("3.3.1 Éú³Éflash driverÎÄ¼ş.");
+        hlpInfo << QString::fromLocal8Bit("3.3.1.1.1 ¶¨Òå£º¶ÀÁ¢Éú³ÉÒ»¸öm1afl2Õï¶ÏÒÇÓÃflash driverÎÄ¼ş.");
+        hlpInfo << QString::fromLocal8Bit("3.3.1.1.2 Ö¸Áî£º<u>:m1afl2 flash driver</u>»ò<u>:mfd</u>.");
+        hlpInfo << QString::fromLocal8Bit("3.3.1.2.1 ¶¨Òå£º¶ÀÁ¢Éú³ÉÒ»¸öt19Õï¶ÏÒÇÓÃflash driverÎÄ¼ş.");
+        hlpInfo << QString::fromLocal8Bit("3.3.1.2.2 Ö¸Áî£º<u>:t19 flash driver</u>»ò<u>:tfd</u>.");
+        hlpInfo << QString::fromLocal8Bit("3.3.1.3.1 ¶¨Òå£º¶ÀÁ¢Éú³ÉÒ»¸ös51evflÕï¶ÏÒÇÓÃflash driverÎÄ¼ş.");
+        hlpInfo << QString::fromLocal8Bit("3.3.1.3.2 Ö¸Áî£º<u>:s51evfl flash driver</u>»ò<u>:sfd</u>.");
+        hlpInfo << QString::fromLocal8Bit("3.3.1.4.1 ¶¨Òå£º¶ÀÁ¢Éú³ÉÒ»¸öÍ¨ÓÃÆæÈğÕï¶ÏÒÇÓÃflash driverÎÄ¼ş.");
+        hlpInfo << QString::fromLocal8Bit("3.3.1.4.2 Ö¸Áî£º<u>:common flash driver</u>»ò<u>:cfd</u>»ò<u>:fd</u>.");
+        hlpInfo << QString::fromLocal8Bit("3.3.1.4 ±¸×¢£ºÓÃ3.2½Ú·½·¨Ò²»á×Ô¶¯Éú³Éflash driverÎÄ¼ş.");
+        hlpInfo << QString::fromLocal8Bit("3.4 Éú³Éerase eeprom firmwareÎÄ¼ş.");
+        hlpInfo << QString::fromLocal8Bit("3.4.1 ¶¨Òå£ºÉú³ÉÓÃÓÚÇå³ıÒÇ±íeepromµÄ.S19¹Ì¼ş.");
+        hlpInfo << QString::fromLocal8Bit("3.4.2 Ö¸Áî£º<u>:erase eeprom</u>»ò<u>:ee</u>.");
+        hlpInfo << QString::fromLocal8Bit("3.4.3 ±¸×¢£ºÉÕÂ¼´Ë¹Ì¼şºó»á²Á³ıÒÇ±íÔ­À´µÄapp¹Ì¼ş£¬ĞèÒªÖØĞÂÉÕÂ¼app¹Ì¼ş.");
+        hlpInfo << QString::fromLocal8Bit("3.5 Éú³ÉM1ÏµÁĞboot codeÎÄ¼ş.");
+        hlpInfo << QString::fromLocal8Bit("3.5.1 ¶¨Òå£ºÉú³ÉM1ÏµÁĞboot´úÂë¶ÎµÄ.S19¹Ì¼ş.");
+        hlpInfo << QString::fromLocal8Bit("3.5.2 Ö¸Áî£º<u>:m boot code</u>»ò<u>:mbc</u>.");
+        hlpInfo << QString::fromLocal8Bit("3.5.3 ±¸×¢£º´Ë¹Ì¼ş²»¿Éµ¥¶ÀÉÕÂ¼ÖÁÒÇ±í£¬ĞèÒªºÏ³Éµ½ÒÇ±íapp¹Ì¼şÖĞ£¬ºÏ³É·½·¨²Î¿¼3.1½Ú.");
+        hlpInfo << QString::fromLocal8Bit("3.6 Éú³ÉT1ÏµÁĞboot codeÎÄ¼ş.");
+        hlpInfo << QString::fromLocal8Bit("3.6.1 ¶¨Òå£ºÉú³ÉT1ÏµÁĞboot´úÂë¶ÎµÄ.S19¹Ì¼ş.");
+        hlpInfo << QString::fromLocal8Bit("3.6.2 Ö¸Áî£º<u>:t boot code</u>»ò<u>:tbc</u>.");
+        hlpInfo << QString::fromLocal8Bit("3.6.3 ±¸×¢£º´Ë¹Ì¼ş²»¿Éµ¥¶ÀÉÕÂ¼ÖÁÒÇ±í£¬ĞèÒªºÏ³Éµ½ÒÇ±íapp¹Ì¼şÖĞ£¬ºÏ³É·½·¨²Î¿¼3.1½Ú.");
+        hlpInfo << QString::fromLocal8Bit("3.7 Éú³ÉS51EVFLµÄboot codeÎÄ¼ş.");
+        hlpInfo << QString::fromLocal8Bit("3.7.1 ¶¨Òå£ºÉú³ÉS51EVFLµÄboot´úÂë¶ÎµÄ.S19¹Ì¼ş.");
+        hlpInfo << QString::fromLocal8Bit("3.7.2 Ö¸Áî£º<u>:s boot code</u>»ò<u>:sbc</u>.");
+        hlpInfo << QString::fromLocal8Bit("3.7.3 ±¸×¢£º´Ë¹Ì¼ş²»¿Éµ¥¶ÀÉÕÂ¼ÖÁÒÇ±í£¬ĞèÒªºÏ³Éµ½ÒÇ±íapp¹Ì¼şÖĞ£¬ºÏ³É·½·¨²Î¿¼3.1½Ú.");
+        hlpInfo << QString::fromLocal8Bit("4 ¿ª·¢¸¨Öú¹¤¾ß.");
+        hlpInfo << QString::fromLocal8Bit("4.1 ÎÄ¼ş×ª×Ö·û´®¹¤¾ß.");
+        hlpInfo << QString::fromLocal8Bit("4.1.1 ¶¨Òå£º½«Ö¸¶¨ÎÄ¼şµÄËùÓĞ×Ö½ÚÉú³ÉC/C++ÓïÑÔÄÜÊ¶±ğµÄÊı×é£¬²¢´æ´¢Îª.hÎÄ¼ş.");
+        hlpInfo << QString::fromLocal8Bit("4.1.2 Ö¸Áî£º<u>:convert code to sQString::fromLocal8Biting</u>»ò<u>:c2s</u>.");
+        hlpInfo << QString::fromLocal8Bit("4.2 ¸ù¾İÖÖ×Ó¼ÆËãÃÜÔ¿.");
+        hlpInfo << QString::fromLocal8Bit("4.2.1 ¶¨Òå£ºÄ³Ğ©Õï¶Ï·şÎñĞèÒª½âËø£¬±¾¹¦ÄÜ¸ù¾İÊäÈëµÄÖÖ×ÓÀ´¼ÆËã¶ÔÓ¦µÄÃÜÔ¿.");
+        hlpInfo << QString::fromLocal8Bit("4.2.2 Ö¸Áî£º<u>:calculate key</u>»ò<u>:calc key</u>»ò<u>:ck</u>.");
+        hlpInfo << QString::fromLocal8Bit("4.2.3 ±¸×¢£ºÊäÈë<u>:calculate key?</u>»ò<u>:calc key?</u>»ò<u>:ck?</u>£¬ÏÔÊ¾°²È«½âËø²Ù×÷²½Öè°ïÖúĞÅÏ¢.");
+        hlpInfo << QString::fromLocal8Bit("4.3 ÓÉImg2LcdÉú³ÉµÄÎ»Í¼CÊı×éÊı¾İÑ¹Ëõ¹¤¾ß.");
+        hlpInfo << QString::fromLocal8Bit("4.3.1 ¶¨Òå£ºÓÉImg2LcdÉú³ÉµÄÎ»Í¼CÊı×éÊı¾İ£¬½«ÆäÖĞµÄÈ«²¿0x00»ò0xff£¬°´ÕÕ³öÏÖµÄ´ÎÊı½øĞĞÑ¹Ëõ.");
+        hlpInfo << QString::fromLocal8Bit("4.3.2 Ö¸Áî£º<u>:compress bmp</u>»ò<u>:cb</u>.");
     }
     else if(CMD_HELP_BOOTLOADER == cmd)
     {
-        hlpInfo << tr("ã€ŠBootLoaderåˆæˆå·¥å…·ä½¿ç”¨æ–¹æ³•ã€‹");
-        hlpInfo << tr("0 å°†<u>switch function</u>ï¼ˆæˆ–<u>input command</u>ï¼‰åˆ‡æ¢è‡³<u>add bootloader to firmware</u>.");
-        hlpInfo << tr("1 åŠ è½½bootloaderä»£ç æ®µçš„ä¸¤ç§æ–¹å¼.");
-        hlpInfo << tr("1.1 æ–¹å¼ä¸€ï¼šåŠ è½½é»˜è®¤bootloaderä»£ç æ®µï¼Œå…ˆå‹¾é€‰<u>use default</u>ï¼Œå†æ›´æ”¹å…¶å·¦ä¾§çš„ä¸‹æ‹‰é€‰æ‹©æ¡†æ¥é€‰æ‹©åŠ è½½ç‰¹å®šå‹å·çš„é»˜è®¤bootloaderä»£ç æ®µ.");
-        hlpInfo << tr("1.2 æ–¹å¼äºŒï¼šåŠ è½½å…¶å®ƒbootloaderä»£ç æ®µï¼Œå»å‹¾é€‰<u>default</u>ï¼Œç‚¹å‡»<u>load bootloader</u>æŒ‰é’®é€‰æ‹©å…¶å®ƒbootloaderæ–‡ä»¶.");
-        hlpInfo << tr("2 ç‚¹å‡»<u>load file</u>æŒ‰é’®é€‰æ‹©.S19åŸappæ–‡ä»¶.");
-        hlpInfo << tr("3 ç‚¹å‡»<u>generate</u>æŒ‰é’®ç”Ÿæˆå«bootloaderçš„æ–°appæ–‡ä»¶,å¹¶è‡ªåŠ¨æ‰“å¼€è¯¥æ–‡ä»¶æ‰€åœ¨çš„ç›®å½•ä¸”é€‰ä¸­è¯¥æ–‡ä»¶.");
+        hlpInfo << QString::fromLocal8Bit("¡¶BootLoaderºÏ³É¹¤¾ßÊ¹ÓÃ·½·¨¡·");
+        hlpInfo << QString::fromLocal8Bit("0 ½«<u>switch function</u>£¨»ò<u>input command</u>£©ÇĞ»»ÖÁ<u>add bootloader to firmware</u>.");
+        hlpInfo << QString::fromLocal8Bit("1 ¼ÓÔØbootloader´úÂë¶ÎµÄÁ½ÖÖ·½Ê½.");
+        hlpInfo << QString::fromLocal8Bit("1.1 ·½Ê½Ò»£º¼ÓÔØÄ¬ÈÏbootloader´úÂë¶Î£¬ÏÈ¹´Ñ¡<u>use default</u>£¬ÔÙ¸ü¸ÄÆä×ó²àµÄÏÂÀ­Ñ¡Ôñ¿òÀ´Ñ¡Ôñ¼ÓÔØÌØ¶¨ĞÍºÅµÄÄ¬ÈÏbootloader´úÂë¶Î.");
+        hlpInfo << QString::fromLocal8Bit("1.2 ·½Ê½¶ş£º¼ÓÔØÆäËübootloader´úÂë¶Î£¬È¥¹´Ñ¡<u>default</u>£¬µã»÷<u>load bootloader</u>°´Å¥Ñ¡ÔñÆäËübootloaderÎÄ¼ş.");
+        hlpInfo << QString::fromLocal8Bit("2 µã»÷<u>load file</u>°´Å¥Ñ¡Ôñ.S19Ô­appÎÄ¼ş.");
+        hlpInfo << QString::fromLocal8Bit("3 µã»÷<u>generate</u>°´Å¥Éú³Éº¬bootloaderµÄĞÂappÎÄ¼ş,²¢×Ô¶¯´ò¿ª¸ÃÎÄ¼şËùÔÚµÄÄ¿Â¼ÇÒÑ¡ÖĞ¸ÃÎÄ¼ş.");
     }
     else if(CMD_HELP_DIAGNOSIS == cmd)
     {
-        hlpInfo << tr("ã€Šè¯Šæ–­ä»ªappç”Ÿæˆå·¥å…·ä½¿ç”¨æ–¹æ³•ã€‹");
-        hlpInfo << tr("0 å°†<u>switch function</u>ï¼ˆæˆ–<u>input command</u>ï¼‰åˆ‡æ¢è‡³<u>gen firmware for diagnosis</u>.");
-        hlpInfo << tr("1 ç‚¹å‡»<u>load file</u>æŒ‰é’®é€‰æ‹©.S19åŸappæ–‡ä»¶.");
-        hlpInfo << tr("2 è¾“å…¥S021æ•°æ®ï¼Œè¯¥æ•°æ®æœ€ç»ˆå°†ä½äºappçš„ç¬¬ä¸€è¡Œ.");
-        hlpInfo << tr("2.1 åœ¨S021è¾“å…¥æ¡†è¾“å…¥<u>:t</u>å¹¶æŒ‰å›è½¦é”®è·å–T19é¢„ç½®çš„S021æ•°æ®ï¼›è¾“å…¥<u>:m</u>å¹¶æŒ‰å›è½¦é”®è·å–m1afl2é¢„ç½®çš„S021æ•°æ®ï¼›"
-                      "è¾“å…¥<u>:s</u>å¹¶æŒ‰å›è½¦é”®è·å–s51evflé¢„ç½®çš„S021æ•°æ®ï¼›è¾“å…¥<u>:a</u>å¹¶æŒ‰å›è½¦é”®è·å–a13tevé¢„ç½®çš„S021æ•°æ®.");
-        hlpInfo << tr("2.2 æ­£ç¡®è¾“å…¥S021æ•°æ®åï¼Œå°†å…‰æ ‡ç½®äºS021æ•°æ®æ‰€åœ¨çš„è¾“å…¥æ¡†åï¼Œç‚¹å‡»å›è½¦é”®å¯ä»¥ä¿®æ”¹ç‰ˆæœ¬å·ï¼Œç‰ˆæœ¬å·æ ¼å¼éœ€ä¸¥æ ¼åŒ¹é…<u>xx.xx.xx</u>,xä¸º0-9æˆ–a-f,å­—æ¯ä¸åŒºåˆ†å¤§å°å†™ï¼Œæœ€ç»ˆæŒ‰å¤§å†™å­—æ¯å†™å…¥æ–‡ä»¶.");
-        hlpInfo << tr("2.3 å°†å…‰æ ‡ç½®äºS021æ•°æ®æ‰€åœ¨çš„è¾“å…¥æ¡†åï¼Œå½“S021è¾“å…¥æ¡†ä¸ºç©ºæ—¶æŒ‰ä¸‹å›è½¦é”®ï¼Œä¼šè¯·æ±‚è¾“å…¥é›¶ä»¶å·ï¼Œä¹‹åä¼šè¯·æ±‚è¾“å…¥è½¯ä»¶ç‰ˆæœ¬ä¿¡æ¯ï¼Œç„¶åè‡ªåŠ¨åˆæˆS021è¡Œæ•°æ®ï¼Œæ•°æ®ç”Ÿæˆåä¾ç„¶å¯ä»¥ä½¿ç”¨2.1èŠ‚çš„æ–¹æ³•ä¿®æ”¹ç‰ˆæœ¬å·.");
-        hlpInfo << tr("3 ç‚¹å‡»<u>generate</u>æŒ‰é’®ï¼Œç”Ÿæˆè¯Šæ–­ä»ªappæ–‡ä»¶,å¹¶è‡ªåŠ¨æ‰“å¼€è¯¥æ–‡ä»¶æ‰€åœ¨çš„ç›®å½•ä¸”é€‰ä¸­è¯¥æ–‡ä»¶.");
-        hlpInfo << tr("4 è¯¥æ–‡ä»¶å¤¹ä¸‹è¿˜å°†è‡ªåŠ¨ç”Ÿæˆflash driveræ–‡ä»¶ï¼Œè¯·å°†è¯Šæ–­ä»ªappæ–‡ä»¶å’Œflash driveræ–‡ä»¶ä¸€åŒåŠ å…¥å‹ç¼©åŒ…æä¾›ç»™ä½¿ç”¨è€….");
+        hlpInfo << QString::fromLocal8Bit("¡¶Õï¶ÏÒÇappÉú³É¹¤¾ßÊ¹ÓÃ·½·¨¡·");
+        hlpInfo << QString::fromLocal8Bit("0 ½«<u>switch function</u>£¨»ò<u>input command</u>£©ÇĞ»»ÖÁ<u>gen firmware for diagnosis</u>.");
+        hlpInfo << QString::fromLocal8Bit("1 µã»÷<u>load file</u>°´Å¥Ñ¡Ôñ.S19Ô­appÎÄ¼ş.");
+        hlpInfo << QString::fromLocal8Bit("2 ÊäÈëS021Êı¾İ£¬¸ÃÊı¾İ×îÖÕ½«Î»ÓÚappµÄµÚÒ»ĞĞ.");
+        hlpInfo << QString::fromLocal8Bit("2.1 ÔÚS021ÊäÈë¿òÊäÈë<u>:t</u>²¢°´»Ø³µ¼ü»ñÈ¡T19Ô¤ÖÃµÄS021Êı¾İ£»ÊäÈë<u>:m</u>²¢°´»Ø³µ¼ü»ñÈ¡m1afl2Ô¤ÖÃµÄS021Êı¾İ£»"
+                      "ÊäÈë<u>:s</u>²¢°´»Ø³µ¼ü»ñÈ¡s51evflÔ¤ÖÃµÄS021Êı¾İ£»ÊäÈë<u>:a</u>²¢°´»Ø³µ¼ü»ñÈ¡a13tevÔ¤ÖÃµÄS021Êı¾İ.");
+        hlpInfo << QString::fromLocal8Bit("2.2 ÕıÈ·ÊäÈëS021Êı¾İºó£¬½«¹â±êÖÃÓÚS021Êı¾İËùÔÚµÄÊäÈë¿òºó£¬µã»÷»Ø³µ¼ü¿ÉÒÔĞŞ¸Ä°æ±¾ºÅ£¬°æ±¾ºÅ¸ñÊ½ĞèÑÏ¸ñÆ¥Åä<u>xx.xx.xx</u>,xÎª0-9»òa-f,×ÖÄ¸²»Çø·Ö´óĞ¡Ğ´£¬×îÖÕ°´´óĞ´×ÖÄ¸Ğ´ÈëÎÄ¼ş.");
+        hlpInfo << QString::fromLocal8Bit("2.3 ½«¹â±êÖÃÓÚS021Êı¾İËùÔÚµÄÊäÈë¿òºó£¬µ±S021ÊäÈë¿òÎª¿ÕÊ±°´ÏÂ»Ø³µ¼ü£¬»áÇëÇóÊäÈëÁã¼şºÅ£¬Ö®ºó»áÇëÇóÊäÈëÈí¼ş°æ±¾ĞÅÏ¢£¬È»ºó×Ô¶¯ºÏ³ÉS021ĞĞÊı¾İ£¬Êı¾İÉú³ÉºóÒÀÈ»¿ÉÒÔÊ¹ÓÃ2.1½ÚµÄ·½·¨ĞŞ¸Ä°æ±¾ºÅ.");
+        hlpInfo << QString::fromLocal8Bit("3 µã»÷<u>generate</u>°´Å¥£¬Éú³ÉÕï¶ÏÒÇappÎÄ¼ş,²¢×Ô¶¯´ò¿ª¸ÃÎÄ¼şËùÔÚµÄÄ¿Â¼ÇÒÑ¡ÖĞ¸ÃÎÄ¼ş.");
+        hlpInfo << QString::fromLocal8Bit("4 ¸ÃÎÄ¼ş¼ĞÏÂ»¹½«×Ô¶¯Éú³Éflash driverÎÄ¼ş£¬Çë½«Õï¶ÏÒÇappÎÄ¼şºÍflash driverÎÄ¼şÒ»Í¬¼ÓÈëÑ¹Ëõ°üÌá¹©¸øÊ¹ÓÃÕß.");
     }
     else if(CMD_HELP_DIAG_CALCULATE_KEY == cmd)
     {
-        hlpInfo << tr("ã€Šå®‰å…¨è§£é”æ“ä½œæ­¥éª¤ã€‹");
-        hlpInfo << tr("0 åœ¨busmasterè½¯ä»¶è¯Šæ–­çª—å£å°†[Send Tester Present]å‹¾é€‰ä¸º[ON]ï¼Œæ¿€æ´»3EæœåŠ¡.");
-        hlpInfo << tr("1 åœ¨busmasterè½¯ä»¶è¯Šæ–­çª—å£å‘é€[10 03]ï¼Œåˆ‡æ¢åˆ°æ‰©å±•ä¼šè¯.");
-        hlpInfo << tr("2 åœ¨busmasterè½¯ä»¶è¯Šæ–­çª—å£å‘é€[27 03]ï¼Œè¯·æ±‚è®¡ç®—å®‰å…¨å¯†é’¥çš„ç§å­.");
-        hlpInfo << tr("3 å°†busmasterè½¯ä»¶è¯Šæ–­çª—å£æ”¶åˆ°çš„[67 03 xx xx]ä¸­çš„åä¸¤ä¸ªå­—èŠ‚å³[xx xx]è¾“å…¥åˆ°å¼¹å‡ºçš„[seed query]çª—å£ä¸­.");
-        hlpInfo << tr("4 ç‚¹å‡»[seed query]çª—å£çš„[OK]å°†ä¼šè¿”å›è®¡ç®—å¥½çš„å®‰å…¨å¯†é’¥.");
-        hlpInfo << tr("5 è¾“å…¥å¯†é’¥.");
-        hlpInfo << tr("5.1 æ–¹æ³•ä¸€ï¼šåœ¨busmasterè½¯ä»¶è¯Šæ–­çª—å£å‘é€[27 04 hh hh]ï¼Œå…¶ä¸­[hh hh]ä¸ºç¬¬4æ­¥æ‰€å¾—çš„æ•°å€¼.");
-        hlpInfo << tr("5.2 æ–¹æ³•äºŒï¼šç¬¬4æ­¥å®Œæˆåï¼Œç¨‹åºå·²ç»å°†ç»“æœå¤åˆ¶åˆ°ç³»ç»Ÿå‰ªè´´æ¿ä¸­ï¼Œåœ¨busmasterè½¯ä»¶è¯Šæ–­å‘é€çª—å£ï¼Œä½¿ç”¨é¼ æ ‡å³é”®å•å‡»å¹¶é€‰æ‹©ç²˜è´´ï¼Œç„¶åå‘é€å³å¯.");
+        hlpInfo << QString::fromLocal8Bit("¡¶°²È«½âËø²Ù×÷²½Öè¡·");
+        hlpInfo << QString::fromLocal8Bit("0 ÔÚbusmasterÈí¼şÕï¶Ï´°¿Ú½«[Send Tester Present]¹´Ñ¡Îª[ON]£¬¼¤»î3E·şÎñ.");
+        hlpInfo << QString::fromLocal8Bit("1 ÔÚbusmasterÈí¼şÕï¶Ï´°¿Ú·¢ËÍ[10 03]£¬ÇĞ»»µ½À©Õ¹»á»°.");
+        hlpInfo << QString::fromLocal8Bit("2 ÔÚbusmasterÈí¼şÕï¶Ï´°¿Ú·¢ËÍ[27 03]£¬ÇëÇó¼ÆËã°²È«ÃÜÔ¿µÄÖÖ×Ó.");
+        hlpInfo << QString::fromLocal8Bit("3 ½«busmasterÈí¼şÕï¶Ï´°¿ÚÊÕµ½µÄ[67 03 xx xx]ÖĞµÄºóÁ½¸ö×Ö½Ú¼´[xx xx]ÊäÈëµ½µ¯³öµÄ[seed query]´°¿ÚÖĞ.");
+        hlpInfo << QString::fromLocal8Bit("4 µã»÷[seed query]´°¿ÚµÄ[OK]½«»á·µ»Ø¼ÆËãºÃµÄ°²È«ÃÜÔ¿.");
+        hlpInfo << QString::fromLocal8Bit("5 ÊäÈëÃÜÔ¿.");
+        hlpInfo << QString::fromLocal8Bit("5.1 ·½·¨Ò»£ºÔÚbusmasterÈí¼şÕï¶Ï´°¿Ú·¢ËÍ[27 04 hh hh]£¬ÆäÖĞ[hh hh]ÎªµÚ4²½ËùµÃµÄÊıÖµ.");
+        hlpInfo << QString::fromLocal8Bit("5.2 ·½·¨¶ş£ºµÚ4²½Íê³Éºó£¬³ÌĞòÒÑ¾­½«½á¹û¸´ÖÆµ½ÏµÍ³¼ôÌù°åÖĞ£¬ÔÚbusmasterÈí¼şÕï¶Ï·¢ËÍ´°¿Ú£¬Ê¹ÓÃÊó±êÓÒ¼üµ¥»÷²¢Ñ¡ÔñÕ³Ìù£¬È»ºó·¢ËÍ¼´¿É.");
     }
 
     ptOutputWnd->clear();
     foreach(QString elem, hlpInfo)
     {
-        //å¦èµ·ä¸€ä¸ªæ–°æ®µè½
+        //ÁíÆğÒ»¸öĞÂ¶ÎÂä
         if(elem.startsWith("0 ") || elem.startsWith("1 ") || elem.startsWith("2 ") || elem.startsWith("3 ") || elem.startsWith("4 ") || elem.startsWith("5 "))
         {
             ptOutputWnd->appendPlainText(QString());
@@ -1433,13 +1439,13 @@ void FirmwareGenerator::showHelpInfo(CmdType cmd)
         ptOutputWnd->appendHtml(elem);
     }
 
-    //å…‰æ ‡ç§»åŠ¨åˆ°æœ€é¡¶éƒ¨ï¼Œå¦åˆ™å°†æ˜¾ç¤ºæ–‡ä»¶æœ«å°¾
+    //¹â±êÒÆ¶¯µ½×î¶¥²¿£¬·ñÔò½«ÏÔÊ¾ÎÄ¼şÄ©Î²
     QTextCursor cursor = ptOutputWnd->textCursor();
     cursor.movePosition(QTextCursor::Start);
     ptOutputWnd->setTextCursor(cursor);
 }
 
-//å¤„ç†é…ç½®æ–‡ä»¶
+//´¦ÀíÅäÖÃÎÄ¼ş
 void FirmwareGenerator::procConfigFile(CmdType cmd)
 {
     if(CMD_SAVE_CONFIG_FILE == cmd)
@@ -1577,7 +1583,7 @@ void FirmwareGenerator::versionDetectTimerTimeout()
 
         if(!fileStringList.isEmpty() && fileStringList.at(0) > SOFTWARE_VERSION && fileStringList.at(0).startsWith('v'))
         {
-            int ret = QMessageBox::question(this, tr("è‡ªåŠ¨å‡çº§"), "æ£€æµ‹åˆ°æ–°ç‰ˆæœ¬" + fileStringList.at(0) + "ï¼Œå½“å‰ç‰ˆæœ¬" + SOFTWARE_VERSION + "ï¼Œæ˜¯å¦å‡çº§ï¼Ÿ", QMessageBox::Yes, QMessageBox::No);
+            int ret = QMessageBox::question(this, tr("×Ô¶¯Éı¼¶"), "¼ì²âµ½ĞÂ°æ±¾" + fileStringList.at(0) + "£¬µ±Ç°°æ±¾" + SOFTWARE_VERSION + "£¬ÊÇ·ñÉı¼¶£¿", QMessageBox::Yes, QMessageBox::No);
             if(QMessageBox::No == ret)
                 return;
 
@@ -1614,7 +1620,7 @@ void FirmwareGenerator::appDetectTimerTimeout()
 
     if(300 == howmany1sPassed && !isDownloadSuccess)
     {
-        QMessageBox::critical(NULL, tr("è‡ªåŠ¨å‡çº§"), tr("æ›´æ–°å¯èƒ½å¤±è´¥äº†..."));
+        QMessageBox::critical(NULL, tr("×Ô¶¯Éı¼¶"), tr("¸üĞÂ¿ÉÄÜÊ§°ÜÁË..."));
         appDetectTimer->stop();
         return;
     }
@@ -1630,28 +1636,28 @@ void FirmwareGenerator::appDetectTimerTimeout()
 
         if(appFile.size() >= 500 * 1024)
         {
-            int ret = QMessageBox::information(this, tr("è‡ªåŠ¨å‡çº§"), "æ›´æ–°æˆåŠŸï¼Œæ˜¯å¦æŸ¥çœ‹ç‰ˆæœ¬æ›´æ–°æ—¥å¿—ï¼Ÿ", QMessageBox::Yes, QMessageBox::No);
+            int ret = QMessageBox::information(this, tr("×Ô¶¯Éı¼¶"), "¸üĞÂ³É¹¦£¬ÊÇ·ñ²é¿´°æ±¾¸üĞÂÈÕÖ¾£¿", QMessageBox::Yes, QMessageBox::No);
             if(QMessageBox::Yes == ret)
                 QDesktopServices::openUrl(QUrl(QLatin1String("https://github.com/bingshuizhilian/QTPROJECTS-FIRMWARE_GENERATOR/releases")));
 
-            //WINDOWSç¯å¢ƒä¸‹ï¼Œé€‰ä¸­è¯¥æ–‡ä»¶
+            //WINDOWS»·¾³ÏÂ£¬Ñ¡ÖĞ¸ÃÎÄ¼ş
 #ifdef WIN32
             QProcess process;
             QString openFileName = appFilePathName;
 
-            openFileName.replace("/", "\\");    //***è¿™å¥windowsä¸‹å¿…è¦***
+            openFileName.replace("/", "\\");    //***Õâ¾äwindowsÏÂ±ØÒª***
             process.startDetached("explorer /select," + openFileName);
 #endif
         }
         else
         {
             appFile.remove();
-            QMessageBox::critical(NULL, tr("è‡ªåŠ¨å‡çº§"), "æ›´æ–°å¤±è´¥äº†...");
+            QMessageBox::critical(NULL, tr("×Ô¶¯Éı¼¶"), "¸üĞÂÊ§°ÜÁË...");
         }
     }
 }
 
-//åŸºäºQTç½‘ç»œåº“çš„ä¸‹è½½è™½å·²å®ç°ç½‘ç»œä¼ è¾“ï¼Œä½†æ˜¯ä¸èƒ½ä¸‹è½½ä¸€äº›éœ€è¦çš„é“¾æ¥ï¼Œå¾…åç»­æœ‰æ—¶é—´å†åˆ†æ
+//»ùÓÚQTÍøÂç¿âµÄÏÂÔØËäÒÑÊµÏÖÍøÂç´«Êä£¬µ«ÊÇ²»ÄÜÏÂÔØÒ»Ğ©ĞèÒªµÄÁ´½Ó£¬´ıºóĞøÓĞÊ±¼äÔÙ·ÖÎö
 void FirmwareGenerator::autoUpdate(QString local_version)
 {
     qDebug() << local_version;
@@ -1671,24 +1677,24 @@ void FirmwareGenerator::autoUpdate(QString local_version)
         return;
     }
 
-    //æ£€æµ‹æœåŠ¡å™¨ä¸Šçš„è½¯ä»¶ç‰ˆæœ¬å·
+    //¼ì²â·şÎñÆ÷ÉÏµÄÈí¼ş°æ±¾ºÅ
     m_networkAccessMngr = new QNetworkAccessManager;
     QUrl url(VERSION_DOWNLOAD_URL);
     QNetworkRequest request(url);
 //    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/octet-stream");
 
-    m_httpReply = m_networkAccessMngr->get(request);//å‘é€è¯·æ±‚
+    m_httpReply = m_networkAccessMngr->get(request);//·¢ËÍÇëÇó
 
     connect(m_httpReply, SIGNAL(readyRead()), this, SLOT(httpReadContent()));
     connect(m_networkAccessMngr, SIGNAL(finished(QNetworkReply*)), this, SLOT(httpReplyFinished(QNetworkReply*)));
     connect(m_httpReply, SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(httpDownloadError(QNetworkReply::NetworkError)));
 
-    //è¯¢é—®æ˜¯å¦éœ€è¦å‡çº§
-//    int ret = QMessageBox::question(this, tr("è‡ªåŠ¨å‡çº§"), tr("éœ€è¦æ›´æ–°åˆ°æœ€æ–°ç‰ˆæœ¬ç¨‹åºå—ï¼Ÿ"), QMessageBox::Yes, QMessageBox::No);
+    //Ñ¯ÎÊÊÇ·ñĞèÒªÉı¼¶
+//    int ret = QMessageBox::question(this, tr("×Ô¶¯Éı¼¶"), tr("ĞèÒª¸üĞÂµ½×îĞÂ°æ±¾³ÌĞòÂğ£¿"), QMessageBox::Yes, QMessageBox::No);
 //    if(QMessageBox::No == ret)
 //        return;
 
-    //ä¸‹è½½æœåŠ¡å™¨ä¸Šçš„æœ€æ–°ç‰ˆæœ¬è½¯ä»¶
+    //ÏÂÔØ·şÎñÆ÷ÉÏµÄ×îĞÂ°æ±¾Èí¼ş
 
 
 }
@@ -1740,11 +1746,11 @@ void FirmwareGenerator::httpDownloadProgress(qint64 bytes_received, qint64 bytes
     qDebug() << "httpDownloadProgress: " << bytes_received << bytes_total << QString(" -> %1%").arg(bytes_received * 100 / bytes_total);
 }
 
-//å°†boot codeç”Ÿæˆä¸ºå­—ç¬¦ä¸²å¸¸é‡ï¼Œå½“boot codeæ›´æ–°æ—¶ï¼Œè°ƒç”¨æ­¤å‡½æ•°å°†å…¶è½¬æ¢ä¸ºæ•°ç»„
+//½«boot codeÉú³ÉÎª×Ö·û´®³£Á¿£¬µ±boot code¸üĞÂÊ±£¬µ÷ÓÃ´Ëº¯Êı½«Æä×ª»»ÎªÊı×é
 void FirmwareGenerator::generateCharArray()
 {
     ptOutputWnd->clear();
-    ptOutputWnd->appendPlainText("æ¬¢è¿ä½¿ç”¨æ–‡ä»¶è½¬å­—ç¬¦ä¸²å·¥å…·");
+    ptOutputWnd->appendPlainText(QString::fromLocal8Bit("»¶Ó­Ê¹ÓÃÎÄ¼ş×ª×Ö·û´®¹¤¾ß"));
 
     QString filePathName = QFileDialog::getOpenFileName();
     QString filePath = QFileInfo(filePathName).absolutePath();
@@ -1817,12 +1823,12 @@ void FirmwareGenerator::generateCharArray()
 
     qDebug()<<newFilePathName<<endl;
 
-    //WINDOWSç¯å¢ƒä¸‹ï¼Œé€‰ä¸­è¯¥æ–‡ä»¶
+    //WINDOWS»·¾³ÏÂ£¬Ñ¡ÖĞ¸ÃÎÄ¼ş
 #ifdef WIN32
     QProcess process;
     QString openFileName = newFilePathName;
 
-    openFileName.replace("/", "\\");    //***è¿™å¥windowsä¸‹å¿…è¦***
+    openFileName.replace("/", "\\");    //***Õâ¾äwindowsÏÂ±ØÒª***
     process.startDetached("explorer /select," + openFileName);
 #endif
 }
@@ -1830,24 +1836,26 @@ void FirmwareGenerator::generateCharArray()
 void FirmwareGenerator::compressCArrayOfBitmap()
 {
     ptOutputWnd->clear();
-    ptOutputWnd->appendPlainText("æ¬¢è¿ä½¿ç”¨Image2Lcdç”Ÿæˆçš„Cæ•°ç»„çš„æ•°ç»„å‹ç¼©å·¥å…·");
+    ptOutputWnd->appendPlainText(QString::fromLocal8Bit("»¶Ó­Ê¹ÓÃImage2LcdÉú³ÉµÄCÊı×éµÄÊı×éÑ¹Ëõ¹¤¾ß"));
 
-    const int DEVIDE_AMOUNT = 255; //ä¸‹ä½æœºå­˜å‚¨å®½å’Œé«˜å„ç”¨ä¸€ä¸ªå­—èŠ‚ï¼Œæ­¤å¤„åº”ç¡®ä¿æ­¤å€¼ä¸å¤§äº255ï¼ˆå³0xffï¼‰
-    QString filePathName = QFileDialog::getOpenFileName();
+    const int DEVIDE_AMOUNT = 255; //ÏÂÎ»»ú´æ´¢¿íºÍ¸ß¸÷ÓÃÒ»¸ö×Ö½Ú£¬´Ë´¦Ó¦È·±£´ËÖµ²»´óÓÚ255£¨¼´0xff£©
+    QString filePathName = QFileDialog::getOpenFileName(this, QString::fromLocal8Bit("ÇëÑ¡ÔñÓÉImage2LcdÉú³ÉµÄÎ»Í¼Êı×éÎÄ¼ş"),
+                                                        "",
+                                                        tr("C files (*.c *.h)"));
     QString filePath = QFileInfo(filePathName).absolutePath();
 
     qDebug()<<filePathName<<endl<<filePath<<endl;
 
     if(filePathName.isEmpty())
     {
-        QMessageBox::warning(this, "Warnning", "compress failed, please select a file", QMessageBox::Yes);
+        QMessageBox::warning(this, QString::fromLocal8Bit("¾¯¸æ"), QString::fromLocal8Bit("Î´Ñ¡ÔñÎÄ¼ş, Ñ¹ËõÊ§°Ü"), QMessageBox::Yes);
         return;
     }
 
     QFile targetFile(filePathName);
     if(!targetFile.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        QMessageBox::warning(this, "Warnning", "Cannot open " + filePathName, QMessageBox::Yes);
+        QMessageBox::warning(this, QString::fromLocal8Bit("¾¯¸æ"), QString::fromLocal8Bit("ÎŞ·¨´ò¿ª") + filePathName, QMessageBox::Yes);
         return;
     }
 
@@ -1876,7 +1884,7 @@ void FirmwareGenerator::compressCArrayOfBitmap()
         return;
     }
 
-    //æ³¨æ„3.5" TFTå®é™…ä½¿ç”¨åˆ°çš„å›¾ç‰‡å°ºå¯¸åœ¨ä»»æ„æ–¹å‘ä¸Šä¸ä¼šä¸”ä¸èƒ½è¶…è¿‡248(è¿™ä¸ªé™åˆ¶æ˜¯ç”±äºä¸‹ä½æœºè½¯ä»¶é©±åŠ¨èƒ½åŠ›å†³å®šçš„)
+    //×¢Òâ3.5" TFTÊµ¼ÊÊ¹ÓÃµ½µÄÍ¼Æ¬³ß´çÔÚÈÎÒâ·½ÏòÉÏ²»»áÇÒ²»ÄÜ³¬¹ı248(Õâ¸öÏŞÖÆÊÇÓÉÓÚÏÂÎ»»úÈí¼şÇı¶¯ÄÜÁ¦¾ö¶¨µÄ)
     QString widthAndHeight = tmpStr.mid(tmpStr.lastIndexOf(',') - 14, 4);
     widthAndHeight += ", ";
     widthAndHeight += tmpStr.mid(tmpStr.lastIndexOf(',') - 4, 4);
@@ -1901,7 +1909,7 @@ void FirmwareGenerator::compressCArrayOfBitmap()
         tmpStringList += elem.split(',');
 
     tmpStringList.removeAll("");
-    //åœ¨ç»“å°¾æ·»åŠ ä¸€ä¸ªç»“æŸæ ‡è®°ï¼Œå¦åˆ™å½“æ•°æ®å…¨ä¸º0x00æˆ–0xffä¸”æ•°æ®é‡è¾ƒå¤§æ—¶ï¼Œä¸‹é¢çš„æ­£åˆ™è¡¨è¾¾å¼æŸ¥æ‰¾ç¬¬ä¸€ä¸ªä¸ä¸º0x00æˆ–0xffçš„æ•°æ®éå¸¸è€—æ—¶
+    //ÔÚ½áÎ²Ìí¼ÓÒ»¸ö½áÊø±ê¼Ç£¬·ñÔòµ±Êı¾İÈ«Îª0x00»ò0xffÇÒÊı¾İÁ¿½Ï´óÊ±£¬ÏÂÃæµÄÕıÔò±í´ïÊ½²éÕÒµÚÒ»¸ö²»Îª0x00»ò0xffµÄÊı¾İ·Ç³£ºÄÊ±
     tmpStringList.append("END_FLAG");
 
     //debug
@@ -1946,12 +1954,12 @@ void FirmwareGenerator::compressCArrayOfBitmap()
                     }
                     else
                     {
-                        //ç§»é™¤å¤šæ·»åŠ çš„0x00æˆ–0xff
+                        //ÒÆ³ı¶àÌí¼ÓµÄ0x00»ò0xff
                         targetStringList.removeLast();
                     }
                 }
 
-                //forå¾ªç¯é©¬ä¸Šä¼šå¦indexè‡ªå¢1ï¼Œæå‰å‡å»1åæ¥ä¸‹æ¥æ‰èƒ½å®šä½åˆ°ä¸‹ä¸€ä¸ªé0x00æˆ–0xffçš„å…ƒç´ ï¼Œå³matchIndexæ‰€æŒ‡å‘çš„å…ƒç´ 
+                //forÑ­»·ÂíÉÏ»áÁíindex×ÔÔö1£¬ÌáÇ°¼õÈ¥1ºó½ÓÏÂÀ´²ÅÄÜ¶¨Î»µ½ÏÂÒ»¸ö·Ç0x00»ò0xffµÄÔªËØ£¬¼´matchIndexËùÖ¸ÏòµÄÔªËØ
                 index = matchIndex - 1;
             }
         }
@@ -1961,7 +1969,7 @@ void FirmwareGenerator::compressCArrayOfBitmap()
         }
     }
 
-    //ç§»é™¤è®¾ç½®çš„"END_FLAG"
+    //ÒÆ³ıÉèÖÃµÄ"END_FLAG"
     targetStringList.removeLast();
 
     for(int index = 0; index < targetStringList.size(); ++index)
@@ -1976,7 +1984,7 @@ void FirmwareGenerator::compressCArrayOfBitmap()
             targetStringList[index] += ", ";
     }
 
-    //ç§»é™¤æœ€åä¸€ä¸ª", "æˆ–","ï¼Œ(è‚¯å®šä¸ºäºŒè€…ä¹‹ä¸€ï¼Œä¸¤ä¸ªéƒ½removeå³å¯ä¿è¯)
+    //ÒÆ³ı×îºóÒ»¸ö", "»ò","£¬(¿Ï¶¨Îª¶şÕßÖ®Ò»£¬Á½¸ö¶¼remove¼´¿É±£Ö¤)
     targetStringList.last().remove(", ");
     targetStringList.last().remove(",");
 
@@ -2005,7 +2013,7 @@ void FirmwareGenerator::compressCArrayOfBitmap()
         *iter = (*iter).toUpper();
     }
 
-    //å®½åº¦å’Œé«˜åº¦ç”¨å°å†™å­—æ¯
+    //¿í¶ÈºÍ¸ß¶ÈÓÃĞ¡Ğ´×ÖÄ¸
     if(!targetFormattedStringList.isEmpty())
         targetFormattedStringList[1] = targetFormattedStringList[1].left(14) + targetFormattedStringList[1].right(targetFormattedStringList[1].size() - 14).toLower();
 
@@ -2016,15 +2024,15 @@ void FirmwareGenerator::compressCArrayOfBitmap()
     clipboard->clear();
     clipboard->setText(ptOutputWnd->document()->toPlainText());
 
-    ptOutputWnd->appendPlainText("\n\n***ä¸Šè¿°ç»“æœå·²ç»æ‹·è´è‡³ç³»ç»Ÿå‰ªè´´æ¿ä¸­***");
+    ptOutputWnd->appendPlainText(QString::fromLocal8Bit("\n\n***ÉÏÊö½á¹ûÒÑ¾­¿½±´ÖÁÏµÍ³¼ôÌù°åÖĞ***"));
 }
 
-//æ§ä»¶åˆå§‹åŒ–
+//¿Ø¼ş³õÊ¼»¯
 void FirmwareGenerator::componentsInitialization(void)
 {
     setWindowTitle(tr("CheryFirmwareGenerator"));
 
-    //çª—ä½“åç§°åŠçŠ¶æ€æ è®¾ç½®
+    //´°ÌåÃû³Æ¼°×´Ì¬À¸ÉèÖÃ
     auto labelAuthorInfo = new QLabel;
     labelAuthorInfo->setStatusTip(tr("click to view source code on github"));
     labelAuthorInfo->setOpenExternalLinks(true);
@@ -2032,22 +2040,22 @@ void FirmwareGenerator::componentsInitialization(void)
     labelAuthorInfo->show();
     ui->statusBar->addPermanentWidget(labelAuthorInfo);
 
-    //é€‰æ‹©.S19æ–‡ä»¶æŒ‰é’®
+    //Ñ¡Ôñ.S19ÎÄ¼ş°´Å¥
     m_btnChooseFile = new QPushButton(tr("load file"));
     connect(m_btnChooseFile, &m_btnChooseFile->clicked, this, &selectFilePressed);
     m_btnChooseFile->setStatusTip(tr("select the original .S19 file"));
-    //æ˜¾ç¤º.S19æ–‡ä»¶å
+    //ÏÔÊ¾.S19ÎÄ¼şÃû
     m_leFileInfo = new QLineEdit;
     m_leFileInfo->setReadOnly(true);
 
-    //é€‰æ‹©bootloaderæ–‡ä»¶æŒ‰é’®
+    //Ñ¡ÔñbootloaderÎÄ¼ş°´Å¥
     m_btnLoadBootloader = new QPushButton(tr("load bootloader"));
     connect(m_btnLoadBootloader, &m_btnLoadBootloader->clicked, this, &loadBootloaderPressed);
-    //æ˜¾ç¤ºbootloaderæ–‡ä»¶åï¼Œæˆ–æç¤ºæ­£åœ¨ä½¿ç”¨é»˜è®¤boot code
+    //ÏÔÊ¾bootloaderÎÄ¼şÃû£¬»òÌáÊ¾ÕıÔÚÊ¹ÓÃÄ¬ÈÏboot code
     m_leBootloaderInfo = new QLineEdit;
     m_leBootloaderInfo->setReadOnly(true);
 
-    //æœºå‹é€‰æ‹©
+    //»úĞÍÑ¡Ôñ
     m_cmbPlatformSwitch = new QComboBox;
     connect(m_cmbPlatformSwitch, static_cast<void (QComboBox::*)(const QString&)>(&QComboBox::currentTextChanged), this, &switchPlatformPressed);
     m_cmbPlatformSwitch->setFixedWidth(77);
@@ -2059,17 +2067,17 @@ void FirmwareGenerator::componentsInitialization(void)
     m_cmbPlatformSwitch->addItem(PLATFORM_STRING_LIST.at(S51EVFL), S51EVFL);
     m_cmbPlatformSwitch->addItem(PLATFORM_STRING_LIST.at(A13TEV), A13TEV);
 
-    //æ˜¯å¦ä½¿ç”¨é»˜è®¤boot codeé€‰é¡¹
+    //ÊÇ·ñÊ¹ÓÃÄ¬ÈÏboot codeÑ¡Ïî
     m_ckbUseDefaultBootloader = new QCheckBox(tr("use default"));
     connect(m_ckbUseDefaultBootloader, &m_ckbUseDefaultBootloader->stateChanged, this, &useDefaultBootloaderPressed);
     m_ckbUseDefaultBootloader->setStatusTip(tr("use default boot code when checked"));
     m_ckbUseDefaultBootloader->setChecked(true);
 
-    //ç”ŸæˆæŒ‰é’®
+    //Éú³É°´Å¥
     m_btnGenerate = new QPushButton(tr("generate"));
     connect(m_btnGenerate, &m_btnGenerate->clicked, this, &generateButtonPressed);
 
-    //åˆæˆè¯Šæ–­ä»ªfirmwareæ—¶éœ€è¦çš„é¢å¤–ä¿¡æ¯
+    //ºÏ³ÉÕï¶ÏÒÇfirmwareÊ±ĞèÒªµÄ¶îÍâĞÅÏ¢
     m_leDiagnosisS021 = new QLineEdit;
     connect(m_leDiagnosisS021, &m_leDiagnosisS021->returnPressed, this, &s021ReturnPressed);
     m_leDiagnosisS021->setStatusTip("press enter to modify version");
@@ -2079,7 +2087,7 @@ void FirmwareGenerator::componentsInitialization(void)
     m_leDiagnosisS20C->setStatusTip("crc and checksum infos");
     m_leDiagnosisS20C->setPlaceholderText("this line is automatically filled");
 
-    //å‘½ä»¤è¡Œè¾“å…¥è¾“å‡ºçª—å£
+    //ÃüÁîĞĞÊäÈëÊä³ö´°¿Ú
     m_leRunCommand = new QLineEdit;
     connect(m_leRunCommand, &m_leRunCommand->returnPressed, this, &runCmdReturnPressed);
     m_leRunCommand->setStatusTip("press enter to run command");
@@ -2088,7 +2096,7 @@ void FirmwareGenerator::componentsInitialization(void)
     ptOutputWnd->setReadOnly(true);
     ptOutputWnd->setStatusTip(tr("execute result echo window"));
 
-    //å¸ƒå±€æ§ä»¶
+    //²¼¾Ö¿Ø¼ş
     m_gbBootloader = new QGroupBox;
     m_gbBootloader->setTitle(tr("bootloader settings"));
     m_gbS19Selector = new QGroupBox;
@@ -2097,7 +2105,7 @@ void FirmwareGenerator::componentsInitialization(void)
     m_gbDiagnosis->setTitle(tr("diagnosis data settings"));
     m_gbSwitchFunction = new QGroupBox;
 
-    //åŠŸèƒ½é€‰æ‹©ä¸‹æ‹‰æ¡†
+    //¹¦ÄÜÑ¡ÔñÏÂÀ­¿ò
     m_cmbFunctionSwitch = new QComboBox;
     connect(m_cmbFunctionSwitch, static_cast<void (QComboBox::*)(const QString&)>(&QComboBox::currentTextChanged), this, &switchFunctionPressed);
     m_cmbFunctionSwitch->setInsertPolicy(QComboBox::NoInsert);
@@ -2107,10 +2115,10 @@ void FirmwareGenerator::componentsInitialization(void)
     m_cmbFunctionSwitch->addItem(FUNCTION_STRING_LIST.at(CMD_HANDLER), FUNCTION_STRING_LIST.at(CMD_HANDLER));
 }
 
-//å¸ƒå±€åˆå§‹åŒ–
+//²¼¾Ö³õÊ¼»¯
 void FirmwareGenerator::layoutsInitialization()
 {
-    //bootloaderæ§ä»¶åŒº
+    //bootloader¿Ø¼şÇø
     auto layoutBootloader = new QGridLayout;
     auto labelLeBootloader = new QLabel(tr("bootloader"));
     layoutBootloader->addWidget(labelLeBootloader, 0, 0, 1, 1);
@@ -2120,13 +2128,13 @@ void FirmwareGenerator::layoutsInitialization()
     layoutBootloader->addWidget(m_btnLoadBootloader, 1, 2, 1, 1);
     m_gbBootloader->setLayout(layoutBootloader);
 
-    //select fileæ§ä»¶åŒº
+    //select file¿Ø¼şÇø
     auto layoutS19Selector = new QGridLayout;
     layoutS19Selector->addWidget(m_btnChooseFile, 0, 0);
     layoutS19Selector->addWidget(m_leFileInfo, 0, 1);
     m_gbS19Selector->setLayout(layoutS19Selector);
 
-    //diagnosisæ§ä»¶åŒº
+    //diagnosis¿Ø¼şÇø
     auto layoutDiagnosis = new QGridLayout;
     auto labelLeS021 = new QLabel(tr("S021:"));
     labelLeS021->setStatusTip("the first line of the firmware");
@@ -2138,13 +2146,13 @@ void FirmwareGenerator::layoutsInitialization()
     layoutDiagnosis->addWidget(m_leDiagnosisS20C, 1, 1);
     m_gbDiagnosis->setLayout(layoutDiagnosis);
 
-    //åŠŸèƒ½é€‰æ‹©æ§ä»¶åŒº
+    //¹¦ÄÜÑ¡Ôñ¿Ø¼şÇø
     auto swFuncLayout = new QHBoxLayout;
     swFuncLayout->addWidget(m_cmbFunctionSwitch);
     swFuncLayout->addWidget(m_leRunCommand);
     m_gbSwitchFunction->setLayout(swFuncLayout);
 
-    //åº•éƒ¨æ§ä»¶åŒº
+    //µ×²¿¿Ø¼şÇø
     auto bottomLayout = new QHBoxLayout;
     bottomLayout->addWidget(m_gbSwitchFunction);
     bottomLayout->addWidget(m_btnGenerate);
@@ -2157,13 +2165,13 @@ void FirmwareGenerator::layoutsInitialization()
     m_layoutGlobal->addWidget(m_gbDiagnosis);
     m_layoutGlobal->addLayout(bottomLayout);
 
-    //è®¾ç½®çª—å£å’Œå…¶å®ƒç»„ä»¶å¤§å°
+    //ÉèÖÃ´°¿ÚºÍÆäËü×é¼ş´óĞ¡
     m_btnGenerate->setFixedHeight(50);
     ui->centralWidget->setLayout(m_layoutGlobal);
 }
 
-//å‘½ä»¤åˆå§‹åŒ–
-void FirmwareGenerator::commandsInitialization()
+//ÃüÁî³õÊ¼»¯
+void FirmwareGenerator::commandsInitialization(void)
 {
     cmdList.push_back({ CMD_HELP, {":help", ":hlp", ":?"} });
     cmdList.push_back({ CMD_HELP_BOOTLOADER, {":bootloader?", ":b?"} });
@@ -2190,7 +2198,7 @@ void FirmwareGenerator::commandsInitialization()
     cmdList.push_back({ CMD_DIAG_CALCULATE_KEY, {":calculate key", ":calc key", ":ck"} });
 #if WIN32
     cmdList.push_back({ CMD_WINDOWS_COMMON, {"::"} });
-    //æ­¤å¤„è¦æŠŠwindowsèƒ½è¯†åˆ«çš„å‘½ä»¤æ”¾åœ¨stringlistçš„é¦–ä½
+    //´Ë´¦Òª°ÑwindowsÄÜÊ¶±ğµÄÃüÁî·ÅÔÚstringlistµÄÊ×Î»
     cmdList.push_back({ CMD_WINDOWS_CALCULATOR, {":calc", ":calculator", ":c"} });
     cmdList.push_back({ CMD_WINDOWS_TASKMANAGER, {":taskmgr", ":tm"} });
     cmdList.push_back({ CMD_WINDOWS_PAINT, {":mspaint", ":mp"} });

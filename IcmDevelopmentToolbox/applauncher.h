@@ -31,6 +31,7 @@ private:
     QMediaPlayer* mp_bgmPlayer;
     QMediaPlaylist* mpl_bgmList;
     QPushButton* btn_bgmPlayer;
+    QPushButton* btn_subAppCompressCArrayOfBitmap;
 
 protected:
     void paintEvent(QPaintEvent *event);

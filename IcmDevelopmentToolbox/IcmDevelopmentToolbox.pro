@@ -49,4 +49,9 @@ FORMS    += \
 RESOURCES += \
     resources.qrc
 
-LIBS += ModelData.dll
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../ModelData/release/ -lModelData
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../ModelData/debug/ -lModelData
+else:unix: LIBS += -L$$OUT_PWD/../ModelData/ -lModelData
+
+INCLUDEPATH += $$PWD/../ModelData
+DEPENDPATH += $$PWD/../ModelData

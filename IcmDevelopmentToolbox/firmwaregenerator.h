@@ -35,7 +35,8 @@ public:
         BOOTLOADER,
         DIAGNOSIS,
         CMD_HANDLER,
-        CMD_HANDLER_CALCULATE_KEY
+        CMD_HANDLER_CALCULATE_KEY,
+        CMD_HANDLER_COMPRESS_ARRAY_OF_BMP
     };
 
 private:
@@ -95,7 +96,7 @@ private:
         WINDOW_WIDTH  = 334
     };
 
-    const QString SOFTWARE_VERSION = "v1.6";
+    const QString SOFTWARE_VERSION = "v1.7";
     const QString CONFIG_FILE_NAME = "config.json";
     QString versionFilePathName = "/version.txt";
     const QString appNameFirst = "IcmDevelopmentToolbox_";
@@ -158,16 +159,16 @@ public:
     inline QString getVersion(void){return SOFTWARE_VERSION;}
     void dealWithCalculateKeyCommand(void);
     void switchFunctionPage(FunctionType functype);
+    void compressCArrayOfBitmap(void);
 
 private:
     void componentsInitialization(void);
     void layoutsInitialization(void);
     void commandsInitialization(void);
-    void generateFirmwareWithBootloader();
-    void generateFirmwareForDiagnosis();
+    void generateFirmwareWithBootloader(void);
+    void generateFirmwareForDiagnosis(void);
     void generateFiles(CmdType cmd, QString dir_path, bool is_open_folder, QString user_part_number = "");
     void generateCharArray(void);
-    void compressCArrayOfBitmap(void);
     bool sortS19Code(QStringList &originalStringList);
     int hexCharToHex(char src);
     unsigned short calcCRC16(QList<unsigned char> data_list);

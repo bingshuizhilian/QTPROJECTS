@@ -22,7 +22,8 @@ AppLauncher::AppLauncher(QWidget *parent) :
     btn_appMinimize(new QPushButton),
     mp_bgmPlayer(new QMediaPlayer),
     mpl_bgmList(new QMediaPlaylist),
-    btn_bgmPlayer(new QPushButton)
+    btn_bgmPlayer(new QPushButton),
+    btn_subAppCompressCArrayOfBitmap(new QPushButton)
 {
     //launcher设置
     setWindowTitle(QString::fromLocal8Bit("Launcher"));
@@ -93,7 +94,7 @@ AppLauncher::AppLauncher(QWidget *parent) :
 
     //launcher按钮5设置
     btn_subAppCaculateKey->setParent(this);
-    btn_subAppCaculateKey->setGeometry(130, 237, this->width() / 8, this->height() / 8);
+    btn_subAppCaculateKey->setGeometry(100, 237, this->width() / 8, this->height() / 8);
     btn_subAppCaculateKey->setToolTip(QString::fromLocal8Bit("诊断密钥计算"));
     btn_subAppCaculateKey->installEventFilter(this);
     btn_subAppCaculateKey->setStyleSheet("QPushButton{border-image: url(:qrc:/../resources/icons/sunset.png);border-radius: 5px;}"
@@ -171,6 +172,24 @@ AppLauncher::AppLauncher(QWidget *parent) :
         }
     });
 
+    //launcher按钮8设置
+    btn_subAppCompressCArrayOfBitmap->setParent(this);
+    btn_subAppCompressCArrayOfBitmap->setGeometry(165, 239, this->width() / 9, this->height() / 9);
+    btn_subAppCompressCArrayOfBitmap->setToolTip(QString::fromLocal8Bit("Image2Lcd生成的C数组的压缩工具"));
+    btn_subAppCompressCArrayOfBitmap->installEventFilter(this);
+    btn_subAppCompressCArrayOfBitmap->setStyleSheet("QPushButton{border-image: url(:qrc:/../resources/icons/cactus.png);border-radius: 5px;}"
+                                                    "QPushButton:hover{border:2px;}"
+                                                    "QPushButton:pressed{border:4px;}");
+    connect(btn_subAppCompressCArrayOfBitmap, &btn_subAppCompressCArrayOfBitmap->clicked, this, [this](){
+        mp_soundPlayer->setVolume(100);
+        mp_soundPlayer->setMedia(QUrl::fromLocalFile(QApplication::applicationDirPath() + "/soundeffects/btnclicked2.wav"));
+        mp_soundPlayer->play();
+
+        appFirmwareGenerator->switchFunctionPage(FirmwareGenerator::CMD_HANDLER_COMPRESS_ARRAY_OF_BMP);
+        appFirmwareGenerator->show();
+        appFirmwareGenerator->compressCArrayOfBitmap();
+    });
+
     //右键菜单
     menu_launcher->addAction(QIcon(":qrc:/../resources/icons/paper-plane.png"), QString::fromLocal8Bit("关于(&A)"), this, [this](){
         QString info(QString::fromLocal8Bit("开发助手\n"));
@@ -246,7 +265,8 @@ bool AppLauncher::eventFilter(QObject *watched, QEvent *event)
             mp_soundPlayer->setMedia(QUrl::fromLocalFile(QApplication::applicationDirPath() + "/soundeffects/shua.wav"));
             mp_soundPlayer->play();
         }
-        else if(btn_subAppCaculateKey == watched)
+        else if(btn_subAppCaculateKey == watched
+                || btn_subAppCompressCArrayOfBitmap == watched)
         {
             mp_soundPlayer->setVolume(100);
             mp_soundPlayer->setMedia(QUrl::fromLocalFile(QApplication::applicationDirPath() + "/soundeffects/huaguo.wav"));

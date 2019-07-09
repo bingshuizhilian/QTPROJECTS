@@ -11,5 +11,6 @@
         <file>../resources/icons/watermelon.png</file>
         <file>../resources/icons/play-button2.png</file>
         <file>../resources/icons/music2.png</file>
+        <file>../resources/icons/cactus.png</file>
     </qresource>
 </RCC>

@@ -26,4 +26,6 @@ bmp位图转C语言数组页截图\
 can log分组查看工具页截图\
 ![can log分组查看工具页截图](https://github.com/bingshuizhilian/QTPROJECTS-ICM-DEVELOPMENT-TOOLBOX/blob/master/resources/pic5.png)
 
-4.Special thanks for https://www.flaticon.com/ and http://www.aigei.com/, the icons and soundeffects used in launcher were found in them.
+4.Sub-porject ModelData provides dll library file for IcmDevelopmentToolbox.
+
+5.Special thanks for https://www.flaticon.com/ and http://www.aigei.com/, the icons and soundeffects used in launcher were found in them.
