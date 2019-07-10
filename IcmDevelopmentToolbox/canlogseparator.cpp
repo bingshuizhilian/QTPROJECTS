@@ -27,7 +27,7 @@ CanLogSeparator::~CanLogSeparator()
 void CanLogSeparator::initialization()
 {
     //window name
-    setWindowTitle(tr("CanLogSeparator"));
+    setWindowTitle(QString::fromLocal8Bit("Can日志按信号ID分组查看"));
 
     //status bar
     auto labelAuthorInfo = new QLabel;
@@ -40,36 +40,36 @@ void CanLogSeparator::initialization()
     //components initialization
     m_pteOutput = new QPlainTextEdit;
     m_leSeparator = new QLineEdit;
-    m_leSeparator->setToolTip(tr("input format(case insensitive): 0xhhh;0xhhhh"));
-    m_leSeparator->setPlaceholderText("e.g. 0xhhh or 0xhhh;0xhhhh");
+    m_leSeparator->setToolTip(QString::fromLocal8Bit("输入格式要求：不区分大小写、以0x开头的3位或4位\n16进制信号ID、输入多个信号时以;(分号)作为间隔符"));
+    m_leSeparator->setPlaceholderText(QString::fromLocal8Bit("例：单条【0xhhh】，多条【0xhhh;0xhhhh】"));
     QRegExp hexCodeRegex("^(0[xX][a-fA-F\\d]{3,4};)+$");
     auto validator = new QRegExpValidator(hexCodeRegex, m_leSeparator);
     m_leSeparator->setValidator(validator);
     m_cbLogStyle = new QComboBox;
-    m_cbLogStyle->setStatusTip(tr("select a log style"));
-    m_cbLogStyle->addItem(tr("time stamp"));
-    m_cbLogStyle->addItem(tr("line number"));
-    m_cbLogStyle->addItem(tr("time & line"));
-    m_cbLogStyle->addItem(tr("none"));
+    m_cbLogStyle->setToolTip(QString::fromLocal8Bit("选择日志显示类型"));
+    m_cbLogStyle->addItem(QString::fromLocal8Bit("时间戳"));
+    m_cbLogStyle->addItem(QString::fromLocal8Bit("行号"));
+    m_cbLogStyle->addItem(QString::fromLocal8Bit("时间戳和行号"));
+    m_cbLogStyle->addItem(QString::fromLocal8Bit("无"));
     m_pbOpenLog = new QPushButton;
-    m_pbOpenLog->setText(tr("open log"));
+    m_pbOpenLog->setText(QString::fromLocal8Bit("打开日志"));
     connect(m_pbOpenLog, &m_pbOpenLog->clicked, this, &onOpenLogButtonClicked);
     m_pbShowStatistics = new QPushButton;
-    m_pbShowStatistics->setText(tr("log statistics"));
+    m_pbShowStatistics->setText(QString::fromLocal8Bit("日志信息统计"));
     connect(m_pbShowStatistics, &m_pbShowStatistics->clicked, this, &onShowStatisticsButtonClicked);
     m_pbSaveScreen = new QPushButton;
-    m_pbSaveScreen->setText(tr("save screen"));
+    m_pbSaveScreen->setText(QString::fromLocal8Bit("保存屏幕内容"));
     connect(m_pbSaveScreen, &m_pbSaveScreen->clicked, this, &onSaveScreenButtonClicked);
     m_pbClearScreen = new QPushButton;
-    m_pbClearScreen->setText(tr("clear screen"));
+    m_pbClearScreen->setText(QString::fromLocal8Bit("清除屏幕"));
     connect(m_pbClearScreen, &m_pbClearScreen->clicked, m_pteOutput, &m_pteOutput->clear);
     m_pbSeparateLog = new QPushButton;
-    m_pbSeparateLog->setText(tr("separate log"));
+    m_pbSeparateLog->setText(QString::fromLocal8Bit("分析日志"));
     connect(m_pbSeparateLog, &m_pbSeparateLog->clicked, this, &onSeparateLogButtonClicked);
 
     //CAN msg filter
     m_gbFilterSettings = new QGroupBox;
-    m_gbFilterSettings->setTitle(tr("filters"));
+    m_gbFilterSettings->setTitle(QString::fromLocal8Bit("信号过滤"));
     auto m_gbFilterSettingsLayout = new QHBoxLayout;
     m_gbFilterSettingsLayout->addWidget(m_leSeparator);
     m_gbFilterSettingsLayout->addWidget(m_cbLogStyle);
@@ -78,7 +78,7 @@ void CanLogSeparator::initialization()
 
     //main buttons
     m_gbBtns = new QGroupBox;
-    m_gbBtns->setTitle(tr("operations"));
+    m_gbBtns->setTitle(QString::fromLocal8Bit("操作选项"));
     auto m_gbBtnsLayout = new QHBoxLayout;
     m_gbBtnsLayout->addWidget(m_pbOpenLog);
     m_gbBtnsLayout->addWidget(m_pbShowStatistics);
@@ -101,7 +101,7 @@ void CanLogSeparator::onOpenLogButtonClicked()
     //定义文件对话框类
     QFileDialog* fileDialog = new QFileDialog(this);
     //定义文件对话框标题
-    fileDialog->setWindowTitle(tr("choose log file(s)"));
+    fileDialog->setWindowTitle(QString::fromLocal8Bit("选择Can日志文件"));
     //设置默认文件路径
     fileDialog->setDirectory(".");
     //设置文件过滤器
@@ -155,7 +155,7 @@ void CanLogSeparator::onOpenLogButtonClicked()
         QFile logFile(fileNameIter);
         if(!logFile.open(QIODevice::ReadOnly | QIODevice::Text))
         {
-            QMessageBox::warning(this, "Warnning", "Cannot open " + fileNameIter, QMessageBox::Yes);
+            QMessageBox::warning(this, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("无法打开") + fileNameIter, QMessageBox::Yes);
             return;
         }
 
@@ -190,15 +190,15 @@ void CanLogSeparator::onOpenLogButtonClicked()
         logFile.close();
 
         //statistics info output
-        m_pteOutput->appendPlainText("####in log file: " + m_FileInfos[fileNameIter].at(ABSOLUTE_FILE_PATH) + "####");
+        m_pteOutput->appendPlainText(QString::fromLocal8Bit("####在【") + m_FileInfos[fileNameIter].at(ABSOLUTE_FILE_PATH) + QString::fromLocal8Bit("】日志文件中####"));
 
-        m_Statistics[fileNameIter] << "***all detected can message list***";
+        m_Statistics[fileNameIter] << QString::fromLocal8Bit("***检测到的全部Can信号列表***");
         foreach(const QString &value, m_CanMessages[fileNameIter])
             m_Statistics[fileNameIter] << value;
 
-        m_Statistics[fileNameIter] << "***statistics infos***";
-        m_Statistics[fileNameIter] << "Total effective lines: " + QString::number(m_OriginalLogs[fileNameIter].size());
-        m_Statistics[fileNameIter] << "Total different can messages: " + QString::number(m_CanMessages[fileNameIter].size());
+        m_Statistics[fileNameIter] << QString::fromLocal8Bit("***统计信息***");
+        m_Statistics[fileNameIter] << QString::fromLocal8Bit("全部有效行数：") + QString::number(m_OriginalLogs[fileNameIter].size());
+        m_Statistics[fileNameIter] << QString::fromLocal8Bit("不同Can信号数：") + QString::number(m_CanMessages[fileNameIter].size());
 
         if(fileNameIter != m_FileInfos.keys().last())
             m_Statistics[fileNameIter] << "\n";
@@ -207,7 +207,7 @@ void CanLogSeparator::onOpenLogButtonClicked()
             m_pteOutput->appendPlainText(value);
     }
 
-    m_pbOpenLog->setStatusTip("amount of current loaded files: " + QString::number(m_FileInfos.size()));
+    m_pbOpenLog->setStatusTip(QString::fromLocal8Bit("当前加载的Can日志文件数量：") + QString::number(m_FileInfos.size()));
 }
 
 void CanLogSeparator::onShowStatisticsButtonClicked()
@@ -218,7 +218,7 @@ void CanLogSeparator::onShowStatisticsButtonClicked()
     {
         for(QString fileNameIter: m_FileInfos.keys())
         {
-            m_pteOutput->appendPlainText("####in log file: " + m_FileInfos[fileNameIter].at(ABSOLUTE_FILE_PATH) + "####");
+            m_pteOutput->appendPlainText(QString::fromLocal8Bit("####在【") + m_FileInfos[fileNameIter].at(ABSOLUTE_FILE_PATH) + QString::fromLocal8Bit("】日志文件中####"));
 
             foreach(const QString &value, m_Statistics[fileNameIter])
                 m_pteOutput->appendPlainText(value);
@@ -255,7 +255,7 @@ void CanLogSeparator::onSaveScreenButtonClicked()
     QFile newFile(newFilePathName);
     if(!newFile.open(QIODevice::WriteOnly | QIODevice::Text))
     {
-        QMessageBox::warning(this, "Warnning", "Cannot open " + newFilePathName, QMessageBox::Yes);
+        QMessageBox::warning(this, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("无法打开") + newFilePathName, QMessageBox::Yes);
         return;
     }
 
@@ -263,11 +263,11 @@ void CanLogSeparator::onSaveScreenButtonClicked()
 
     if(1 == m_FileInfos.size())
     {
-        out << "original log file:\n" + m_FileInfos.first().at(ABSOLUTE_FILE_PATH) + '\n';
+        out << QString::fromLocal8Bit("原始日志文件：\n") + m_FileInfos.first().at(ABSOLUTE_FILE_PATH) + '\n';
     }
     else
     {
-        out << "original log files:\n";
+        out << QString::fromLocal8Bit("原始日志文件：\n");
 
         for(QString fileNameIter: m_FileInfos.keys())
         {
@@ -299,6 +299,7 @@ void CanLogSeparator::onSeparateLogButtonClicked()
 
     QStringList tmpSeparators;
     tmpSeparators = separator.split(';', QString::SkipEmptyParts, Qt::CaseInsensitive);
+    tmpSeparators = QList<QString>::fromSet(tmpSeparators.toSet());
 
     for(QString fileNameIter: m_FileInfos.keys())
     {
@@ -308,14 +309,15 @@ void CanLogSeparator::onSeparateLogButtonClicked()
             //can id format: 0x3af 0x5edd
             if(value.size() != 5 && value.size() != 6)
             {
-                QMessageBox::warning(this, "Warnning", "please check input", QMessageBox::Yes);
+                QMessageBox::warning(this, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("输入信息无效"), QMessageBox::Yes);
                 return;
             }
 
             if(!m_CanMessages[fileNameIter].contains(value.toLower()))
             {
-                QMessageBox::information(this, "Warnning", "none " + value + " record was founded in "
-                                         + m_FileInfos[fileNameIter].at(ABSOLUTE_FILE_PATH), QMessageBox::Yes);
+                QMessageBox::information(this, QString::fromLocal8Bit("Warnning"),
+                                         QString::fromLocal8Bit("在【") + m_FileInfos[fileNameIter].at(ABSOLUTE_FILE_PATH)
+                                         + QString::fromLocal8Bit("】文件中没有【")+ value + QString::fromLocal8Bit("】信号出现过"), QMessageBox::Yes);
                 continue;
             }
 
@@ -324,6 +326,19 @@ void CanLogSeparator::onSeparateLogButtonClicked()
     }
 
     if(m_Separators.isEmpty())
+        return;
+
+    bool isAllSeparatorsEmpty = true;
+    for(QStringList separators: m_Separators.values())
+    {
+        if(!separators.isEmpty())
+        {
+            isAllSeparatorsEmpty = false;
+            break;
+        }
+    }
+
+    if(isAllSeparatorsEmpty)
         return;
 
     m_pteOutput->clear();
