@@ -289,29 +289,6 @@ void FirmwareGenerator::runCmdReturnPressed()
 void FirmwareGenerator::switchPlatformPressed()
 {
     m_leBootloaderInfo->setText("default " + m_cmbPlatformSwitch->currentText() + " boot code loaded");
-
-    ModelData md;
-
-    if(PLATFORM_STRING_LIST.at(M1AFL2) == m_cmbPlatformSwitch->currentText())
-    {
-        m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(md.HW_VER_M1AFL2));
-    }
-    else if(PLATFORM_STRING_LIST.at(T18) == m_cmbPlatformSwitch->currentText())
-    {
-        m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(md.HW_VER_T19));
-    }
-    else if(PLATFORM_STRING_LIST.at(T19) == m_cmbPlatformSwitch->currentText())
-    {
-        m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(md.HW_VER_T19));
-    }
-    else if(PLATFORM_STRING_LIST.at(S51EVFL) == m_cmbPlatformSwitch->currentText())
-    {
-        m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(md.HW_VER_S51EVFL));
-    }
-    else if(PLATFORM_STRING_LIST.at(A13TEV) == m_cmbPlatformSwitch->currentText())
-    {
-        m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(md.HW_VER_A13TEV));
-    }
 }
 
 //处理按下generate按钮事件
@@ -343,29 +320,6 @@ void FirmwareGenerator::useDefaultBootloaderPressed()
         m_leBootloaderInfo->setEnabled(false);
         m_btnLoadBootloader->setStatusTip(tr("use default boot code now"));
         m_cmbPlatformSwitch->setEnabled(true);
-
-        ModelData md;
-
-        if(PLATFORM_STRING_LIST.at(M1AFL2) == m_cmbPlatformSwitch->currentText())
-        {
-            m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(md.HW_VER_M1AFL2));
-        }
-        else if(PLATFORM_STRING_LIST.at(T18) == m_cmbPlatformSwitch->currentText())
-        {
-            m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(md.HW_VER_T19));
-        }
-        else if(PLATFORM_STRING_LIST.at(T19) == m_cmbPlatformSwitch->currentText())
-        {
-            m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(md.HW_VER_T19));
-        }
-        else if(PLATFORM_STRING_LIST.at(S51EVFL) == m_cmbPlatformSwitch->currentText())
-        {
-            m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(md.HW_VER_S51EVFL));
-        }
-        else if(PLATFORM_STRING_LIST.at(A13TEV) == m_cmbPlatformSwitch->currentText())
-        {
-            m_leBootloaderInfo->setStatusTip(QString("HW VER in current bootloader : ") + tr(md.HW_VER_A13TEV));
-        }
     }
     else
     {
@@ -374,7 +328,6 @@ void FirmwareGenerator::useDefaultBootloaderPressed()
         m_leBootloaderInfo->clear();
         m_btnLoadBootloader->setStatusTip(tr("select the bootloader file"));
         m_cmbPlatformSwitch->setEnabled(false);
-        m_leBootloaderInfo->setStatusTip(tr(""));
     }
 }
 
@@ -584,10 +537,6 @@ void FirmwareGenerator::generateFirmwareWithBootloader(void)
         {
             bootloaderCodeString = md.BOOT_CODE_M1AFL2;
         }
-        else if(PLATFORM_STRING_LIST.at(T18) == m_cmbPlatformSwitch->currentText())
-        {
-            bootloaderCodeString = md.BOOT_CODE_T19;
-        }
         else if(PLATFORM_STRING_LIST.at(T19) == m_cmbPlatformSwitch->currentText())
         {
             bootloaderCodeString = md.BOOT_CODE_T19;
@@ -724,19 +673,19 @@ void FirmwareGenerator::generateFiles(CmdType cmd, QString dir_path, bool is_ope
         fileContent = md.ERASE_EEPROM_FIRMWARE;
         break;
     case CMD_GEN_M1_BOOT_CODE:
-        filePathName += QString("CheryM1SeriesBootCode_hw") + md.HW_VER_M1AFL2 + QString(".S19");
+        filePathName += QString("CheryM1SeriesBootCode.S19");
         fileContent = md.BOOT_CODE_M1AFL2;
         break;
     case CMD_GEN_T1_BOOT_CODE:
-        filePathName += QString("CheryT1SeriesBootCode_hw") + md.HW_VER_T19 + QString(".S19");
+        filePathName += QString("CheryT1SeriesBootCode.S19");
         fileContent = md.BOOT_CODE_T19;
         break;
     case CMD_GEN_S51EVFL_BOOT_CODE:
-        filePathName += QString("CheryS51evflBootCode_hw") + md.HW_VER_S51EVFL + QString(".S19");
+        filePathName += QString("CheryS51evflBootCode.S19");
         fileContent = md.BOOT_CODE_S51EVFL;
         break;
     case CMD_GEN_A13TEV_BOOT_CODE:
-        filePathName += QString("CheryA13tevBootCode_hw") + md.HW_VER_A13TEV + QString(".S19");
+        filePathName += QString("CheryA13tevBootCode.S19");
         fileContent = md.BOOT_CODE_A13TEV;
         break;
     default:
@@ -2062,7 +2011,6 @@ void FirmwareGenerator::componentsInitialization(void)
     m_cmbPlatformSwitch->setInsertPolicy(QComboBox::NoInsert);
     m_cmbPlatformSwitch->setStatusTip("select a platform");
     m_cmbPlatformSwitch->addItem(PLATFORM_STRING_LIST.at(M1AFL2), M1AFL2);
-    m_cmbPlatformSwitch->addItem(PLATFORM_STRING_LIST.at(T18), T18);
     m_cmbPlatformSwitch->addItem(PLATFORM_STRING_LIST.at(T19), T19);
     m_cmbPlatformSwitch->addItem(PLATFORM_STRING_LIST.at(S51EVFL), S51EVFL);
     m_cmbPlatformSwitch->addItem(PLATFORM_STRING_LIST.at(A13TEV), A13TEV);

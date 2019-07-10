@@ -15,13 +15,9 @@ public:
 
 public:
     //boot related
-    static const char* HW_VER_M1AFL2;
     static const char* BOOT_CODE_M1AFL2;
-    static const char* HW_VER_T19;
     static const char* BOOT_CODE_T19;
-    static const char* HW_VER_S51EVFL;
     static const char* BOOT_CODE_S51EVFL;
-    static const char* HW_VER_A13TEV;
     static const char* BOOT_CODE_A13TEV;
 
     //erase eeprom firmware

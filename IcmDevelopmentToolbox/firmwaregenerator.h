@@ -50,7 +50,6 @@ private:
     enum PlatformType
     {
         M1AFL2,
-        T18,
         T19,
         S51EVFL,
         A13TEV
@@ -116,7 +115,6 @@ private:
     const QStringList PLATFORM_STRING_LIST =
     {
         "m1afl2",
-        "t18",
         "t19",
         "s51evfl",
         "a13tev"
