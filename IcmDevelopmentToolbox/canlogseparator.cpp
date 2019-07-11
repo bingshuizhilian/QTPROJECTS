@@ -105,7 +105,7 @@ void CanLogSeparator::onOpenLogButtonClicked()
     //设置默认文件路径
     fileDialog->setDirectory(".");
     //设置文件过滤器
-    fileDialog->setNameFilter(tr("*.log *.txt"));
+    fileDialog->setNameFilter(QString::fromLocal8Bit("日志文件(*.log *.txt)"));
     //设置可以选择多个文件,默认为只能选择一个文件QFileDialog::ExistingFile
     fileDialog->setFileMode(QFileDialog::ExistingFiles);
     //设置视图模式
@@ -138,7 +138,10 @@ void CanLogSeparator::onOpenLogButtonClicked()
     }
 
     if(fileNames.isEmpty())
+    {
+        QMessageBox::warning(this, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("加载失败，请选择日志文件"), QMessageBox::Yes);
         return;
+    }
 
     if(m_FileInfos.isEmpty())
         return;
