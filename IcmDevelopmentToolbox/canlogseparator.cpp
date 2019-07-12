@@ -58,6 +58,7 @@ void CanLogSeparator::initialization()
     m_pbShowStatistics->setText(QString::fromLocal8Bit("日志信息统计"));
     connect(m_pbShowStatistics, &m_pbShowStatistics->clicked, this, &onShowStatisticsButtonClicked);
     m_pbSaveScreen = new QPushButton;
+    m_pbSaveScreen->installEventFilter(this);
     m_pbSaveScreen->setText(QString::fromLocal8Bit("保存屏幕内容"));
     connect(m_pbSaveScreen, &m_pbSaveScreen->clicked, this, &onSaveScreenButtonClicked);
     m_pbClearScreen = new QPushButton;
@@ -66,6 +67,10 @@ void CanLogSeparator::initialization()
     m_pbSeparateLog = new QPushButton;
     m_pbSeparateLog->setText(QString::fromLocal8Bit("分析日志"));
     connect(m_pbSeparateLog, &m_pbSeparateLog->clicked, this, &onSeparateLogButtonClicked);
+    m_cbSaveStyle = new QComboBox;
+    m_cbSaveStyle->setToolTip(QString::fromLocal8Bit("此选项亦影响分析日志操作"));
+    m_cbSaveStyle->addItem(QString::fromLocal8Bit("含文件信息"));
+    m_cbSaveStyle->addItem(QString::fromLocal8Bit("仅raw数据"));
 
     //CAN msg filter
     m_gbFilterSettings = new QGroupBox;
@@ -76,21 +81,33 @@ void CanLogSeparator::initialization()
     m_gbFilterSettingsLayout->addWidget(m_pbSeparateLog);
     m_gbFilterSettings->setLayout(m_gbFilterSettingsLayout);
 
-    //main buttons
-    m_gbBtns = new QGroupBox;
-    m_gbBtns->setTitle(QString::fromLocal8Bit("操作选项"));
+    //button group A
+    m_gbOperationsA = new QGroupBox;
+    m_gbOperationsA->setTitle(QString::fromLocal8Bit("操作选项"));
+    auto m_gbBtnsLayoutA = new QHBoxLayout;
+    m_gbBtnsLayoutA->addWidget(m_pbOpenLog);
+    m_gbBtnsLayoutA->addWidget(m_pbShowStatistics);
+    m_gbBtnsLayoutA->addWidget(m_pbClearScreen);
+    m_gbBtnsLayoutA->addWidget(m_pbSaveScreen);
+    m_gbOperationsA->setLayout(m_gbBtnsLayoutA);
+
+    //button group B
+    m_gbOperationsB = new QGroupBox;
+    m_gbOperationsB->setTitle(QString::fromLocal8Bit("显示及保存选项"));
+    auto m_gbBtnsLayoutB = new QHBoxLayout;
+    m_gbBtnsLayoutB->addWidget(m_cbSaveStyle);
+    m_gbOperationsB->setLayout(m_gbBtnsLayoutB);
+
+    //layout of button group A & B
     auto m_gbBtnsLayout = new QHBoxLayout;
-    m_gbBtnsLayout->addWidget(m_pbOpenLog);
-    m_gbBtnsLayout->addWidget(m_pbShowStatistics);
-    m_gbBtnsLayout->addWidget(m_pbSaveScreen);
-    m_gbBtnsLayout->addWidget(m_pbClearScreen);
-    m_gbBtns->setLayout(m_gbBtnsLayout);
+    m_gbBtnsLayout->addWidget(m_gbOperationsA);
+    m_gbBtnsLayout->addWidget(m_gbOperationsB);
 
     //global layout
     m_layoutGlobal = new QVBoxLayout;
     m_layoutGlobal->addWidget(m_pteOutput);
     m_layoutGlobal->addWidget(m_gbFilterSettings);
-    m_layoutGlobal->addWidget(m_gbBtns);
+    m_layoutGlobal->addLayout(m_gbBtnsLayout);
 
     ui->centralWidget->setLayout(m_layoutGlobal);
     this->setMinimumSize(480, 400);
@@ -146,8 +163,8 @@ void CanLogSeparator::onOpenLogButtonClicked()
     if(m_FileInfos.isEmpty())
         return;
 
-    for(auto tmp:m_FileInfos)
-        qDebug()<<tmp<<endl;
+    for(auto tmp: m_FileInfos)
+        qDebug() << tmp << endl;
 
     //clear output
     m_pteOutput->clear();
@@ -264,21 +281,26 @@ void CanLogSeparator::onSaveScreenButtonClicked()
 
     QTextStream out(&newFile);
 
-    if(1 == m_FileInfos.size())
+    if(0 == m_cbSaveStyle->currentIndex())
     {
-        out << QString::fromLocal8Bit("原始日志文件：\n") + m_FileInfos.first().at(ABSOLUTE_FILE_PATH) + '\n';
-    }
-    else
-    {
-        out << QString::fromLocal8Bit("原始日志文件：\n");
-
-        for(QString fileNameIter: m_FileInfos.keys())
+        if(1 == m_FileInfos.size())
         {
-            out << m_FileInfos[fileNameIter].at(ABSOLUTE_FILE_PATH) + '\n';
+            out << QString::fromLocal8Bit("原始日志文件：\n") + m_FileInfos.first().at(ABSOLUTE_FILE_PATH) + '\n';
         }
+        else
+        {
+            out << QString::fromLocal8Bit("原始日志文件：\n");
+
+            for(QString fileNameIter: m_FileInfos.keys())
+            {
+                out << m_FileInfos[fileNameIter].at(ABSOLUTE_FILE_PATH) + '\n';
+            }
+        }
+
+        out << "\n\n";
     }
 
-    out << "\n\n" + m_pteOutput->toPlainText();
+    out << m_pteOutput->toPlainText();
 
     newFile.close();
 
@@ -368,8 +390,11 @@ void CanLogSeparator::onSeparateLogButtonClicked()
 
     for(QString fileNameIter: m_FileInfos.keys())
     {
-        m_pteOutput->appendPlainText("--->" + m_FileInfos[fileNameIter].at(ABSOLUTE_FILE_PATH) + "<---");
-        m_pteOutput->appendPlainText(bmStr);
+        if(0 == m_cbSaveStyle->currentIndex())
+        {
+            m_pteOutput->appendPlainText("--->" + m_FileInfos[fileNameIter].at(ABSOLUTE_FILE_PATH) + "<---");
+            m_pteOutput->appendPlainText(bmStr);
+        }
 
         unsigned int lineNumber = 1;
         foreach(const QString &value1, m_OriginalLogs[fileNameIter])
@@ -404,7 +429,7 @@ void CanLogSeparator::onSeparateLogButtonClicked()
             }
         }
 
-        if(fileNameIter != m_FileInfos.keys().last())
+        if(fileNameIter != m_FileInfos.keys().last() && 0 == m_cbSaveStyle->currentIndex())
             m_pteOutput->appendPlainText("\n\n");
     }
 
@@ -412,3 +437,4 @@ void CanLogSeparator::onSeparateLogButtonClicked()
     cursor.movePosition(QTextCursor::Start);
     m_pteOutput->setTextCursor(cursor);
 }
+

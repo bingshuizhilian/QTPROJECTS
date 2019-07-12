@@ -53,10 +53,12 @@ private:
     QLineEdit *m_leSeparator;
     QComboBox *m_cbLogStyle;
     QPushButton *m_pbSeparateLog;
+    QComboBox *m_cbSaveStyle;
 
 private:
     QVBoxLayout* m_layoutGlobal;
-    QGroupBox* m_gbBtns;
+    QGroupBox* m_gbOperationsA;
+    QGroupBox* m_gbOperationsB;
     QGroupBox* m_gbFilterSettings;
 
 private:
