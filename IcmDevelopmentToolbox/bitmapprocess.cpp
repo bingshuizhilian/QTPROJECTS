@@ -94,7 +94,7 @@ void BitmapProcess::on_btn_openBmp_clicked()
 {
     selectedFilePathName = QFileDialog::getOpenFileName(this, QString::fromLocal8Bit("打开图片"),
                                                         "",
-                                                        tr("Bmp Image (*.bmp)"));
+                                                        QString::fromLocal8Bit("Bmp文件 (*.bmp)"));
 
     selectedFilePath = QFileInfo(selectedFilePathName).absolutePath();
 
@@ -439,9 +439,9 @@ QString BitmapProcess::toCTypeArray(BitmapHandler& bmp, BMPBITPERPIXEL destbpp)
     foreach(auto elem, cTypeArrayText)
         qDebug() << elem;
 
-    QString saveFilePathName = QFileDialog::getSaveFileName(nullptr, "Save C Type Array",
+    QString saveFilePathName = QFileDialog::getSaveFileName(nullptr, QString::fromLocal8Bit("保存C类型的数组文件"),
                                                             "",
-                                                            "Images (*.c)");
+                                                            QString::fromLocal8Bit("C文件 (*.c)"));
 
     qDebug() << "saveFilePathName: " << saveFilePathName;
 
