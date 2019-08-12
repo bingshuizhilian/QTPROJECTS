@@ -154,49 +154,33 @@ void FirmwareGenerator::runCmdReturnPressed()
     case CMD_COMPRESS_BMP:
         compressCArrayOfBitmap();
         break;
-    case CMD_GEN_M1AFL2_FLASH_DRIVER:
+    case CMD_GEN_FLASH_DRIVER:
     {
-        QString dirPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
-        dirPath.append("/cheryM1afl2FlashDriver/");
-        ptOutputWnd->clear();
-        ptOutputWnd->appendPlainText(dirPath.left(dirPath.size() - 1));
-        generateFiles(findCmd, dirPath, true);
-        break;
-    }
-    case CMD_GEN_T19_FLASH_DRIVER:
-    {
-        QString dirPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
-        dirPath.append("/cheryT19FlashDriver/");
-        ptOutputWnd->clear();
-        ptOutputWnd->appendPlainText(dirPath.left(dirPath.size() - 1));
-        generateFiles(findCmd, dirPath, true);
-        break;
-    }
-    case CMD_GEN_S51EVFL_FLASH_DRIVER:
-    {
-        QString dirPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
-        dirPath.append("/cheryS51evflFlashDriver/");
-        ptOutputWnd->clear();
-        ptOutputWnd->appendPlainText(dirPath.left(dirPath.size() - 1));
-        generateFiles(findCmd, dirPath, true);
-        break;
-    }
-    case CMD_GEN_A13TEV_FLASH_DRIVER:
-    {
-        QString dirPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
-        dirPath.append("/cheryA13tevFlashDriver/");
-        ptOutputWnd->clear();
-        ptOutputWnd->appendPlainText(dirPath.left(dirPath.size() - 1));
-        generateFiles(findCmd, dirPath, true);
-        break;
-    }
-    case CMD_GEN_COMMON_FLASH_DRIVER:
-    {
-        QString dirPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
-        dirPath.append("/cheryCommonFlashDriver/");
-        ptOutputWnd->clear();
-        ptOutputWnd->appendPlainText(dirPath.left(dirPath.size() - 1));
-        generateFiles(findCmd, dirPath, true);
+        //请求用户输入零件号
+        bool isOK;
+        QString partnumberQueryData = QInputDialog::getText(this,
+                                                            QString::fromLocal8Bit("输入零件号"),
+                                                            QString::fromLocal8Bit("请输入零件号, 最多可以输入16个字符"),
+                                                            QLineEdit::Normal,
+                                                            "",
+                                                            &isOK);
+        //校验输入信息
+        QRegExp regExp("^[\\w\\-]{0,16}$");
+
+        if(isOK && regExp.exactMatch(partnumberQueryData))
+        {
+            QString dirPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
+            dirPath.append("/cheryCustomizedFlashDriver/");
+            ptOutputWnd->clear();
+            ptOutputWnd->appendPlainText(dirPath.left(dirPath.size() - 1));
+            generateFiles(findCmd, dirPath, true, partnumberQueryData.toLatin1().toHex().toUpper());
+        }
+        else
+        {
+            QMessageBox::warning(this, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("无效零件号"), QMessageBox::Yes);
+            return;
+        }
+
         break;
     }
     case CMD_GEN_ERASE_EEPROM:
@@ -639,7 +623,7 @@ void FirmwareGenerator::generateFirmwareWithBootloader(void)
 #endif
 }
 
-//生成诊断仪用flash driver
+//生成独立的boot code或诊断仪用flash driver
 void FirmwareGenerator::generateFiles(CmdType cmd, QString dir_path, bool is_open_folder, QString user_part_number)
 {
     QString filePathName = dir_path;
@@ -648,23 +632,7 @@ void FirmwareGenerator::generateFiles(CmdType cmd, QString dir_path, bool is_ope
 
     switch(cmd)
     {
-    case CMD_GEN_M1AFL2_FLASH_DRIVER:
-        filePathName += "CheryM1afl2FlashDriver.S19";
-        fileContent = md.FLASH_DRIVER_M1AFL2;
-        break;
-    case CMD_GEN_T19_FLASH_DRIVER:
-        filePathName += "CheryT19FlashDriver.S19";
-        fileContent = md.FLASH_DRIVER_T19;
-        break;
-    case CMD_GEN_S51EVFL_FLASH_DRIVER:
-        filePathName += "CheryS51evflFlashDriver.S19";
-        fileContent = md.FLASH_DRIVER_S51EVFL;
-        break;
-    case CMD_GEN_A13TEV_FLASH_DRIVER:
-        filePathName += "CheryA13tevFlashDriver.S19";
-        fileContent = md.FLASH_DRIVER_A13TEV;
-        break;
-    case CMD_GEN_COMMON_FLASH_DRIVER:
+    case CMD_GEN_FLASH_DRIVER:
         filePathName += "CheryCustomizedFlashDriver.S19";
         fileContent = md.FLASH_DRIVER_NO_PART_NUMBER;
         break;
@@ -712,7 +680,7 @@ void FirmwareGenerator::generateFiles(CmdType cmd, QString dir_path, bool is_ope
 
     QTextStream out(&newFile);
 
-    if(CMD_GEN_COMMON_FLASH_DRIVER == cmd && !user_part_number.isEmpty())
+    if(CMD_GEN_FLASH_DRIVER == cmd && !user_part_number.isEmpty())
     {
         QString newFileContent(fileContent);
         newFileContent.replace(18, user_part_number.size(), user_part_number);
@@ -970,26 +938,7 @@ void FirmwareGenerator::generateFirmwareForDiagnosis(void)
     newFile.close();
 
     //同时生成一个flash driver
-    if(m_leDiagnosisS021->text().contains(DIAG_M1AFL2_PARTNUMBER.toLatin1().toHex(), Qt::CaseInsensitive))
-    {
-        generateFiles(CMD_GEN_M1AFL2_FLASH_DRIVER, dirPath, false);
-    }
-    else if(m_leDiagnosisS021->text().contains(DIAG_T19_PARTNUMBER.toLatin1().toHex(), Qt::CaseInsensitive))
-    {
-        generateFiles(CMD_GEN_T19_FLASH_DRIVER, dirPath, false);
-    }
-    else if(m_leDiagnosisS021->text().contains(DIAG_S51EVFL_PARTNUMBER.toLatin1().toHex(), Qt::CaseInsensitive))
-    {
-        generateFiles(CMD_GEN_S51EVFL_FLASH_DRIVER, dirPath, false);
-    }
-    else if(m_leDiagnosisS021->text().contains(DIAG_A13TEV_PARTNUMBER.toLatin1().toHex(), Qt::CaseInsensitive))
-    {
-        generateFiles(CMD_GEN_A13TEV_FLASH_DRIVER, dirPath, false);
-    }
-    else
-    {
-        generateFiles(CMD_GEN_COMMON_FLASH_DRIVER, dirPath, false, m_leDiagnosisS021->text().right(m_leDiagnosisS021->text().size() - 18).left(32));
-    }
+    generateFiles(CMD_GEN_FLASH_DRIVER, dirPath, false, m_leDiagnosisS021->text().right(m_leDiagnosisS021->text().size() - 18).left(32));
 
     //windows系统下直接打开该文件夹并选中诊断仪app文件
 #ifdef WIN32
@@ -1301,17 +1250,10 @@ void FirmwareGenerator::showHelpInfo(CmdType cmd)
         hlpInfo << QString::fromLocal8Bit("3.2 诊断仪app合成.");
         hlpInfo << QString::fromLocal8Bit("3.2.1 定义：奇瑞M1系列诊断仪app合成方法介绍.");
         hlpInfo << QString::fromLocal8Bit("3.2.2 指令：<u>:diagnosis?</u>或<u>:d?</u>.");
-        hlpInfo << QString::fromLocal8Bit("3.3 诊断仪app合成辅助工具.");
-        hlpInfo << QString::fromLocal8Bit("3.3.1 生成flash driver文件.");
-        hlpInfo << QString::fromLocal8Bit("3.3.1.1.1 定义：独立生成一个m1afl2诊断仪用flash driver文件.");
-        hlpInfo << QString::fromLocal8Bit("3.3.1.1.2 指令：<u>:m1afl2 flash driver</u>或<u>:mfd</u>.");
-        hlpInfo << QString::fromLocal8Bit("3.3.1.2.1 定义：独立生成一个t19诊断仪用flash driver文件.");
-        hlpInfo << QString::fromLocal8Bit("3.3.1.2.2 指令：<u>:t19 flash driver</u>或<u>:tfd</u>.");
-        hlpInfo << QString::fromLocal8Bit("3.3.1.3.1 定义：独立生成一个s51evfl诊断仪用flash driver文件.");
-        hlpInfo << QString::fromLocal8Bit("3.3.1.3.2 指令：<u>:s51evfl flash driver</u>或<u>:sfd</u>.");
-        hlpInfo << QString::fromLocal8Bit("3.3.1.4.1 定义：独立生成一个通用奇瑞诊断仪用flash driver文件.");
-        hlpInfo << QString::fromLocal8Bit("3.3.1.4.2 指令：<u>:common flash driver</u>或<u>:cfd</u>或<u>:fd</u>.");
-        hlpInfo << QString::fromLocal8Bit("3.3.1.4 备注：用3.2节方法也会自动生成flash driver文件.");
+        hlpInfo << QString::fromLocal8Bit("3.3 生成flash driver文件.");
+        hlpInfo << QString::fromLocal8Bit("3.3.1 定义：独立生成一个诊断仪用flash driver文件.");
+        hlpInfo << QString::fromLocal8Bit("3.3.2 指令：<u>:flash driver</u>或<u>:fd</u>.");
+        hlpInfo << QString::fromLocal8Bit("3.3.3 备注：此功能需要额外输入零件号；用3.2节方法也会自动生成flash driver文件.");
         hlpInfo << QString::fromLocal8Bit("3.4 生成erase eeprom firmware文件.");
         hlpInfo << QString::fromLocal8Bit("3.4.1 定义：生成用于清除仪表eeprom的.S19固件.");
         hlpInfo << QString::fromLocal8Bit("3.4.2 指令：<u>:erase eeprom</u>或<u>:ee</u>.");
@@ -1328,6 +1270,11 @@ void FirmwareGenerator::showHelpInfo(CmdType cmd)
         hlpInfo << QString::fromLocal8Bit("3.7.1 定义：生成S51EVFL的boot代码段的.S19固件.");
         hlpInfo << QString::fromLocal8Bit("3.7.2 指令：<u>:s boot code</u>或<u>:sbc</u>.");
         hlpInfo << QString::fromLocal8Bit("3.7.3 备注：此固件不可单独烧录至仪表，需要合成到仪表app固件中，合成方法参考3.1节.");
+        hlpInfo << QString::fromLocal8Bit("3.8 生成A13TEV的boot code文件.");
+        hlpInfo << QString::fromLocal8Bit("3.8.1 定义：生成A13TEV的boot代码段的.S19固件.");
+        hlpInfo << QString::fromLocal8Bit("3.8.2 指令：<u>:a boot code</u>或<u>:abc</u>.");
+        hlpInfo << QString::fromLocal8Bit("3.8.3 备注：此固件不可单独烧录至仪表，需要合成到仪表app固件中，合成方法参考3.1节.");
+
         hlpInfo << QString::fromLocal8Bit("4 开发辅助工具.");
         hlpInfo << QString::fromLocal8Bit("4.1 文件转字符串工具.");
         hlpInfo << QString::fromLocal8Bit("4.1.1 定义：将指定文件的所有字节生成C/C++语言能识别的数组，并存储为.h文件.");
@@ -2133,11 +2080,7 @@ void FirmwareGenerator::commandsInitialization(void)
     cmdList.push_back({ CMD_LOAD_CONFIG_FILE, {":load config file", ":lcf"} });
     cmdList.push_back({ CMD_CODE_TO_STRING, {":convert code to string", ":c2s"} });
     cmdList.push_back({ CMD_COMPRESS_BMP, {":compress bmp", ":cb"} });
-    cmdList.push_back({ CMD_GEN_M1AFL2_FLASH_DRIVER, {":m1afl2 flash driver", ":mfd"} });
-    cmdList.push_back({ CMD_GEN_T19_FLASH_DRIVER, {":t19 flash driver", ":tfd"} });
-    cmdList.push_back({ CMD_GEN_S51EVFL_FLASH_DRIVER, {":s51evfl flash driver", ":sfd"} });
-    cmdList.push_back({ CMD_GEN_A13TEV_FLASH_DRIVER, {":a13tev flash driver", ":afd"} });
-    cmdList.push_back({ CMD_GEN_COMMON_FLASH_DRIVER, {":common flash driver", ":cfd", ":fd"} });
+    cmdList.push_back({ CMD_GEN_FLASH_DRIVER, {":flash driver", ":fd"} });
     cmdList.push_back({ CMD_GEN_ERASE_EEPROM, {":erase eeprom", ":ee"} });
     cmdList.push_back({ CMD_GEN_M1_BOOT_CODE, {":m boot code", ":mbc"} });
     cmdList.push_back({ CMD_GEN_T1_BOOT_CODE, {":t boot code", ":tbc"} });
