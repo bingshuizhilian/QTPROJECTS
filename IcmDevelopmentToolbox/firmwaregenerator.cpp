@@ -895,16 +895,31 @@ void FirmwareGenerator::generateFirmwareForDiagnosis(void)
                              QMessageBox::Yes);
     qDebug() << "crc address: " << s20cText;
 
+    QString crcStr = QString::number(crc, 16);
+    for(int i = 0, s = crcStr.size(); i < 4 - s; ++i)
+        crcStr = '0' + crcStr;
+
+    qDebug() << "crc string: " << crcStr;
+
     for(int cnt = 0; cnt < 4; ++cnt)
-        s20cText.append(QString::number(crc, 16));
+        s20cText.append(crcStr);
 
     if(chkSum <= 0x0f)
         s20cText += "0"+ QString::number(chkSum, 16);
     else
         s20cText += QString::number(chkSum, 16);
 
+    if(s20cText.size() != 28)
+    {
+        QMessageBox::warning(this, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("请检查s20c行字符个数，字符个数应是28"), QMessageBox::Yes);
+        return;
+    }
+
     s20cText = s20cText.toUpper();
     m_leDiagnosisS20C->setText(s20cText);
+
+    qDebug() << "s20cText: " << s20cText;
+
     //将S20C数据添加换行符并写入排序完成的文件的倒数第二行
     s20cText.append('\n');
     originalS19FileStringList.insert(originalS19FileStringList.size() - 1, s20cText);
